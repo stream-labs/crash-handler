@@ -3,14 +3,14 @@
 #include <windows.h>
 
 class NamedSocket_win : public NamedSocket {
-	public:
+public:
 	NamedSocket_win(std::string path);
 	virtual ~NamedSocket_win();
 
-	private:
+private:
 	HANDLE m_handle;
 
-	public:
+public:
 	// Reading
 	virtual size_t read(char* buf, size_t length) override;
 
