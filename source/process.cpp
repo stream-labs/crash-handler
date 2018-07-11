@@ -11,9 +11,6 @@ void check(void* p) {
 	DWORD	lpcbNeeded;
 
 	while(!proc->getStopped()) {
-		std::unique_lock<std::mutex> ulock(proc->mutex);
-		proc->setAlive(false);
-
 		bool success =  EnumProcesses(
 			lpidProcess,
 			sizeof(lpidProcess),
@@ -21,6 +18,8 @@ void check(void* p) {
 		);
 
 		if (success) {
+			std::unique_lock<std::mutex> ulock(proc->mutex);
+			proc->setAlive(false);
 			uint32_t index = 0;
 			uint32_t procCount = (uint32_t)lpcbNeeded / sizeof(DWORD);
 
