@@ -1,27 +1,31 @@
 #include "process.hpp"
 #include <windows.h>
 #include <psapi.h>
+#include <iostream>
 
 void check(void* p) {
 	Process* proc = reinterpret_cast<Process*> (p);
-	DWORD   *lpidProcess;
+		
+	DWORD   lpidProcess[1024];
 	DWORD   cb;
-	LPDWORD lpcbNeeded;
+	DWORD	lpcbNeeded;
 
 	while(!proc->getStopped()) {
+		std::unique_lock<std::mutex> ulock(proc->mutex);
 		proc->setAlive(false);
 
 		bool success =  EnumProcesses(
 			lpidProcess,
-			cb,
-			lpcbNeeded
+			sizeof(lpidProcess),
+			&lpcbNeeded
 		);
 
 		if (success) {
 			uint32_t index = 0;
 			uint32_t procCount = (uint32_t)lpcbNeeded / sizeof(DWORD);
 
-			while (proc->getAlive() || index < procCount) {
+			while (!proc->getAlive() && index < procCount) {
+				std::cout << lpidProcess[index] << std::endl;
 				proc->setAlive(lpidProcess[index] == proc->getPID());
 				index++;
 			}
@@ -36,11 +40,12 @@ void check(void* p) {
 	}
 }
 
-Process::Process(uint64_t pid, bool isCritical, NamedSocket* sock) {
+Process::Process(uint64_t pid, bool isCritical, std::unique_ptr<NamedSocket>* sock) {
 	m_pid = pid;
 	m_isCritical = isCritical;
 	m_isAlive = true;
 	m_stop = false;
+	m_sock = sock;
 
 	m_worker = new std::thread(check, this);
 }
@@ -79,4 +84,8 @@ void Process::stopWorker() {
 
 bool Process::getStopped(void) {
 	return m_stop;
+}
+
+std::thread* Process::getWorker(void) {
+	return m_worker;
 }
