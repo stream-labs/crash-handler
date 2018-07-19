@@ -4,7 +4,7 @@
 
 class Process {
 public:
-	Process(uint64_t pid, bool isCritical, std::unique_ptr<NamedSocket>* sock);
+	Process(uint64_t pid, bool isCritical, HANDLE hdl);
 	~Process();
 
 private:
@@ -13,7 +13,7 @@ private:
 	std::thread* m_worker;
 	bool m_isAlive;
 	bool m_stop;
-	std::unique_ptr<NamedSocket>* m_sock;
+	HANDLE m_hdl;
 	std::string m_name;
 
 public:

@@ -1,21 +1,20 @@
 #include "namedsocket.hpp"
 #include <vector>
-#include <windows.h>
 
 class NamedSocket_win : public NamedSocket {
 public:
 	NamedSocket_win(std::string path);
 	virtual ~NamedSocket_win();
 
-private:
+public:
 	HANDLE m_handle;
 
 public:
-	// Reading
+	virtual bool connect() override;
 	virtual size_t read(char* buf, size_t length) override;
-
-	// Writing
 	virtual size_t write(const char* buf, const size_t length) override;
-
+	virtual void disconnect() override;
 	virtual bool flush() override;
+
+	virtual HANDLE getHandle() override;
 };

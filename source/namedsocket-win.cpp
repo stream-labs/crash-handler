@@ -1,4 +1,5 @@
 #include "namedsocket-win.hpp"
+#include <iostream>
 
 NamedSocket_win::NamedSocket_win(std::string path) {
 	m_handle= CreateNamedPipe(path.c_str(),
@@ -18,6 +19,18 @@ NamedSocket_win::NamedSocket_win(std::string path) {
 
 std::unique_ptr<NamedSocket> NamedSocket::create(std::string path) {
 	return std::make_unique<NamedSocket_win>(path);
+}
+
+bool NamedSocket_win::connect() {
+	return ConnectNamedPipe(m_handle, NULL);
+}
+
+HANDLE NamedSocket_win::getHandle() {
+	return m_handle;
+}
+
+void NamedSocket_win::disconnect() {
+	CloseHandle(m_handle);
 }
 
 NamedSocket_win::~NamedSocket_win() {
@@ -43,7 +56,7 @@ size_t NamedSocket_win::read(char* buf, size_t length) {
 		NULL, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
 
 	std::string message(messageBuffer, size);
-
+	std::cout << "Error message : " << message.c_str() << std::endl;
 	return bytesRead;
 }
 

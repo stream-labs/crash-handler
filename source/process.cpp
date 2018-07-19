@@ -24,7 +24,6 @@ void check(void* p) {
 			uint32_t procCount = (uint32_t)lpcbNeeded / sizeof(DWORD);
 
 			while (!proc->getAlive() && index < procCount) {
-				std::cout << lpidProcess[index] << std::endl;
 				proc->setAlive(lpidProcess[index] == proc->getPID());
 				index++;
 			}
@@ -34,17 +33,18 @@ void check(void* p) {
 			proc->stopWorker();
 		}
 		else {
+			std::cout << "Alive" << proc->getPID() << std::endl;
 			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 		}
 	}
 }
 
-Process::Process(uint64_t pid, bool isCritical, std::unique_ptr<NamedSocket>* sock) {
+Process::Process(uint64_t pid, bool isCritical, HANDLE hdl) {
 	m_pid = pid;
 	m_isCritical = isCritical;
 	m_isAlive = true;
 	m_stop = false;
-	m_sock = sock;
+	m_hdl = hdl;
 
 	m_worker = new std::thread(check, this);
 }
