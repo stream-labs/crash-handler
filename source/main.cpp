@@ -3,6 +3,7 @@
 #include "message.hpp"
 #include "process.hpp"
 #include <iostream>
+#include <algorithm>
 
 #define CONNECTING_STATE 0 
 #define READING_STATE 1 
@@ -31,12 +32,14 @@ PIPEINST Pipe[INSTANCES];
 HANDLE hEvents[INSTANCES];
 
 std::vector<Process*> processes;
+std::mutex mutex;
 bool exitApp = false;
+bool doRestartApp = false;
 
 void checkProcesses(void) {
 	bool stop = false;
 
-	while (!stop) {
+	while (!stop && !exitApp) {
 		bool alive = true;
 		size_t index = 0;
 
@@ -52,8 +55,9 @@ void checkProcesses(void) {
 					NULL,
 					"An issue occured, don't worry you are still streaming/recording. \n\nChoose whenever you want to restart the application by clicking the \"OK\" button.",
 					"Oops...",
-					MB_OK
+					MB_OK | MB_SYSTEMMODAL
 				);
+				doRestartApp = true;
 			}
 			stop = true;
 		}
@@ -139,26 +143,24 @@ int _tmain(VOID)
 			READING_STATE;     // ready to read 
 	}
 
-	int successRead = 0;
-	while (successRead < 2)
+	while (!exitApp)
 	{
 		// Wait for the event object to be signaled, indicating 
 		// completion of an overlapped read, write, or 
 		// connect operation. 
-		printf("Waiting %d\n", successRead);
 		dwWait = WaitForMultipleObjects(
 			INSTANCES,    // number of event objects 
 			hEvents,      // array of event objects 
 			FALSE,        // does not wait for all 
-			INFINITE);    // waits indefinitely 
+			500);		  // waits 500 ms 
 
 						  // dwWait shows which pipe completed the operation. 
 
 		i = dwWait - WAIT_OBJECT_0;  // determines which pipe 
 		if (i < 0 || i >(INSTANCES - 1))
 		{
-			printf("Index out of range.\n");
-			return 0;
+			// printf("Index out of range.\n");
+			continue;
 		}
 
 		// Get the result if the operation was pending. 
@@ -227,25 +229,52 @@ int _tmain(VOID)
 			);
 
 			// The read operation completed successfully. 
-
 			if (Pipe[i].cbRead > 0) {
-				std::cout << "Data received" << std::endl;
 				Pipe[i].fPendingIO = FALSE;
-				successRead++;
-
-				std::cout << "Got a new message" << std::endl;
 				Message msg(Pipe[i].chRequest);
-				if (msg.getAction() == REGISTER) {
-					std::vector<char> data = msg.getData();
-					bool isCritical = reinterpret_cast<bool&>
-						(data[0]);
 
-					size_t pid = reinterpret_cast<size_t&>
-						(data[1]);
+				switch (msg.readBool()) {
+				case REGISTER: {
+					std::unique_lock<std::mutex> ulock(mutex);
 
-					std::cout << "Registering " << pid << std::endl;
+					bool isCritical = msg.readBool();
+					uint32_t pid = msg.readUInt32();
 
-					processes.push_back(new Process(pid, isCritical, Pipe[i].hPipeInst));
+					std::cout << "Registering " << pid << ", critical : " << isCritical << std::endl;
+
+					processes.push_back(new Process(pid, isCritical));
+					break;
+				}
+				case UNREGISTER: {
+					uint32_t pid = msg.readUInt32();
+					auto it = std::find_if(processes.begin(), processes.end(), [&pid](Process* p) {
+						return p->getPID() == pid;
+					});
+
+					if (it != processes.end()) {
+						std::unique_lock<std::mutex> ulock(mutex);
+
+						std::cout << "Unregistering " << pid << std::endl;
+
+						Process* p = (Process*)(*it);
+						p->stopWorker();
+						if (p->getWorker()->joinable())
+							p->getWorker()->join();
+
+						processes.erase(it);
+					}
+					break;
+				}
+				case EXIT: {
+					std::cout << "Exit received by main process" << std::endl;
+					exitApp = true;
+					break;
+				}
+				default: {
+					// Wrong value
+					exitApp = true;
+					break;
+				}
 				}
 			}
 			
@@ -273,12 +302,28 @@ int _tmain(VOID)
 		printf("Loop\n");
 	}
 
-	while (!exitApp) {
-
-	}
-
 	close();
 	processManager.join();
+
+	if (doRestartApp) {
+		STARTUPINFO info = { sizeof(info) };
+		PROCESS_INFORMATION processInfo;
+		
+		memset(&info, 0, sizeof(info));
+		memset(&processInfo, 0, sizeof(processInfo));
+
+		CreateProcess("..\\Streamlabs OBS.exe",
+			"",
+			NULL,
+			NULL,
+			FALSE,
+			DETACHED_PROCESS,
+			NULL,
+			NULL,
+			&info,
+			&processInfo
+		 );
+	}
 
 	return 0;
 }

@@ -2,7 +2,7 @@
 
 enum Action {
 	REGISTER,
-	HEARTBEAT,
+	UNREGISTER,
 	EXIT
 };
 
@@ -12,16 +12,10 @@ public:
 	~Message();
 	
 private:
-	Action m_action;
-	std::vector<char> m_data;
+	std::vector<char> m_buffer;
+	uint64_t index = 0;
 	
 public:
-	Action getAction(void);
-	void setAction(Action action);
-	std::vector<char> getData(void);
-	void setData(std::vector<char> data);
-
-public:
-	std::vector<char> serialize(void);
-	void deserialize(std::vector<char> buffer);
+	bool readBool();
+	uint32_t readUInt32();
 };

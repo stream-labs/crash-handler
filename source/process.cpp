@@ -39,12 +39,11 @@ void check(void* p) {
 	}
 }
 
-Process::Process(uint64_t pid, bool isCritical, HANDLE hdl) {
+Process::Process(uint64_t pid, bool isCritical) {
 	m_pid = pid;
 	m_isCritical = isCritical;
 	m_isAlive = true;
 	m_stop = false;
-	m_hdl = hdl;
 
 	m_worker = new std::thread(check, this);
 }

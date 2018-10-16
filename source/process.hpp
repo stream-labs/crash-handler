@@ -4,7 +4,7 @@
 
 class Process {
 public:
-	Process(uint64_t pid, bool isCritical, HANDLE hdl);
+	Process(uint64_t pid, bool isCritical);
 	~Process();
 
 private:
@@ -13,7 +13,6 @@ private:
 	std::thread* m_worker;
 	bool m_isAlive;
 	bool m_stop;
-	HANDLE m_hdl;
 	std::string m_name;
 
 public:
