@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(crash-handler-module)
+project(crash-handler)
 
 #############################
 # CMake Settings

@@ -7,4 +7,4 @@ void init(Local<Object> exports) {
     // NODE_SET_METHOD(exports, "startHook", StartHotkeyThreadJS);
 }
 
-NODE_MODULE(crash_handler_module, init)
+NODE_MODULE(crash_handler, init)
