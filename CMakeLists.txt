@@ -1,18 +1,15 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
+﻿CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 PROJECT(crash-handler VERSION 0.0.1)
 
-#############################
-# Source, Libraries & Directories
-#############################
-SET(PROJECT_SOURCE
-	"${PROJECT_SOURCE_DIR}/source/process.cpp" "${PROJECT_SOURCE_DIR}/source/process.hpp"
-	"${PROJECT_SOURCE_DIR}/source/message.cpp" "${PROJECT_SOURCE_DIR}/source/message.hpp"
-	"${PROJECT_SOURCE_DIR}/source/namedsocket-win.cpp" "${PROJECT_SOURCE_DIR}/source/namedsocket-win.hpp"
-	"${PROJECT_SOURCE_DIR}/source/namedsocket.cpp" "${PROJECT_SOURCE_DIR}/source/namedsocket.hpp"
-	"${PROJECT_SOURCE_DIR}/source/main.cpp"
-)
+# Set Module Path
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
 #############################
-# Building
+# Configuration
 #############################
-ADD_EXECUTABLE(crash-handler ${PROJECT_SOURCE})
+
+# Installation
+SET(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/distribute" CACHE PATH "Path to install files to")
+
+ADD_SUBDIRECTORY(crash-handler-module)
+ADD_SUBDIRECTORY(crash-handler-process)

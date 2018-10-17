@@ -1,0 +1,19 @@
+{
+  "name": "spawn-crash-handler",
+  "version": "0.0.1",
+  "description": "Monitor Streamlabs OBS processes.",
+  "files": [
+    "main.js",
+    "crash_handler.node",
+    "crash_handler.pdb"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:stream-labs/crash-handler.git"
+  },
+  "license": "GPL-3.0-or-later",
+  "main": "main.js",
+  "devDependencies": {
+    "nan": "2.10.0"
+  }
+}
