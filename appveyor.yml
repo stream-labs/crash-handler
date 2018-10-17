@@ -1,0 +1,46 @@
+environment:
+  matrix:
+    - RuntimeURL: https://atom.io/download/atom-shell
+      RuntimeName: iojs
+      RuntimeVersion: v2.0.8
+
+    - RuntimeURL: https://atom.io/download/atom-shell
+      RuntimeName: iojs
+      RuntimeVersion: v1.7.15
+
+  NodeVersion: 9
+  SLBuildDirectory: build
+  SLGenerator: Visual Studio 15 2017 Win64
+  SLDistributeDirectory: distribute
+  FullDistributePath: $(SLBuildDirectory)\$(SLDistributeDirectory)
+  DistributionAritfact: $(RuntimeName)-$(RuntimeVersion)-node-libuiohook
+  Arch: x64
+
+install:
+  - ps: Install-Product node $env:NodeVersion
+  - yarn install
+
+build_script:
+  - cmake -H. -B"%SLBuildDirectory%" -G"%SLGenerator%"  -DCMAKE_INSTALL_PREFIX="%FullDistributePath%\crash-handler" -DNODEJS_NAME=%RuntimeName% -DNODEJS_URL=%RuntimeURL% -DNODEJS_VERSION=%RuntimeVersion%
+  - cmake --build %SLBuildDirectory% --target install --config RelWithDebInfo
+  - tar cvaf "%DistributionAritfact%.tar.gz" -C "%FullDistributePath%" "crash-handler"
+
+before_deploy:
+  - ps: Push-AppveyorArtifact "$env:DistributionAritfact.tar.gz"
+
+deploy:
+  - provider: GitHub
+    artifact: $(DistributionAritfact).tar.gz
+    auth_token:
+      secure: OfmsWilJ85PIVnm46u3O6LoEB/A/uA2esTqRNh9kd+Y1A6NKO6t4364EuFvVQ6ud
+    draft: false
+    prerelease: false
+    force_update: true
+    on:
+      appveyor_repo_tag: true
+
+artifacts:
+  - path: $(DistributionAritfact).tar.gz
+    name: Distribution Aritfact
+
+test: off
