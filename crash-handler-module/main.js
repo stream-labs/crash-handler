@@ -1,5 +1,6 @@
-module.exports = require('./crash_handler.node');
-
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const crash_handler = require('./crash-handler.node');
 const net = require('net');
 
 function tryConnect(buffer, attempt = 5, waitMs = 100) {
@@ -20,7 +21,7 @@ function tryConnect(buffer, attempt = 5, waitMs = 100) {
     });
 }
 
-function registerProcess(isCritial = false) {
+function registerProcess(pid, isCritial = false) {
     const buffer = new Buffer(512);
     let offset = 0;
     buffer.writeUInt32LE(0, offset++);
@@ -50,7 +51,7 @@ function terminateCrashHandler(pid) {
 
 function startCrashHandler() {
     const { spawn } = require('child_process');
-    const subprocess = spawn('./crash-handler-process.exe', {
+    const subprocess = spawn('./node_modules/crash-handler/crash-handler-process.exe', {
       detached: true,
       stdio: 'ignore'
     });
@@ -61,3 +62,5 @@ exports.startCrashHandler = startCrashHandler;
 exports.registerProcess = registerProcess;
 exports.unregisterProcess = unregisterProcess;
 exports.terminateCrashHandler = terminateCrashHandler;
+
+exports = crash_handler;
