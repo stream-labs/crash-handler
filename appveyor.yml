@@ -16,7 +16,7 @@ environment:
   SLGenerator: Visual Studio 15 2017 Win64
   SLDistributeDirectory: distribute
   FullDistributePath: $(SLBuildDirectory)\$(SLDistributeDirectory)
-  DistributionAritfact: $(RuntimeName)-$(RuntimeVersion)-node-libuiohook
+  DistributionAritfact: $(RuntimeName)-$(RuntimeVersion)-crash-handler
   Arch: x64
 
 install:
