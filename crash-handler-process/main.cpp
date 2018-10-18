@@ -65,7 +65,6 @@ void checkProcesses(void) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 		}
 	}
-	std::cout << "We should exit the app" << std::endl;
 	exitApp = true;
 }
 
@@ -75,7 +74,8 @@ void close(void) {
 	}
 	for (size_t i = 0; i < processes.size(); i++) {
 		processes.at(i)->getWorker()->join();
-		if (processes.at(i)->getAlive()) {
+		if (processes.at(i)->getAlive() &&
+			!processes.at(i)->getCritical()) {
 			HANDLE hdl = OpenProcess(PROCESS_TERMINATE, FALSE, processes.at(i)->getPID());
 			TerminateProcess(hdl, 1);
 		}
@@ -303,6 +303,32 @@ int _tmain(VOID)
 		printf("Loop\n");
 	}
 
+	HANDLE hPipe = CreateFile(
+		TEXT("\\\\.\\pipe\\exit-slobs-crash-handler"),
+		GENERIC_READ |
+		GENERIC_WRITE,
+		0,
+		NULL,
+		OPEN_EXISTING,
+		0,
+		NULL);
+
+	if (hPipe != INVALID_HANDLE_VALUE &&
+		GetLastError() != ERROR_PIPE_BUSY) {
+		std::vector<char> buffer;
+		buffer.resize(sizeof(exitApp));
+		memcpy(buffer.data(), &exitApp, sizeof(exitApp));
+
+		WriteFile(
+			hPipe,
+			buffer.data(),
+			buffer.size(),
+			NULL,
+			NULL);
+
+		CloseHandle(hPipe);
+	}
+
 	close();
 	processManager.join();
 
@@ -313,7 +339,7 @@ int _tmain(VOID)
 		memset(&info, 0, sizeof(info));
 		memset(&processInfo, 0, sizeof(processInfo));
 
-		CreateProcess("..\\Streamlabs OBS.exe",
+		CreateProcess("..\\..\\..\\..\\Streamlabs OBS.exe",
 			"",
 			NULL,
 			NULL,
