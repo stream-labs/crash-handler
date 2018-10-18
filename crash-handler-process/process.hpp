@@ -1,5 +1,4 @@
 #include <thread>
-#include "namedsocket.hpp"
 #include <mutex>
 
 class Process {

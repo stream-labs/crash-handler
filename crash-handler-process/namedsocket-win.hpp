@@ -3,7 +3,7 @@
 
 class NamedSocket_win : public NamedSocket {
 public:
-	NamedSocket_win(std::string path);
+	NamedSocket_win();
 	virtual ~NamedSocket_win();
 
 public:
@@ -11,8 +11,7 @@ public:
 
 public:
 	virtual bool connect() override;
-	virtual size_t read(char* buf, size_t length) override;
-	virtual size_t write(const char* buf, const size_t length) override;
+	virtual bool read(std::vector<Process*>*) override;
 	virtual void disconnect() override;
 	virtual bool flush() override;
 
