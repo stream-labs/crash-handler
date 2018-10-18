@@ -75,9 +75,10 @@ void close(void) {
 	}
 	for (size_t i = 0; i < processes.size(); i++) {
 		processes.at(i)->getWorker()->join();
-		HANDLE hdl = OpenProcess(PROCESS_TERMINATE, FALSE, processes.at(i)->getPID());
-		TerminateProcess(hdl, 1);
-		std::cout << "Killing process " << processes.at(i)->getPID() << std::endl;
+		if (processes.at(i)->getAlive()) {
+			HANDLE hdl = OpenProcess(PROCESS_TERMINATE, FALSE, processes.at(i)->getPID());
+			TerminateProcess(hdl, 1);
+		}
 	}
 }
 
