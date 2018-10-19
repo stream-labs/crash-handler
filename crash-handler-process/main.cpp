@@ -11,6 +11,7 @@ BOOL ConnectToNewClient(HANDLE, LPOVERLAPPED);
 std::vector<Process*> processes;
 bool exitApp = false;
 bool doRestartApp = false;
+bool monitoring = false;
 
 void checkProcesses(void) {
 	bool stop = false;
@@ -19,7 +20,13 @@ void checkProcesses(void) {
 		bool alive = true;
 		size_t index = 0;
 
+		if (monitoring && processes.size() == 0) {
+			exitApp = true;
+			break;
+		}
+
 		while (alive && index < processes.size()) {
+			monitoring = true;
 			std::unique_lock<std::mutex> ulock(processes.at(index)->mutex);
 			alive = processes.at(index)->getAlive();
 			index++;
