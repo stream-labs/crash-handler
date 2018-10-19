@@ -60,7 +60,7 @@ void close(void) {
 			while (processes.at(i)->getAlive()) {
 				auto t = std::chrono::high_resolution_clock::now();
 				auto delta = t - start;
-				if (std::chrono::duration_cast<std::chrono::milliseconds>(delta).count() > 5000) {
+				if (std::chrono::duration_cast<std::chrono::milliseconds>(delta).count() > 2000) {
 					HANDLE hdl = OpenProcess(PROCESS_TERMINATE, FALSE, processes.at(i)->getPID());
 					TerminateProcess(hdl, 1);
 					processes.at(i)->setAlive(false);
