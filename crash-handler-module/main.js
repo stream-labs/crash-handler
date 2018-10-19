@@ -49,9 +49,9 @@ function terminateCrashHandler(pid) {
     tryConnect(buffer);
   }
 
-function startCrashHandler() {
+function startCrashHandler(workingDirectory) {
     const { spawn } = require('child_process');
-    const subprocess = spawn('./node_modules/crash-handler/crash-handler-process.exe', {
+    const subprocess = spawn(workingDirectory + '\\crash-handler-process.exe', {
       detached: true,
       stdio: 'ignore'
     });
