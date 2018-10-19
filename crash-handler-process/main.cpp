@@ -112,9 +112,9 @@ int main(void)
 
 	std::unique_ptr<NamedSocket> sock = NamedSocket::create();
 
-	while (!exitApp)
+	while (!exitApp && !sock->read(&processes))
 	{
-		exitApp = sock->read(&processes);
+
 	}
 
 	terminalCriticalProcesses();
