@@ -55,6 +55,18 @@ void close(void) {
 			HANDLE hdl = OpenProcess(PROCESS_TERMINATE, FALSE, processes.at(i)->getPID());
 			TerminateProcess(hdl, 1);
 		}
+		else if (processes.at(i)->getCritical()) {
+			auto start = std::chrono::high_resolution_clock::now();
+			while (processes.at(i)->getAlive()) {
+				auto t = std::chrono::high_resolution_clock::now();
+				auto delta = t - start;
+				if (std::chrono::duration_cast<std::chrono::milliseconds>(delta).count() > 5000) {
+					HANDLE hdl = OpenProcess(PROCESS_TERMINATE, FALSE, processes.at(i)->getPID());
+					TerminateProcess(hdl, 1);
+					processes.at(i)->setAlive(false);
+				}
+			}
+		}
 	}
 }
 
@@ -117,6 +129,7 @@ int main(void)
 
 	}
 
+	exitApp = true;
 	terminalCriticalProcesses();
 	close();
 	processManager.join();
