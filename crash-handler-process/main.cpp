@@ -42,9 +42,8 @@ void terminalCriticalProcesses(void) {
 }
 
 void checkProcesses(void) {
-	bool stop = false;
 
-	while (!stop && !exitApp) {
+	while (!exitApp) {
 		bool alive = true;
 		size_t index = 0;
 
@@ -71,7 +70,7 @@ void checkProcesses(void) {
 				doRestartApp = true;
 				terminalCriticalProcesses();
 			}
-			stop = true;
+			exitApp = true;
 		}
 		else {
 			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -138,8 +137,9 @@ int main(void)
 	}
 
 	exitApp = true;
+	if (processManager.joinable())
+		processManager.join();
 	close();
-	processManager.join();
 
 	if (doRestartApp) {
 		restartApp();
