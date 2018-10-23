@@ -137,9 +137,9 @@ int main(void)
 	}
 
 	exitApp = true;
-	terminalCriticalProcesses();
 	close();
 	processManager.join();
+	terminalCriticalProcesses();
 
 	if (doRestartApp) {
 		restartApp();
