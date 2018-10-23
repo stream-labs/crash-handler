@@ -13,6 +13,34 @@ bool exitApp = false;
 bool doRestartApp = false;
 bool monitoring = false;
 
+void terminalCriticalProcesses(void) {
+	HANDLE hPipe = CreateFile(
+		TEXT("\\\\.\\pipe\\exit-slobs-crash-handler"),
+		GENERIC_READ |
+		GENERIC_WRITE,
+		0,
+		NULL,
+		OPEN_EXISTING,
+		0,
+		NULL);
+
+	if (hPipe != INVALID_HANDLE_VALUE &&
+		GetLastError() != ERROR_PIPE_BUSY) {
+		std::vector<char> buffer;
+		buffer.resize(sizeof(exitApp));
+		memcpy(buffer.data(), &exitApp, sizeof(exitApp));
+
+		WriteFile(
+			hPipe,
+			buffer.data(),
+			buffer.size(),
+			NULL,
+			NULL);
+
+		CloseHandle(hPipe);
+	}
+}
+
 void checkProcesses(void) {
 	bool stop = false;
 
@@ -41,6 +69,7 @@ void checkProcesses(void) {
 					MB_OK | MB_SYSTEMMODAL
 				);
 				doRestartApp = true;
+				terminalCriticalProcesses();
 			}
 			stop = true;
 		}
@@ -97,34 +126,6 @@ void restartApp(void) {
 	);
 }
 
-void terminalCriticalProcesses(void) {
-	HANDLE hPipe = CreateFile(
-		TEXT("\\\\.\\pipe\\exit-slobs-crash-handler"),
-		GENERIC_READ |
-		GENERIC_WRITE,
-		0,
-		NULL,
-		OPEN_EXISTING,
-		0,
-		NULL);
-
-	if (hPipe != INVALID_HANDLE_VALUE &&
-		GetLastError() != ERROR_PIPE_BUSY) {
-		std::vector<char> buffer;
-		buffer.resize(sizeof(exitApp));
-		memcpy(buffer.data(), &exitApp, sizeof(exitApp));
-
-		WriteFile(
-			hPipe,
-			buffer.data(),
-			buffer.size(),
-			NULL,
-			NULL);
-
-		CloseHandle(hPipe);
-	}
-}
-
 int main(void)
 {
 	std::thread processManager(checkProcesses);
@@ -139,7 +140,6 @@ int main(void)
 	exitApp = true;
 	close();
 	processManager.join();
-	terminalCriticalProcesses();
 
 	if (doRestartApp) {
 		restartApp();
