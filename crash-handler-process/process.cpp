@@ -23,7 +23,7 @@ void check(void* p) {
 			uint32_t index = 0;
 			uint32_t procCount = (uint32_t)lpcbNeeded / sizeof(DWORD);
 
-			while (!proc->getAlive() && index < procCount) {
+			while (!proc->getStopped() && !proc->getAlive() && index < procCount) {
 				proc->setAlive(lpidProcess[index] == proc->getPID());
 				index++;
 			}
