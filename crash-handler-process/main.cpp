@@ -12,6 +12,7 @@ std::vector<Process*> processes;
 bool exitApp = false;
 bool doRestartApp = false;
 bool monitoring = false;
+bool closeAll = false;
 
 void terminalCriticalProcesses(void) {
 	HANDLE hPipe = CreateFile(
@@ -70,6 +71,9 @@ void checkProcesses(void) {
 				doRestartApp = true;
 				terminalCriticalProcesses();
 			}
+			else {
+				closeAll = true;
+			}
 			exitApp = true;
 		}
 		else {
@@ -79,14 +83,14 @@ void checkProcesses(void) {
 	exitApp = true;
 }
 
-void close(void) {
+void close(bool doCloseALl) {
 	for (size_t i = 0; i < processes.size(); i++) {
 		processes.at(i)->stopWorker();
 	}
 	for (size_t i = 0; i < processes.size(); i++) {
 		processes.at(i)->getWorker()->join();
 		if (processes.at(i)->getAlive() &&
-			!processes.at(i)->getCritical()) {
+			!processes.at(i)->getCritical() && closeAll) {
 			HANDLE hdl = OpenProcess(PROCESS_TERMINATE, FALSE, processes.at(i)->getPID());
 			TerminateProcess(hdl, 1);
 		}
@@ -139,7 +143,7 @@ int main(void)
 	exitApp = true;
 	if (processManager.joinable())
 		processManager.join();
-	close();
+	close(closeAll);
 
 	if (doRestartApp) {
 		restartApp();
