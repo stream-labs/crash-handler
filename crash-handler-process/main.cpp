@@ -109,14 +109,17 @@ void close(bool doCloseALl) {
 	}
 }
 
-void restartApp(void) {
+void restartApp(std::string path) {
 	STARTUPINFO info = { sizeof(info) };
 	PROCESS_INFORMATION processInfo;
 
 	memset(&info, 0, sizeof(info));
 	memset(&processInfo, 0, sizeof(processInfo));
 
-	CreateProcess("..\\..\\..\\..\\Streamlabs OBS.exe",
+	path.substr(0, path.size() - strlen("app.asar.unpacked"));
+	path += "\Streamlabs OBS.exe";
+
+	CreateProcess(path.c_str(),
 		"",
 		NULL,
 		NULL,
@@ -129,8 +132,11 @@ void restartApp(void) {
 	);
 }
 
-int main(void)
+int main(int argc, char** argv)
 {
+	std::string path;
+	if (argc == 1)
+		path = argv[0];
 	std::thread processManager(checkProcesses);
 
 	std::unique_ptr<NamedSocket> sock = NamedSocket::create();
@@ -146,7 +152,7 @@ int main(void)
 	close(closeAll);
 
 	if (doRestartApp) {
-		restartApp();
+		restartApp(path);
 	}
 	return 0;
 }
