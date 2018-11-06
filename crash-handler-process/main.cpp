@@ -64,11 +64,32 @@ void checkProcesses(void) {
 			if (!processes.at(index)->getCritical()) {
 				int code = MessageBox(
 					NULL,
-					"An issue occured, don't worry you are still streaming/recording. \n\nChoose whenever you want to restart the application by clicking the \"OK\" button.",
-					"Oops...",
-					MB_OK | MB_SYSTEMMODAL
+					"An error occurred which has caused Streamlabs OBS to close. Don't worry! If you were streaming or recording, that is still happening in the background."
+					"\n\nWhenever you're ready, we can relaunch the application, however this will end your stream / recording session. Click the Yes button below to restart. "
+					"If you want to keep streaming / recording, click the No button below.",
+					"An error occurred",
+					MB_YESNO | MB_SYSTEMMODAL
 				);
-				doRestartApp = true;
+				switch (code) {
+				case IDYES:
+				{
+					MessageBox(
+						NULL,
+						"Your stream / recording session is still running in the background. Whenever you're ready, click the OK button below to end your stream / recording and relaunch the application.",
+						"Choose when to restart",
+						MB_OK | MB_SYSTEMMODAL
+					);
+					doRestartApp = true;
+					break;
+				}
+				case IDNO:
+				{
+					doRestartApp = true;
+					break;
+				}
+				default:
+					break;
+				}
 				terminalCriticalProcesses();
 			}
 			else {
