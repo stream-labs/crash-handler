@@ -65,8 +65,9 @@ void checkProcesses(void) {
 				int code = MessageBox(
 					NULL,
 					"An error occurred which has caused Streamlabs OBS to close. Don't worry! If you were streaming or recording, that is still happening in the background."
-					"\n\nWhenever you're ready, we can relaunch the application, however this will end your stream / recording session. Click the Yes button below to restart. "
-					"If you want to keep streaming / recording, click the No button below.",
+					"\n\nWhenever you're ready, we can relaunch the application, however this will end your stream / recording session.\n\n"
+					"Click the Yes button to keep streaming / recording. \n\n"
+					"Click the No button to stop streaming / recording and restart the application.",
 					"An error occurred",
 					MB_YESNO | MB_SYSTEMMODAL
 				);
