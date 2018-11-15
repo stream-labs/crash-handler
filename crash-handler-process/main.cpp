@@ -236,6 +236,7 @@ void checkProcesses(void) {
 					break;
 				}
 				terminalCriticalProcesses();
+				closeAll = true;
 			}
 			else {
 				closeAll = true;
@@ -254,11 +255,11 @@ void close(bool doCloseALl) {
 		processes.at(i)->stopWorker();
 	}
 	for (size_t i = 0; i < processes.size(); i++) {
-		processes.at(i)->getWorker()->join();
 		if (processes.at(i)->getAlive() &&
 			!processes.at(i)->getCritical() && closeAll) {
 			HANDLE hdl = OpenProcess(PROCESS_TERMINATE, FALSE, processes.at(i)->getPID());
 			TerminateProcess(hdl, 1);
+			processes.at(i)->getWorker()->join();
 		}
 		else if (processes.at(i)->getCritical()) {
 			auto start = std::chrono::high_resolution_clock::now();

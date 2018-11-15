@@ -1,40 +1,14 @@
 #include "process.hpp"
-#include <windows.h>
 #include <psapi.h>
 #include <iostream>
 
 void check(void* p) {
 	Process* proc = reinterpret_cast<Process*> (p);
-		
-	DWORD   lpidProcess[1024];
-	DWORD   cb;
-	DWORD	lpcbNeeded;
+	proc->setAlive(true);
 
-	while(!proc->getStopped()) {
-		bool success =  EnumProcesses(
-			lpidProcess,
-			sizeof(lpidProcess),
-			&lpcbNeeded
-		);
-
-		if (success) {
-			std::unique_lock<std::mutex> ulock(proc->mutex);
-			proc->setAlive(false);
-			uint32_t index = 0;
-			uint32_t procCount = (uint32_t)lpcbNeeded / sizeof(DWORD);
-
-			while (!proc->getStopped() && !proc->getAlive() && index < procCount) {
-				proc->setAlive(lpidProcess[index] == proc->getPID());
-				index++;
-			}
-		}
-		
-		if (!proc->getAlive()) {
-			proc->stopWorker();
-		}
-		else {
-			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-		}
+	if (!WaitForSingleObject(proc->getHandle(), INFINITE)) {
+		proc->setAlive(false);
+		proc->stopWorker();
 	}
 }
 
@@ -43,8 +17,10 @@ Process::Process(uint64_t pid, bool isCritical) {
 	m_isCritical = isCritical;
 	m_isAlive = true;
 	m_stop = false;
+	m_hdl = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 
-	m_worker = new std::thread(check, this);
+	if (m_hdl)
+		m_worker = new std::thread(check, this);
 }
 
 Process::~Process() {
@@ -85,4 +61,8 @@ bool Process::getStopped(void) {
 
 std::thread* Process::getWorker(void) {
 	return m_worker;
+}
+
+HANDLE Process::getHandle(void) {
+	return m_hdl;
 }

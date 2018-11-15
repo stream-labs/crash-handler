@@ -1,5 +1,6 @@
 #include <thread>
 #include <mutex>
+#include <windows.h>
 
 class Process {
 public:
@@ -13,6 +14,7 @@ private:
 	bool m_isAlive;
 	bool m_stop;
 	std::string m_name;
+	HANDLE m_hdl;
 
 public:
 	std::mutex mutex;
@@ -25,6 +27,7 @@ public:
 	void setAlive(bool isAlive);
 	bool getStopped(void);
 	std::thread* getWorker(void);
+	HANDLE getHandle(void);
 
 	void stopWorker();
 };
