@@ -225,21 +225,11 @@ bool NamedSocket_win::read(std::vector<Process*>* processes) {
 
 				if (it != processes->end()) {
 					Process* p = (Process*)(*it);
-					if (!p->getCritical()) {
-						p->stopWorker();
-						if (p->getWorker()->joinable())
-							p->getWorker()->join();
+					p->stopWorker();
+					if (p->getWorker()->joinable())
+						p->getWorker()->join();
 
-						processes->erase(it);
-					}
-					else {
-						for (auto& process : *processes) {
-							process->stopWorker();
-							if (process->getWorker()->joinable())
-								process->getWorker()->join();
-						}
-						processes->clear();
-					}
+					processes->erase(it);
 				}
 				break;
 			}
