@@ -324,7 +324,6 @@ int main(int argc, char** argv)
 	exitApp = true;
 	if (processManager.joinable())
 		processManager.join();
-	terminalCriticalProcesses();
 	close(closeAll);
 
 	if (doRestartApp) {
