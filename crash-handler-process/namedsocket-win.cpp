@@ -135,7 +135,7 @@ NamedSocket_win::~NamedSocket_win() {
 	DisconnectNamedPipe(m_handle);
 }
 
-bool NamedSocket_win::read(std::vector<Process*>* processes) {
+bool NamedSocket_win::read(std::vector<Process*>* processes, std::mutex &mu) {
 	DWORD i, dwWait, cbRet, dwErr;
 	BOOL fSuccess;
 	bool exitApp = false;
@@ -223,6 +223,7 @@ bool NamedSocket_win::read(std::vector<Process*>* processes) {
 					return p->getPID() == pid;
 				});
 
+				mu.lock();
 				if (it != processes->end()) {
 					Process* p = (Process*)(*it);
 					p->stopWorker();
@@ -231,6 +232,7 @@ bool NamedSocket_win::read(std::vector<Process*>* processes) {
 
 					processes->erase(it);
 				}
+				mu.unlock();
 				break;
 			}
 			case EXIT:

@@ -19,6 +19,7 @@ bool exitApp = false;
 bool doRestartApp = false;
 bool monitoring = false;
 bool closeAll = false;
+std::mutex mu;
 
 static thread_local std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 std::string from_utf16_wide_to_utf8(const wchar_t* from, size_t length = -1)
@@ -186,9 +187,10 @@ void terminalCriticalProcesses(void) {
 	}
 }
 
-void checkProcesses(void) {
+void checkProcesses(std::mutex &m) {
 
 	while (!exitApp) {
+		m.lock();
 		bool alive = true;
 		size_t index = 0;
 
@@ -246,6 +248,7 @@ void checkProcesses(void) {
 		else {
 			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 		}
+		m.unlock();
 	}
 	exitApp = true;
 }
@@ -312,11 +315,11 @@ int main(int argc, char** argv)
 	uint64_t currentPID = GetCurrentProcessId();
 	write_pid_file(pid_path, currentPID);
 
-	std::thread processManager(checkProcesses);
+	std::thread processManager(checkProcesses, std::ref(mu));
 
 	std::unique_ptr<NamedSocket> sock = NamedSocket::create();
 
-	while (!exitApp && !sock->read(&processes))
+	while (!exitApp && !sock->read(&processes, std::ref(mu)))
 	{
 
 	}
