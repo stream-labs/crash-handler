@@ -213,7 +213,7 @@ void checkProcesses(std::mutex &m) {
 					"An error occurred which has caused Streamlabs OBS to close. Don't worry! If you were streaming or recording, that is still happening in the background."
 					"\n\nWhenever you're ready, we can relaunch the application, however this will end your stream / recording session.\n\n"
 					"Click the Yes button to keep streaming / recording. \n\n"
-					"Click the No button to stop streaming / recording and restart the application.",
+					"Click the No button to stop streaming / recording.",
 					"An error occurred",
 					MB_YESNO | MB_SYSTEMMODAL
 				);
@@ -231,7 +231,7 @@ void checkProcesses(std::mutex &m) {
 				}
 				case IDNO:
 				{
-					doRestartApp = true;
+					doRestartApp = false;
 					break;
 				}
 				default:
