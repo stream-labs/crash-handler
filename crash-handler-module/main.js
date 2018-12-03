@@ -61,6 +61,11 @@ function startCrashHandler(workingDirectory) {
       stdio: 'ignore'
     });
 
+    subprocess.on('error', (error) => {
+      console.log('Error spawning');
+      console.log('Error : ' + error)
+    });
+
     subprocess.unref();
 }
 
