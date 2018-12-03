@@ -14,6 +14,7 @@ environment:
   FullDistributePath: $(SLBuildDirectory)\$(SLDistributeDirectory)
   DistributionAritfact: $(RuntimeName)-$(RuntimeVersion)-crash-handler
   Arch: x64
+  SignTool: C:\Program Files (x86)\Windows Kits\10\bin\x64\signtool.exe
   StreamlabsPfxSecret:
     secure: iZlMSWnmH5FQDpa+/0SgXIyvCobkElj2y5lu94Uo8VnTWHTeTC1/bpVkzsLreENocomvDB5ywsa3+QdathRp8A==
   StreamlabsSecret:
@@ -29,6 +30,7 @@ build_script:
   - tar cvaf "%DistributionAritfact%.tar.gz" -C "%FullDistributePath%" "crash-handler"
 
 before_deploy:
+  - nuget install secure-file -ExcludeVersion
   - ps: ci\appveyor\sign_binaries.ps1
   - ps: Push-AppveyorArtifact "$env:DistributionAritfact.tar.gz"
 
