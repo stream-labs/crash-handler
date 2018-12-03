@@ -7,6 +7,10 @@ environment:
       RuntimeName: iojs
       RuntimeVersion: v2.0.8
 
+    - RuntimeURL: https://atom.io/download/atom-shell
+      RuntimeName: iojs
+      RuntimeVersion: v3.0.10
+
   NodeVersion: 9
   SLBuildDirectory: build
   SLGenerator: Visual Studio 15 2017 Win64
