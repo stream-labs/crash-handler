@@ -201,8 +201,9 @@ void checkProcesses(std::mutex &m) {
 
 		while (alive && index < processes.size()) {
 			monitoring = true;
-			std::unique_lock<std::mutex> ulock(processes.at(index)->mutex);
+			processes.at(index)->mutex.lock();
 			alive = processes.at(index)->getAlive();
+			processes.at(index)->mutex.unlock();
 			index++;
 		}
 		if (!alive) {
