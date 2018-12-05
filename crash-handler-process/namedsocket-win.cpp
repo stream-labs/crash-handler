@@ -139,7 +139,6 @@ NamedSocket_win::~NamedSocket_win() {
 }
 
 void acknowledgeUnregister(void) {
-	std::cout << "Send ack" << std::endl;
 	std::string buffer = "exit";
 	HANDLE hPipe = CreateFile(
 		TEXT("\\\\.\\pipe\\exit-slobs-crash-handler"),
