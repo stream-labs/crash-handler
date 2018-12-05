@@ -2,6 +2,7 @@
 #include <iostream>
 #include <mutex>
 #include <algorithm>
+#include <vector>
 
 #define CONNECTING_STATE 0 
 #define READING_STATE 1 
@@ -24,6 +25,8 @@ typedef struct
 
 PIPEINST Pipe[INSTANCES];
 HANDLE hEvents[INSTANCES];
+
+std::vector<std::thread*> requests;
 
 BOOL ConnectToNewClient(HANDLE hPipe, LPOVERLAPPED lpo)
 {
@@ -135,10 +138,74 @@ NamedSocket_win::~NamedSocket_win() {
 	DisconnectNamedPipe(m_handle);
 }
 
-bool NamedSocket_win::read(std::vector<Process*>* processes, std::mutex &mu) {
+void acknowledgeUnregister(void) {
+	std::string buffer = "exit";
+	HANDLE hPipe = CreateFile(
+		TEXT("\\\\.\\pipe\\exit-slobs-crash-handler"),
+		GENERIC_READ |
+		GENERIC_WRITE,
+		0,
+		NULL,
+		OPEN_EXISTING,
+		0,
+		NULL);
+
+	if (hPipe == INVALID_HANDLE_VALUE)
+		return;
+
+	if (GetLastError() == ERROR_PIPE_BUSY)
+		return;
+
+	DWORD bytesWritten;
+
+	WriteFile(
+		hPipe,
+		buffer.data(),
+		buffer.size(), &bytesWritten,
+		NULL);
+
+	CloseHandle(hPipe);
+}
+
+void processRequest(std::vector<char> p_buffer, std::vector<Process*>*  processes, std::mutex* mu, bool* exitApp) {
+	Message msg(p_buffer);
+	mu->lock();
+	switch (msg.readBool()) {
+	case REGISTER: {
+		bool isCritical = msg.readBool();
+		uint32_t pid = msg.readUInt32();
+		processes->push_back(new Process(pid, isCritical));
+		break;
+	}
+	case UNREGISTER: {
+		uint32_t pid = msg.readUInt32();
+		auto it = std::find_if(processes->begin(), processes->end(), [&pid](Process* p) {
+			return p->getPID() == pid;
+		});
+
+		if (it != processes->end()) {
+			Process* p = (Process*)(*it);
+			p->stopWorker();
+
+			processes->erase(it);
+
+			if (p->getCritical())
+				*exitApp = true;
+		}
+		acknowledgeUnregister();
+		break;
+	}
+	case EXIT:
+		*exitApp = true;
+	default:
+		break;
+	}
+	mu->unlock();
+}
+
+bool NamedSocket_win::read(std::vector<Process*>* processes, std::mutex* mu, bool* exit) {
 	DWORD i, dwWait, cbRet, dwErr;
 	BOOL fSuccess;
-	bool exitApp = false;
 
 	dwWait = WaitForMultipleObjects(
 		INSTANCES,
@@ -208,38 +275,9 @@ bool NamedSocket_win::read(std::vector<Process*>* processes, std::mutex &mu) {
 		// The read operation completed successfully. 
 		if (Pipe[i].cbRead > 0) {
 			Pipe[i].fPendingIO = FALSE;
-			Message msg(Pipe[i].chRequest);
 
-			switch (msg.readBool()) {
-			case REGISTER: {
-				bool isCritical = msg.readBool();
-				uint32_t pid = msg.readUInt32();
-				processes->push_back(new Process(pid, isCritical));
-				break;
-			}
-			case UNREGISTER: {
-				uint32_t pid = msg.readUInt32();
-				auto it = std::find_if(processes->begin(), processes->end(), [&pid](Process* p) {
-					return p->getPID() == pid;
-				});
-
-				mu.lock();
-				if (it != processes->end()) {
-					Process* p = (Process*)(*it);
-					p->stopWorker();
-					if (p->getWorker()->joinable())
-						p->getWorker()->join();
-
-					processes->erase(it);
-				}
-				mu.unlock();
-				break;
-			}
-			case EXIT:
-				exitApp = true;
-			default:
-				break;
-			}
+			// Start thread here
+			requests.push_back(new std::thread(processRequest, Pipe[i].chRequest, processes, mu, exit));
 		}
 		dwErr = GetLastError();
 		if (!fSuccess && (dwErr == ERROR_IO_PENDING))
@@ -251,7 +289,7 @@ bool NamedSocket_win::read(std::vector<Process*>* processes, std::mutex &mu) {
 		break;
 	}
 	}
-	return exitApp;
+	return false;
 }
 
 bool NamedSocket_win::flush() {

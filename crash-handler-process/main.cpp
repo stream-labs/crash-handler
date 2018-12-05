@@ -15,11 +15,11 @@ VOID DisconnectAndReconnect(DWORD);
 BOOL ConnectToNewClient(HANDLE, LPOVERLAPPED);
 
 std::vector<Process*> processes;
-bool exitApp = false;
+bool* exitApp = nullptr;
 bool doRestartApp = false;
 bool monitoring = false;
 bool closeAll = false;
-std::mutex mu;
+std::mutex* mu = new std::mutex();
 
 static thread_local std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 std::string from_utf16_wide_to_utf8(const wchar_t* from, size_t length = -1)
@@ -187,24 +187,28 @@ void terminalCriticalProcesses(void) {
 	}
 }
 
-void checkProcesses(std::mutex &m) {
+void checkProcesses(std::mutex* m) {
 
-	while (!exitApp) {
-		m.lock();
+	while (!(*exitApp)) {
+		m->lock();
 		bool alive = true;
 		size_t index = 0;
 
 		if (monitoring && processes.size() == 0) {
-			exitApp = true;
+			*exitApp = true;
 			break;
 		}
 
 		while (alive && index < processes.size()) {
 			monitoring = true;
-			std::unique_lock<std::mutex> ulock(processes.at(index)->mutex);
+			processes.at(index)->mutex.lock();
 			alive = processes.at(index)->getAlive();
+			processes.at(index)->mutex.unlock();
 			index++;
 		}
+
+		m->unlock();
+
 		if (!alive) {
 			index--;
 			if (!processes.at(index)->getCritical()) {
@@ -243,14 +247,13 @@ void checkProcesses(std::mutex &m) {
 			else {
 				closeAll = true;
 			}
-			exitApp = true;
+			*exitApp = true;
 		}
 		else {
 			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 		}
-		m.unlock();
 	}
-	exitApp = true;
+	*exitApp = true;
 }
 
 void close(bool doCloseALl) {
@@ -315,16 +318,18 @@ int main(int argc, char** argv)
 	uint64_t currentPID = GetCurrentProcessId();
 	write_pid_file(pid_path, currentPID);
 
-	std::thread processManager(checkProcesses, std::ref(mu));
+	exitApp = new bool(false);
+
+	std::thread processManager(checkProcesses, mu);
 
 	std::unique_ptr<NamedSocket> sock = NamedSocket::create();
 
-	while (!exitApp && !sock->read(&processes, std::ref(mu)))
+	while (!(*exitApp) && !sock->read(&processes, mu, exitApp))
 	{
 
 	}
 
-	exitApp = true;
+	*exitApp = true;
 	if (processManager.joinable())
 		processManager.join();
 	close(closeAll);
