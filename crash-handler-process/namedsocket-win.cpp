@@ -138,6 +138,36 @@ NamedSocket_win::~NamedSocket_win() {
 	DisconnectNamedPipe(m_handle);
 }
 
+void acknowledgeUnregister(void) {
+	std::cout << "Send ack" << std::endl;
+	std::string buffer = "exit";
+	HANDLE hPipe = CreateFile(
+		TEXT("\\\\.\\pipe\\exit-slobs-crash-handler"),
+		GENERIC_READ |
+		GENERIC_WRITE,
+		0,
+		NULL,
+		OPEN_EXISTING,
+		0,
+		NULL);
+
+	if (hPipe == INVALID_HANDLE_VALUE)
+		return;
+
+	if (GetLastError() == ERROR_PIPE_BUSY)
+		return;
+
+	DWORD bytesWritten;
+
+	WriteFile(
+		hPipe,
+		buffer.data(),
+		buffer.size(), &bytesWritten,
+		NULL);
+
+	CloseHandle(hPipe);
+}
+
 void processRequest(std::vector<char> p_buffer, std::vector<Process*>*  processes, std::mutex* mu, bool* exitApp) {
 	Message msg(p_buffer);
 	mu->lock();
@@ -157,14 +187,13 @@ void processRequest(std::vector<char> p_buffer, std::vector<Process*>*  processe
 		if (it != processes->end()) {
 			Process* p = (Process*)(*it);
 			p->stopWorker();
-			if (p->getWorker()->joinable())
-				p->getWorker()->join();
 
 			processes->erase(it);
 
 			if (p->getCritical())
 				*exitApp = true;
 		}
+		acknowledgeUnregister();
 		break;
 	}
 	case EXIT:

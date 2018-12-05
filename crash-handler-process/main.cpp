@@ -206,6 +206,9 @@ void checkProcesses(std::mutex* m) {
 			processes.at(index)->mutex.unlock();
 			index++;
 		}
+
+		m->unlock();
+
 		if (!alive) {
 			index--;
 			if (!processes.at(index)->getCritical()) {
@@ -249,7 +252,6 @@ void checkProcesses(std::mutex* m) {
 		else {
 			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 		}
-		m->unlock();
 	}
 	*exitApp = true;
 }
