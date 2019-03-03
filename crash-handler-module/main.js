@@ -57,14 +57,18 @@ function startCrashHandler(workingDirectory) {
 
     const subprocess = spawn(processPath +
       '\\crash-handler-process.exe', [workingDirectory], {
-      detached: true,
-      stdio: 'ignore'
+      detached: true
     });
 
-    subprocess.on('error', (error) => {
-      console.log('Error spawning');
-      console.log('Error : ' + error)
+    const exit = new Promise(resolve => {
+      subprocess.on('exit', resolve);
     });
+
+    const error = new Promise(resolve => {
+      subprocess.on('error', resolve);
+    });
+
+    await Promise.race([error, exit]);
 
     subprocess.unref();
 }
