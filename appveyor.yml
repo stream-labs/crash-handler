@@ -29,8 +29,6 @@ build_script:
   - cmake --build %SLBuildDirectory% --target install --config RelWithDebInfo
 
 before_deploy:
-  - nuget install secure-file -ExcludeVersion
-  - ps: ci\appveyor\sign_binaries.ps1
   - tar cvaf "%DistributionAritfact%.tar.gz" -C "%FullDistributePath%" "crash-handler"
   - ps: Push-AppveyorArtifact "$env:DistributionAritfact.tar.gz"
 
