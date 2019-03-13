@@ -211,7 +211,12 @@ void checkProcesses(std::mutex* m) {
 
 		if (!alive) {
 			index--;
-			if (!processes.at(index)->getCritical()) {
+			bool criticalProcessAlive = false;
+			for (size_t i = 0; i < processes.size(); i++) {
+				if (processes.at(i)->getCritical())
+					criticalProcessAlive = processes.at(i)->getAlive();
+			}
+			if (!processes.at(index)->getCritical() && criticalProcessAlive) {
 				int code = MessageBox(
 					NULL,
 					"An error occurred which has caused Streamlabs OBS to close. Don't worry! If you were streaming or recording, that is still happening in the background."
