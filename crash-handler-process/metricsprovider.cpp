@@ -150,8 +150,10 @@ MetricsProvider::~MetricsProvider()
 		m_PollingThread.join();
 	}
 
-	CloseHandle(m_Pipe);
-	MetricsFileClose();
+	if (m_PipeActive)
+	{
+		CloseHandle(m_Pipe);
+	}
 }
 
 bool MetricsProvider::Initialize(std::string name)
@@ -171,9 +173,27 @@ bool MetricsProvider::Initialize(std::string name)
 		return false;
 	}
 
+	m_PipeActive = true;
 	InitializeMetricsFile();
 
 	return true;
+}
+
+void MetricsProvider::Shutdown()
+{
+	m_StopPolling = true;
+	if (m_PollingThread.joinable())
+	{
+		m_PollingThread.join();
+	}
+
+	if (m_PipeActive)
+	{
+		m_PipeActive = false;
+		CloseHandle(m_Pipe);
+	}
+
+	MetricsFileClose();
 }
 
 bool MetricsProvider::ConnectToClient()
@@ -193,24 +213,55 @@ void MetricsProvider::StartPollingEvent()
 	{
 		while (!m_StopPolling)
 		{
-			static const int BufferSize = 128;
-			char buffer[BufferSize];
+			static const int BufferSize = sizeof(MetricsMessage);
+			MetricsMessage message;
 			DWORD numBytesRead = 0;
 			BOOL result = ReadFile(
 				m_Pipe,
-				buffer, // the data from the pipe will be put here
-				(BufferSize - 1) * sizeof(char), // number of bytes allocated
+				&message, // the data from the pipe will be put here
+				BufferSize, // number of bytes allocated
 				&numBytesRead, // this will store number of bytes actually read
 				NULL // not using overlapped IO
 			);
 
-			if (result)
+			if (!result)
+				continue;
+
+			if (message.type == MessageType::Status)
 			{
 				// Write to the file
-				MetricsFileSetStatus(std::string(buffer, numBytesRead));
+				MetricsFileSetStatus(std::string(message.param1));
+			}
+			else if (message.type == MessageType::Shutdown)
+			{
+				m_ServerExitedSuccessfully = true;
+				m_StopPolling = true;
+			}
+			else if (message.type == MessageType::Pid)
+			{
+				m_ServerPid = *reinterpret_cast<DWORD*>(message.param1);
 			}
 		}
 	});
+}
+
+bool MetricsProvider::ServerIsActive()
+{
+	auto IsProcessRunning = [](DWORD pid)
+	{
+		HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, pid);
+		DWORD ret = WaitForSingleObject(process, 0);
+		CloseHandle(process);
+		return ret == WAIT_TIMEOUT;
+	};
+
+	// If we can't check by the server pid, better set that it exited
+	return m_ServerPid != 0 && IsProcessRunning(m_ServerPid);
+}
+
+bool MetricsProvider::ServerExitedSuccessfully()
+{
+	return m_ServerExitedSuccessfully;
 }
 
 void MetricsProvider::InitializeMetricsFile()
@@ -233,6 +284,11 @@ void MetricsProvider::InitializeMetricsFile()
 		if (metrics_file_read.is_open()) {
 			std::string metrics_string;
 			getline(metrics_file_read, metrics_string);
+
+			// Check if the string is empty, in that case SLOBS crashed before initializing
+			if (metrics_string.length() == 0) {
+				metrics_string = std::string("generic-idle");
+			}
 
 			if (metrics_string != "shutdown") {
 				curl_wrapper curl(

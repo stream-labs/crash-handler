@@ -354,6 +354,19 @@ int main(int argc, char** argv)
 	if (doRestartApp) {
 		restartApp(path);
 	}
+
+	// Wait until the server process dies or the metrics provider signals that we can shutdown
+	while (metricsServer.ServerIsActive() && !metricsServer.ServerExitedSuccessfully())
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+	}
+
+	// Only perform the shutdown for the metrics server if it exited successfully
+	if (metricsServer.ServerExitedSuccessfully())
+	{
+		metricsServer.Shutdown();
+	}
+
 	return 0;
 }
 
