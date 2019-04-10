@@ -4,7 +4,9 @@
 #include <algorithm>
 #include <vector>
 #include "namedsocket-win.hpp"
+#include "metricsprovider.hpp"
 
+#include <queue>
 #include <sstream>
 #include <fstream>
 #include <codecvt>
@@ -327,6 +329,14 @@ int main(int argc, char** argv)
 
 	std::thread processManager(checkProcesses, mu);
 
+	MetricsProvider metricsServer;
+	std::thread metricsPipe([&]()
+	{
+		metricsServer.Initialize("\\\\.\\pipe\\my_pipe");
+		metricsServer.ConnectToClient();
+		metricsServer.StartPollingEvent();
+	});
+
 	std::unique_ptr<NamedSocket> sock = NamedSocket::create();
 
 	while (!(*exitApp) && !sock->read(&processes, mu, exitApp))
@@ -337,6 +347,8 @@ int main(int argc, char** argv)
 	*exitApp = true;
 	if (processManager.joinable())
 		processManager.join();
+	if (metricsPipe.joinable())
+		metricsPipe.join();
 	close(closeAll);
 
 	if (doRestartApp) {
