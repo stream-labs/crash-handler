@@ -5,7 +5,6 @@
 #include <vector>
 #include "namedsocket-win.hpp"
 #include "metricsprovider.hpp"
-#include "crashpadprovider.hpp"
 
 #include <queue>
 #include <sstream>
@@ -318,9 +317,6 @@ int main(int argc, char** argv)
 	std::string path;
 	if (argc == 1)
 		path = argv[0];
-
-    CrashpadProvider crashpad;
-    crashpad.Initialize("");
 
 	std::string pid_path(get_temp_directory());
 	pid_path.append("crash-handler.pid");
