@@ -144,16 +144,25 @@ private:
 
 MetricsProvider::~MetricsProvider()
 {
-	m_StopPolling = true;
-	if (m_PollingThread.joinable())
-	{
-		m_PollingThread.join();
-	}
+    m_StopPolling = true;
+    if (m_PollingThread.joinable())
+    {
+        m_PollingThread.join();
+    }
 
-	if (m_PipeActive)
-	{
-		CloseHandle(m_Pipe);
-	}
+    if (m_PipeActive)
+    {
+        m_PipeActive = false;
+        CloseHandle(m_Pipe);
+    }
+
+    // Check if we should report the last status
+    if (m_LastStatus != "shutdown")
+    {
+        SendMetricsReport(m_LastStatus);
+    }
+
+    MetricsFileClose();
 }
 
 bool MetricsProvider::Initialize(std::string name)
@@ -173,7 +182,25 @@ bool MetricsProvider::Initialize(std::string name)
 		return false;
 	}
 
+    // Determine the metrics file path
+    {
+        HRESULT hResult;
+        PWSTR   ppszPath;
+
+        hResult = SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, NULL, &ppszPath);
+
+        std::wstring appdata_path;
+
+        appdata_path.assign(ppszPath);
+        appdata_path.append(L"\\obs-studio-node-server");
+
+        CoTaskMemFree(ppszPath);
+
+        m_MetricsFilePath = appdata_path + L"\\" + std::wstring(CrashMetricsFilename);
+    }
+
 	m_PipeActive = true;
+
 	InitializeMetricsFile();
 
 	return true;
@@ -181,19 +208,7 @@ bool MetricsProvider::Initialize(std::string name)
 
 void MetricsProvider::Shutdown()
 {
-	m_StopPolling = true;
-	if (m_PollingThread.joinable())
-	{
-		m_PollingThread.join();
-	}
-
-	if (m_PipeActive)
-	{
-		m_PipeActive = false;
-		CloseHandle(m_Pipe);
-	}
-
-	MetricsFileClose();
+    MetricsFileClose();
 }
 
 bool MetricsProvider::ConnectToClient()
@@ -209,7 +224,7 @@ bool MetricsProvider::ConnectToClient()
 
 void MetricsProvider::StartPollingEvent()
 {
-	m_PollingThread = std::thread([=]()
+	m_PollingThread = std::thread([&]()
 	{
 		while (!m_StopPolling)
 		{
@@ -241,6 +256,10 @@ void MetricsProvider::StartPollingEvent()
 			{
 				m_ServerPid = *reinterpret_cast<DWORD*>(message.param1);
 			}
+            else if (message.type == MessageType::Tag)
+            {
+                m_ReportTags.insert({std::string(message.param1), std::string(message.param2)});
+            }
 		}
 	});
 }
@@ -266,75 +285,86 @@ bool MetricsProvider::ServerExitedSuccessfully()
 
 void MetricsProvider::InitializeMetricsFile()
 {
-	HRESULT hResult;
-	PWSTR   ppszPath;
-
-	hResult = SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, NULL, &ppszPath);
-
-	std::wstring appdata_path; 
-
-	appdata_path.assign(ppszPath);
-	appdata_path.append(L"\\obs-studio-node-server");
-
-	CoTaskMemFree(ppszPath);
-
 	try {
-		std::wstring file_path = appdata_path + L"\\" + std::wstring(CrashMetricsFilename);
-		auto         metrics_file_read = std::ifstream(file_path);
-		if (metrics_file_read.is_open()) {
-			std::string metrics_string;
-			getline(metrics_file_read, metrics_string);
+        std::string metrics_string = GetMetricsFileStatus();
 
-			// Check if the string is empty, in that case SLOBS crashed before initializing
-			if (metrics_string.length() == 0) {
-				metrics_string = std::string("generic-idle");
-			}
+        // Check if we should send a report
+        if (metrics_string != "shutdown") {
+            SendMetricsReport(metrics_string);
+        }
 
-			if (metrics_string != "shutdown") {
-				curl_wrapper curl(
-					"https://7376a60665cd40bebbd59d6bf8363172:13804c42a5a84504bb5475050f6392e0@sentry.io/1406061");
-
-				nlohmann::json j;
-				nlohmann::json tags;
-				char        name[UNLEN + 1];
-				DWORD          name_len = UNLEN + 1;
-				using convert_typeX     = std::codecvt_utf8<wchar_t>;
-				std::wstring_convert<convert_typeX, wchar_t> converterX;
-
-				j["message"] = metrics_string;
-				j["level"] = "info";
-
-				// User name
-				if (GetUserName(name, &name_len) != 0) {
-					tags["user.name"] = std::string(name);
-				}
-
-				// Computer name
-				name_len = UNLEN + 1;
-				if (GetComputerName(name, &name_len) != 0) {
-					tags["computer.name"] = std::string(name);
-				}
-
-				// Version
-				tags["version"] = "test";
-
-				j["tags"] = tags;
-
-				curl.post(j, true).data;
-			}
-
-			metrics_file_read.close();
-		}
-
-		m_MetricsFile = std::ofstream(file_path, std::ios::trunc | std::ios::ate);
+		m_MetricsFile = std::ofstream(m_MetricsFilePath, std::ios::trunc | std::ios::ate);
 	}
 	catch (...) {
 	}
 }
 
+std::string MetricsProvider::GetMetricsFileStatus()
+{
+    std::string metrics_string;
+
+    try
+    {
+        auto metrics_file_read = std::ifstream(m_MetricsFilePath);
+        if (metrics_file_read.is_open()) {
+
+            getline(metrics_file_read, metrics_string);
+
+            // Check if the string is empty, in that case SLOBS crashed before initializing
+            if (metrics_string.length() == 0) {
+                metrics_string = ("generic-idle");
+            }
+
+            metrics_file_read.close();
+        }
+    }
+    catch (...) {
+    }
+
+    return metrics_string;
+}
+
+void MetricsProvider::SendMetricsReport(std::string status)
+{
+    curl_wrapper curl(
+        "https://7376a60665cd40bebbd59d6bf8363172:13804c42a5a84504bb5475050f6392e0@sentry.io/1406061");
+
+    nlohmann::json j;
+    nlohmann::json tags;
+    char        name[UNLEN + 1];
+    DWORD          name_len = UNLEN + 1;
+    using convert_typeX     = std::codecvt_utf8<wchar_t>;
+    std::wstring_convert<convert_typeX, wchar_t> converterX;
+
+    j["message"] = status;
+    j["level"] = "info";
+
+    // User name
+    if (GetUserName(name, &name_len) != 0) {
+        tags["user.name"] = std::string(name);
+    }
+
+    // Computer name
+    name_len = UNLEN + 1;
+    if (GetComputerName(name, &name_len) != 0) {
+        tags["computer.name"] = std::string(name);
+    }
+    
+    // For each tag
+    for (auto& tag : m_ReportTags)
+    {
+        tags[tag.first] = tag.second;
+    }
+
+    j["tags"] = tags;
+
+    curl.post(j, true).data;
+}
+
 void MetricsProvider::MetricsFileSetStatus(std::string status)
 {
 	if (m_MetricsFile.is_open()) {
+        m_LastStatus = status;
 		m_MetricsFile.seekp(0, std::ios::beg);
 		m_MetricsFile << status << std::endl;
 	}
@@ -343,7 +373,8 @@ void MetricsProvider::MetricsFileSetStatus(std::string status)
 void MetricsProvider::MetricsFileClose()
 {
 	if (m_MetricsFile.is_open()) {
-		MetricsFileSetStatus("shutdown");
+        m_LastStatus = "shutdown";
+		MetricsFileSetStatus(m_LastStatus);
 		m_MetricsFile.close();
 	}
 }

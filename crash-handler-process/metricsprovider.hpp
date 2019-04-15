@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <fstream>
 #include <iostream>
+#include <map>
 
 class MetricsProvider
 {
@@ -41,6 +42,8 @@ private:
 	void InitializeMetricsFile();
 	void MetricsFileSetStatus(std::string status);
 	void MetricsFileClose();
+    void SendMetricsReport(std::string status);
+    std::string GetMetricsFileStatus();
 
 private:
 
@@ -51,4 +54,7 @@ private:
 	std::thread   m_PollingThread;
 	std::ofstream m_MetricsFile;
 	DWORD         m_ServerPid = 0;
+    std::wstring  m_MetricsFilePath;
+    std::string   m_LastStatus;
+    std::map<std::string, std::string> m_ReportTags;
 };
