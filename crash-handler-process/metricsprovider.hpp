@@ -28,6 +28,7 @@ class MetricsProvider
 
     public:
 
+    MetricsProvider();
     ~MetricsProvider();
 
     bool Initialize(std::string name);

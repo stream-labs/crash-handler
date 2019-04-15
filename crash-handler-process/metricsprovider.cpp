@@ -142,6 +142,12 @@ public:
     std::string        m_store_url;
 };
 
+MetricsProvider::MetricsProvider()
+{
+    // Start with a pre-init status (if SLOBS crash we know that it happened before receiving the first message)
+    m_LastStatus = "pre init";
+}
+
 MetricsProvider::~MetricsProvider()
 {
     m_StopPolling = true;
@@ -244,6 +250,8 @@ bool MetricsProvider::ConnectToClient()
 
     return true;
 }
+
+
 
 void MetricsProvider::StartPollingEvent()
 {
