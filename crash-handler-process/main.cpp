@@ -332,7 +332,7 @@ int main(int argc, char** argv)
 	MetricsProvider metricsServer;
 	std::thread metricsPipe([&]()
 	{
-		metricsServer.Initialize("\\\\.\\pipe\\my_pipe");
+		metricsServer.Initialize("\\\\.\\pipe\\metrics_pipe");
 		metricsServer.ConnectToClient();
 		metricsServer.StartPollingEvent();
 	});
