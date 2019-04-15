@@ -327,7 +327,7 @@ std::string MetricsProvider::GetMetricsFileStatus()
 void MetricsProvider::SendMetricsReport(std::string status)
 {
     curl_wrapper curl(
-        "https://7376a60665cd40bebbd59d6bf8363172:13804c42a5a84504bb5475050f6392e0@sentry.io/1406061");
+        "https://b1db4ea934a649bca50701198f29b501:22e46ee0fbe54b53ba8571a4c10e31c0@sentry.io/1439562");
 
     nlohmann::json j;
     nlohmann::json tags;
