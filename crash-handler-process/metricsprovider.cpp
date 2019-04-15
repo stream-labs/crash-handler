@@ -13,133 +13,133 @@
 class curl_wrapper
 {
 public:
-	class response
-	{
-	public:
-		response(std::string d, int sc) : data(std::move(d)), status_code(sc) {}
+    class response
+    {
+        public:
+        response(std::string d, int sc) : data(std::move(d)), status_code(sc) {}
 
-		std::string data;
-		int         status_code;
+        std::string data;
+        int         status_code;
 
-		nlohmann::json json()
-		{
-			return nlohmann::json::parse(data);
-		}
-	};
+        nlohmann::json json()
+        {
+            return nlohmann::json::parse(data);
+        }
+    };
 
-public:
-	curl_wrapper(std::string dns) : m_curl(curl_easy_init())
-	{
-		assert(m_curl);
+    public:
+    curl_wrapper(std::string dns) : m_curl(curl_easy_init())
+    {
+        assert(m_curl);
 
-		setup_sentry_dns(dns);
+        setup_sentry_dns(dns);
 
-		//set_option(CURLOPT_VERBOSE, 1L);
-		set_option(CURLOPT_SSL_VERIFYPEER, 0L);
-	}
+        //set_option(CURLOPT_VERBOSE, 1L);
+        set_option(CURLOPT_SSL_VERIFYPEER, 0L);
+    }
 
-	~curl_wrapper()
-	{
-		curl_slist_free_all(m_headers);
-		curl_easy_cleanup(m_curl);
-	}
+    ~curl_wrapper()
+    {
+        curl_slist_free_all(m_headers);
+        curl_easy_cleanup(m_curl);
+    }
 
-	void config_secure_header()
-	{
-		// add security header
-		std::string security_header = "X-Sentry-Auth: Sentry sentry_version=5,sentry_client=crow/";
-		security_header += std::string("6.8.9") + ",sentry_timestamp=";
-		security_header += std::to_string(34546456);
-		security_header += ",sentry_key=" + m_public_key;
-		security_header += ",sentry_secret=" + m_secret_key;
-		set_header(security_header.c_str());
-	}
+    void config_secure_header()
+    {
+        // add security header
+        std::string security_header = "X-Sentry-Auth: Sentry sentry_version=5,sentry_client=crow/";
+        security_header += std::string("6.8.9") + ",sentry_timestamp=";
+        security_header += std::to_string(34546456);
+        security_header += ",sentry_key=" + m_public_key;
+        security_header += ",sentry_secret=" + m_secret_key;
+        set_header(security_header.c_str());
+    }
 
-	response post(const nlohmann::json& payload, const bool compress = false)
-	{
-		config_secure_header();
+    response post(const nlohmann::json& payload, const bool compress = false)
+    {
+        config_secure_header();
 
-		set_header("Content-Type: application/json");
+        set_header("Content-Type: application/json");
 
-		return post(m_store_url, payload.dump(), compress);
-	}
+        return post(m_store_url, payload.dump(), compress);
+    }
 
-private:
-	response post(const std::string& url, const std::string& data, const bool compress = false)
-	{
-		std::string c_data;
+    private:
+    response post(const std::string& url, const std::string& data, const bool compress = false)
+    {
+        std::string c_data;
 
-		set_option(CURLOPT_POSTFIELDS, data.c_str());
-		set_option(CURLOPT_POSTFIELDSIZE, data.size());
+        set_option(CURLOPT_POSTFIELDS, data.c_str());
+        set_option(CURLOPT_POSTFIELDSIZE, data.size());
 
-		set_option(CURLOPT_URL, url.c_str());
-		set_option(CURLOPT_POST, 1);
-		set_option(CURLOPT_WRITEFUNCTION, &write_callback);
-		set_option(CURLOPT_WRITEDATA, &string_buffer);
+        set_option(CURLOPT_URL, url.c_str());
+        set_option(CURLOPT_POST, 1);
+        set_option(CURLOPT_WRITEFUNCTION, &write_callback);
+        set_option(CURLOPT_WRITEDATA, &string_buffer);
 
-		auto res = curl_easy_perform(m_curl);
+        auto res = curl_easy_perform(m_curl);
 
-		if (res != CURLE_OK) {
-			std::string error_msg = std::string("curl_easy_perform() failed: ") + curl_easy_strerror(res);
-			throw std::runtime_error(error_msg);
-		}
+        if (res != CURLE_OK) {
+            std::string error_msg = std::string("curl_easy_perform() failed: ") + curl_easy_strerror(res);
+        throw std::runtime_error(error_msg);
+        }
 
-		int status_code;
-		curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &status_code);
+        int status_code;
+        curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &status_code);
 
-		return { std::move(string_buffer), status_code };
-	}
+        return { std::move(string_buffer), status_code };
+    }
 
-	template<typename T>
-	CURLcode set_option(CURLoption option, T parameter)
-	{
-		return curl_easy_setopt(m_curl, option, parameter);
-	}
+    template<typename T>
+    CURLcode set_option(CURLoption option, T parameter)
+    {
+        return curl_easy_setopt(m_curl, option, parameter);
+    }
 
-	void set_header(const char* header)
-	{
-		m_headers = curl_slist_append(m_headers, header);
-		set_option(CURLOPT_HTTPHEADER, m_headers);
-	}
+    void set_header(const char* header)
+    {
+        m_headers = curl_slist_append(m_headers, header);
+        set_option(CURLOPT_HTTPHEADER, m_headers);
+    }
 
-private:
-	static size_t write_callback(char* ptr, size_t size, size_t nmemb, void* userdata)
-	{
-		assert(userdata);
-		((std::string*)userdata)->append(ptr, size * nmemb);
-		return size * nmemb;
-	}
+    private:
+    static size_t write_callback(char* ptr, size_t size, size_t nmemb, void* userdata)
+    {
+        assert(userdata);
+        ((std::string*)userdata)->append(ptr, size * nmemb);
+        return size * nmemb;
+    }
 
-	void setup_sentry_dns(const std::string& dsn)
-	{
-		if (!dsn.empty()) {
-			const std::regex dsn_regex("(http[s]?)://([^:]+):([^@]+)@([^/]+)/([0-9]+)");
-			std::smatch      pieces_match;
+    void setup_sentry_dns(const std::string& dsn)
+    {
+        if (!dsn.empty()) {
+        const std::regex dsn_regex("(http[s]?)://([^:]+):([^@]+)@([^/]+)/([0-9]+)");
+        std::smatch      pieces_match;
 
-			if (std::regex_match(dsn, pieces_match, dsn_regex) and pieces_match.size() == 6) {
-				const auto scheme = pieces_match.str(1);
-				m_public_key = pieces_match.str(2);
-				m_secret_key = pieces_match.str(3);
-				const auto host = pieces_match.str(4);
-				const auto project_id = pieces_match.str(5);
-				m_store_url = scheme + "://" + host + "/api/" + project_id + "/store/";
-			}
-			else {
-				throw std::invalid_argument("DNS " + dsn + " is invalid");
-			}
-		}
-		else {
-			throw std::invalid_argument("DNS is empty");
-		}
-	}
+            if (std::regex_match(dsn, pieces_match, dsn_regex) and pieces_match.size() == 6) {
+            const auto scheme = pieces_match.str(1);
+            m_public_key = pieces_match.str(2);
+            m_secret_key = pieces_match.str(3);
+            const auto host = pieces_match.str(4);
+            const auto project_id = pieces_match.str(5);
+            m_store_url = scheme + "://" + host + "/api/" + project_id + "/store/";
+            }
+            else {
+            throw std::invalid_argument("DNS " + dsn + " is invalid");
+            }
+        }
+        else {
+        throw std::invalid_argument("DNS is empty");
+        }
+    }
 
-private:
-	CURL* const        m_curl;
-	struct curl_slist* m_headers = nullptr;
-	std::string        string_buffer;
-	std::string        m_public_key;
-	std::string        m_secret_key;
-	std::string        m_store_url;
+    private:
+    CURL* const        m_curl;
+    struct curl_slist* m_headers = nullptr;
+    std::string        string_buffer;
+    std::string        m_public_key;
+    std::string        m_secret_key;
+    std::string        m_store_url;
 };
 
 MetricsProvider::~MetricsProvider()
@@ -167,20 +167,20 @@ MetricsProvider::~MetricsProvider()
 
 bool MetricsProvider::Initialize(std::string name)
 {
-	m_Pipe = CreateNamedPipe(
-		name.c_str(), // name of the pipe // "\\\\.\\pipe\\my_pipe"
-		PIPE_ACCESS_INBOUND, // 1-way pipe -- receive only
-		PIPE_TYPE_BYTE, // send data as a byte stream
-		1, // only allow 1 instance of this pipe
-		0, // no outbound buffer
-		0, // no inbound buffer
-		0, // use default wait time
-		NULL // use default security attributes
-	);
+    m_Pipe = CreateNamedPipe(
+        name.c_str(), // name of the pipe // "\\\\.\\pipe\\my_pipe"
+        PIPE_ACCESS_INBOUND, // 1-way pipe -- receive only
+        PIPE_TYPE_BYTE, // send data as a byte stream
+        1, // only allow 1 instance of this pipe
+        0, // no outbound buffer
+        0, // no inbound buffer
+        0, // use default wait time
+        NULL // use default security attributes
+    );
 
-	if (m_Pipe == NULL || m_Pipe == INVALID_HANDLE_VALUE) {
-		return false;
-	}
+    if (m_Pipe == NULL || m_Pipe == INVALID_HANDLE_VALUE) {
+        return false;
+    }
 
     // Determine the metrics file path
     {
@@ -199,11 +199,11 @@ bool MetricsProvider::Initialize(std::string name)
         m_MetricsFilePath = appdata_path + L"\\" + std::wstring(CrashMetricsFilename);
     }
 
-	m_PipeActive = true;
+    m_PipeActive = true;
 
-	InitializeMetricsFile();
+    InitializeMetricsFile();
 
-	return true;
+    return true;
 }
 
 void MetricsProvider::Shutdown()
@@ -213,79 +213,79 @@ void MetricsProvider::Shutdown()
 
 bool MetricsProvider::ConnectToClient()
 {
-	BOOL result = ConnectNamedPipe(m_Pipe, NULL);
-	if (!result) {
-		CloseHandle(m_Pipe); // close the pipe
-		return false;
-	}
+    BOOL result = ConnectNamedPipe(m_Pipe, NULL);
+    if (!result) {
+        CloseHandle(m_Pipe); // close the pipe
+        return false;
+    }
 
-	return true;
+    return true;
 }
 
 void MetricsProvider::StartPollingEvent()
 {
-	m_PollingThread = std::thread([&]()
-	{
-		while (!m_StopPolling)
-		{
-			static const int BufferSize = sizeof(MetricsMessage);
-			MetricsMessage message;
-			DWORD numBytesRead = 0;
-			BOOL result = ReadFile(
-				m_Pipe,
-				&message, // the data from the pipe will be put here
-				BufferSize, // number of bytes allocated
-				&numBytesRead, // this will store number of bytes actually read
-				NULL // not using overlapped IO
-			);
+    m_PollingThread = std::thread([&]()
+    {
+        while (!m_StopPolling)
+        {
+            static const int BufferSize = sizeof(MetricsMessage);
+            MetricsMessage message;
+            DWORD numBytesRead = 0;
+            BOOL result = ReadFile(
+                m_Pipe,
+                &message, // the data from the pipe will be put here
+                BufferSize, // number of bytes allocated
+                &numBytesRead, // this will store number of bytes actually read
+                NULL // not using overlapped IO
+            );
 
-			if (!result)
-				continue;
+            if (!result)
+                continue;
 
-			if (message.type == MessageType::Status)
-			{
-				// Write to the file
-				MetricsFileSetStatus(std::string(message.param1));
-			}
-			else if (message.type == MessageType::Shutdown)
-			{
-				m_ServerExitedSuccessfully = true;
-				m_StopPolling = true;
-			}
-			else if (message.type == MessageType::Pid)
-			{
-				m_ServerPid = *reinterpret_cast<DWORD*>(message.param1);
-			}
+            if (message.type == MessageType::Status)
+            {
+                // Write to the file
+                MetricsFileSetStatus(std::string(message.param1));
+            }
+            else if (message.type == MessageType::Shutdown)
+            {
+                m_ServerExitedSuccessfully = true;
+                m_StopPolling = true;
+            }
+            else if (message.type == MessageType::Pid)
+            {
+                m_ServerPid = *reinterpret_cast<DWORD*>(message.param1);
+            }
             else if (message.type == MessageType::Tag)
             {
                 m_ReportTags.insert({std::string(message.param1), std::string(message.param2)});
             }
-		}
-	});
+        }
+    });
 }
 
 bool MetricsProvider::ServerIsActive()
 {
-	auto IsProcessRunning = [](DWORD pid)
-	{
-		HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, pid);
-		DWORD ret = WaitForSingleObject(process, 0);
-		CloseHandle(process);
-		return ret == WAIT_TIMEOUT;
-	};
+    auto IsProcessRunning = [](DWORD pid)
+    {
+        HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, pid);
+        DWORD ret = WaitForSingleObject(process, 0);
+        CloseHandle(process);
+        return ret == WAIT_TIMEOUT;
+    };
 
-	// If we can't check by the server pid, better set that it exited
-	return m_ServerPid != 0 && IsProcessRunning(m_ServerPid);
+    // If we can't check by the server pid, better set that it exited
+    return m_ServerPid != 0 && IsProcessRunning(m_ServerPid);
 }
 
 bool MetricsProvider::ServerExitedSuccessfully()
 {
-	return m_ServerExitedSuccessfully;
+    return m_ServerExitedSuccessfully;
 }
 
 void MetricsProvider::InitializeMetricsFile()
 {
-	try {
+    try {
         std::string metrics_string = GetMetricsFileStatus();
 
         // Check if we should send a report
@@ -293,10 +293,10 @@ void MetricsProvider::InitializeMetricsFile()
             SendMetricsReport(metrics_string);
         }
 
-		m_MetricsFile = std::ofstream(m_MetricsFilePath, std::ios::trunc | std::ios::ate);
-	}
-	catch (...) {
-	}
+        m_MetricsFile = std::ofstream(m_MetricsFilePath, std::ios::trunc | std::ios::ate);
+    }
+    catch (...) {
+    }
 }
 
 std::string MetricsProvider::GetMetricsFileStatus()
@@ -363,18 +363,18 @@ void MetricsProvider::SendMetricsReport(std::string status)
 
 void MetricsProvider::MetricsFileSetStatus(std::string status)
 {
-	if (m_MetricsFile.is_open()) {
+    if (m_MetricsFile.is_open()) {
         m_LastStatus = status;
-		m_MetricsFile.seekp(0, std::ios::beg);
-		m_MetricsFile << status << std::endl;
-	}
+        m_MetricsFile.seekp(0, std::ios::beg);
+        m_MetricsFile << status << std::endl;
+    }
 }
 
 void MetricsProvider::MetricsFileClose()
 {
-	if (m_MetricsFile.is_open()) {
+    if (m_MetricsFile.is_open()) {
         m_LastStatus = "shutdown";
-		MetricsFileSetStatus(m_LastStatus);
-		m_MetricsFile.close();
-	}
+        MetricsFileSetStatus(m_LastStatus);
+        m_MetricsFile.close();
+    }
 }
