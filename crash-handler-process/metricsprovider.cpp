@@ -159,6 +159,11 @@ MetricsProvider::~MetricsProvider()
     // Check if we should report the last status
     if (m_LastStatus != "shutdown")
     {
+        if (m_LastStatus.length() == 0)
+        {
+            m_LastStatus = IdleStatus;
+        }
+
         SendMetricsReport(m_LastStatus);
     }
 
@@ -211,13 +216,31 @@ void MetricsProvider::Shutdown()
     MetricsFileClose();
 }
 
+DWORD WINAPI ConnectToClientPipe(LPVOID lpParam)
+{
+    HANDLE pipe = *static_cast<HANDLE*>(lpParam);
+
+    BOOL result = ConnectNamedPipe(pipe, NULL);
+    if (!result) {
+        return 1;
+    }
+
+    return 0;
+}
+
 bool MetricsProvider::ConnectToClient()
 {
-    BOOL result = ConnectNamedPipe(m_Pipe, NULL);
-    if (!result) {
-        CloseHandle(m_Pipe); // close the pipe
-        return false;
-    }
+    // Necessary to create a windows thread so we can use the CancelSynchronousIo() method in case we need to
+    // exit without waiting for the client connection
+    m_ClientConnectionThread = CreateThread(
+        NULL,
+        0,
+        (LPTHREAD_START_ROUTINE)ConnectToClientPipe,
+        &m_Pipe,
+        0,
+        NULL);
+
+    WaitForMultipleObjects(1, &m_ClientConnectionThread, TRUE, INFINITE);
 
     return true;
 }
@@ -262,6 +285,11 @@ void MetricsProvider::StartPollingEvent()
             }
         }
     });
+}
+
+void MetricsProvider::KillPendingIO()
+{
+    CancelSynchronousIo(m_ClientConnectionThread);
 }
 
 bool MetricsProvider::ServerIsActive()
@@ -312,7 +340,7 @@ std::string MetricsProvider::GetMetricsFileStatus()
 
             // Check if the string is empty, in that case SLOBS crashed before initializing
             if (metrics_string.length() == 0) {
-                metrics_string = ("generic-idle");
+                metrics_string = IdleStatus;
             }
 
             metrics_file_read.close();

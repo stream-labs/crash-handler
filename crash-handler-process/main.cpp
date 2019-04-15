@@ -347,6 +347,8 @@ int main(int argc, char** argv)
 	*exitApp = true;
 	if (processManager.joinable())
 		processManager.join();
+
+    metricsServer.KillPendingIO();
 	if (metricsPipe.joinable())
 		metricsPipe.join();
 	close(closeAll);

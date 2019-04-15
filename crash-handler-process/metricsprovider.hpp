@@ -7,7 +7,8 @@
 
 class MetricsProvider
 {
-    const wchar_t* CrashMetricsFilename = L"backend-metrics.doc";
+    const wchar_t*   CrashMetricsFilename = L"backend-metrics.doc";
+    const char*      IdleStatus = "generic-idle";
     const static int StringSize = 64;
 
     enum class MessageType
@@ -34,6 +35,8 @@ class MetricsProvider
     bool ConnectToClient();
     void StartPollingEvent();
 
+    void KillPendingIO();
+
     bool ServerIsActive();
     bool ServerExitedSuccessfully();
 
@@ -48,6 +51,7 @@ class MetricsProvider
     private:
 
     HANDLE        m_Pipe;
+    HANDLE        m_ClientConnectionThread = nullptr;
     bool		  m_PipeActive = false;
     bool          m_StopPolling = false;
     bool          m_ServerExitedSuccessfully = false;
