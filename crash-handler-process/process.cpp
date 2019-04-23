@@ -7,8 +7,10 @@ void check(void* p) {
 	proc->setAlive(true);
 
 	if (!WaitForSingleObject(proc->getHandle(), INFINITE)) {
+		proc->mutex.lock();
 		proc->setAlive(false);
 		proc->stopWorker();
+		proc->mutex.unlock();
 	}
 }
 
