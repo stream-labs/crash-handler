@@ -8,7 +8,6 @@
 class MetricsProvider
 {
     const wchar_t*   CrashMetricsFilename = L"backend-metrics.doc";
-    const char*      IdleStatus = "generic-idle";
     const static int StringSize = 64;
 
     enum class MessageType
@@ -40,6 +39,9 @@ class MetricsProvider
 
     bool ServerIsActive();
     bool ServerExitedSuccessfully();
+
+    void BlameFrontend();
+    void BlameServer();
 
     private:
 

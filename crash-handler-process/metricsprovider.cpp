@@ -251,8 +251,6 @@ bool MetricsProvider::ConnectToClient()
     return true;
 }
 
-
-
 void MetricsProvider::StartPollingEvent()
 {
     m_PollingThread = std::thread([&]()
@@ -319,6 +317,16 @@ bool MetricsProvider::ServerExitedSuccessfully()
     return m_ServerExitedSuccessfully;
 }
 
+void MetricsProvider::BlameFrontend()
+{
+    MetricsFileSetStatus("Frontend Crash");
+}
+
+void MetricsProvider::BlameServer()
+{
+    MetricsFileSetStatus("Backend Crash");
+}
+
 void MetricsProvider::InitializeMetricsFile()
 {
     try {
@@ -348,7 +356,7 @@ std::string MetricsProvider::GetMetricsFileStatus()
 
             // Check if the string is empty, in that case SLOBS crashed before initializing
             if (metrics_string.length() == 0) {
-                metrics_string = IdleStatus;
+                metrics_string = "Frontend Crash";
             }
 
             metrics_file_read.close();

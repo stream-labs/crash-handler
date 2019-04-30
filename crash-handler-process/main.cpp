@@ -22,6 +22,7 @@ bool doRestartApp = false;
 bool monitoring = false;
 bool closeAll = false;
 std::mutex* mu = new std::mutex();
+MetricsProvider metricsServer;
 
 static thread_local std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 std::string from_utf16_wide_to_utf8(const wchar_t* from, size_t length = -1)
@@ -219,6 +220,10 @@ void checkProcesses(std::mutex* m) {
 					criticalProcessAlive = processes.at(i)->getAlive();
 			}
 			if (!processes.at(index)->getCritical() && criticalProcessAlive) {
+
+                // Metrics
+                metricsServer.BlameFrontend();
+
 				int code = MessageBox(
 					NULL,
 					"An error occurred which has caused Streamlabs OBS to close. Don't worry! If you were streaming or recording, that is still happening in the background."
@@ -252,6 +257,10 @@ void checkProcesses(std::mutex* m) {
 				closeAll = true;
 			}
 			else {
+
+                // Metrics
+                metricsServer.BlameServer();
+
 				closeAll = true;
 			}
 			*exitApp = true;
@@ -329,7 +338,6 @@ int main(int argc, char** argv)
 
 	std::thread processManager(checkProcesses, mu);
 
-	MetricsProvider metricsServer;
 	std::thread metricsPipe([&]()
 	{
 		metricsServer.Initialize("\\\\.\\pipe\\metrics_pipe");
