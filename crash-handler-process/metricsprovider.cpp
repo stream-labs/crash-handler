@@ -403,9 +403,15 @@ void MetricsProvider::SendMetricsReport(std::string status)
 void MetricsProvider::MetricsFileSetStatus(std::string status)
 {
     if (m_MetricsFile.is_open()) {
-        m_LastStatus = status;
-        m_MetricsFile.seekp(0, std::ios::beg);
-        m_MetricsFile << status << std::endl;
+        // Don't do anything if the last status is 'Handled Crash' since this means that the server
+        // crashed but it handled the crash, we should propagate the report as it is to correctly 
+        // address the number of handled crashes
+        if (m_LastStatus != "Handled Crash")
+        {
+            m_LastStatus = status;
+            m_MetricsFile.seekp(0, std::ios::beg);
+            m_MetricsFile << status << std::endl;
+        }
     }
 }
 
