@@ -144,8 +144,8 @@ public:
 
 MetricsProvider::MetricsProvider()
 {
-    // Start with a pre-init status (if SLOBS crash we know that it happened before receiving the first message)
-    m_LastStatus = "pre init";
+    // Start with a Frontend Crash status (if SLOBS crash we know that it happened before receiving the first message)
+    m_LastStatus = "Frontend Crash";
 }
 
 MetricsProvider::~MetricsProvider()
@@ -165,11 +165,6 @@ MetricsProvider::~MetricsProvider()
     // Check if we should report the last status
     if (m_LastStatus != "shutdown")
     {
-        if (m_LastStatus.length() == 0)
-        {
-            m_LastStatus = IdleStatus;
-        }
-
         SendMetricsReport(m_LastStatus);
     }
 
