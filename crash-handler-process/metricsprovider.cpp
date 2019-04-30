@@ -117,19 +117,19 @@ public:
         std::smatch      pieces_match;
 
             if (std::regex_match(dsn, pieces_match, dsn_regex) and pieces_match.size() == 6) {
-            const auto scheme = pieces_match.str(1);
-            m_public_key = pieces_match.str(2);
-            m_secret_key = pieces_match.str(3);
-            const auto host = pieces_match.str(4);
-            const auto project_id = pieces_match.str(5);
-            m_store_url = scheme + "://" + host + "/api/" + project_id + "/store/";
+                const auto scheme = pieces_match.str(1);
+                m_public_key = pieces_match.str(2);
+                m_secret_key = pieces_match.str(3);
+                const auto host = pieces_match.str(4);
+                const auto project_id = pieces_match.str(5);
+                m_store_url = scheme + "://" + host + "/api/" + project_id + "/store/";
             }
             else {
-            throw std::invalid_argument("DNS " + dsn + " is invalid");
+                throw std::invalid_argument("DNS " + dsn + " is invalid");
             }
         }
         else {
-        throw std::invalid_argument("DNS is empty");
+            throw std::invalid_argument("DNS is empty");
         }
     }
 
