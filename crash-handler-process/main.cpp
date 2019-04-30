@@ -10,6 +10,7 @@
 #include <codecvt>
 #include <windows.h>
 #include <psapi.h>
+#include <tlhelp32.h>
 
 VOID DisconnectAndReconnect(DWORD);
 BOOL ConnectToNewClient(HANDLE, LPOVERLAPPED);
@@ -109,9 +110,46 @@ std::fstream open_file(std::string& file_path, std::fstream::openmode mode)
 {
 	return std::fstream(from_utf8_to_utf16_wide(file_path.c_str()), mode);
 }
+
+BOOL TerminateProcessTree(HANDLE parentProcess, DWORD processId, uint32_t code = 1)
+{
+    PROCESSENTRY32 pe;
+
+    memset(&pe, 0, sizeof(PROCESSENTRY32));
+    pe.dwSize = sizeof(PROCESSENTRY32);
+
+    HANDLE hSnap = ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+
+    if (::Process32First(hSnap, &pe))
+    {
+        BOOL bContinue = TRUE;
+
+        // kill child processes
+        while (bContinue)
+        {
+            // only kill child processes (and do not kill this process)
+            if (pe.th32ParentProcessID == processId && pe.th32ProcessID != GetCurrentProcessId())
+            {
+                HANDLE hChildProc = ::OpenProcess(PROCESS_ALL_ACCESS, FALSE, pe.th32ProcessID);
+
+                if (hChildProc)
+                {
+                    TerminateProcess(hChildProc, 1);
+                    CloseHandle(hChildProc);
+                }
+            }
+
+            bContinue = ::Process32Next(hSnap, &pe);
+        }
+    }
+
+    TerminateProcess(parentProcess, code);
+    return CloseHandle(parentProcess);
+}
+
 bool kill(ProcessInfo pinfo, uint32_t code)
 {
-	return TerminateProcess(reinterpret_cast<HANDLE>(pinfo.handle), code);
+	return TerminateProcessTree(reinterpret_cast<HANDLE>(pinfo.handle), pinfo.id, code);
 }
 static void check_pid_file(std::string& pid_path)
 {
@@ -269,7 +307,7 @@ void close(bool doCloseALl) {
 		if (processes.at(i)->getAlive() &&
 			!processes.at(i)->getCritical() && closeAll) {
 			HANDLE hdl = OpenProcess(PROCESS_TERMINATE, FALSE, processes.at(i)->getPID());
-			TerminateProcess(hdl, 1);
+			TerminateProcessTree(hdl, processes.at(i)->getPID(), 1);
 			processes.at(i)->getWorker()->join();
 		}
 		else if (processes.at(i)->getCritical()) {
@@ -279,7 +317,7 @@ void close(bool doCloseALl) {
 				auto delta = t - start;
 				if (std::chrono::duration_cast<std::chrono::milliseconds>(delta).count() > 2000) {
 					HANDLE hdl = OpenProcess(PROCESS_TERMINATE, FALSE, processes.at(i)->getPID());
-					TerminateProcess(hdl, 1);
+					TerminateProcessTree(hdl, processes.at(i)->getPID(), 1);
 					processes.at(i)->setAlive(false);
 				}
 			}
