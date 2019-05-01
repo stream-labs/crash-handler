@@ -15,6 +15,7 @@ class MetricsProvider
         Pid,
         Tag, 
         Status, 
+        Blame, 
         Shutdown
     };
 
@@ -58,6 +59,7 @@ class MetricsProvider
     bool		  m_PipeActive = false;
     bool          m_StopPolling = false;
     bool          m_ServerExitedSuccessfully = false;
+    bool          m_ClientBlameActive = false;
     std::thread   m_PollingThread;
     std::ofstream m_MetricsFile;
     DWORD         m_ServerPid = 0;

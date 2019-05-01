@@ -271,6 +271,14 @@ void MetricsProvider::StartPollingEvent()
                 // Write to the file
                 MetricsFileSetStatus(std::string(message.param1));
             }
+            else if (message.type == MessageType::Blame)
+            {
+                // Write to the file
+                MetricsFileSetStatus(std::string(message.param1));
+
+                // Set blame active
+                m_ClientBlameActive = true;
+            }
             else if (message.type == MessageType::Shutdown)
             {
                 m_ServerExitedSuccessfully = true;
@@ -280,6 +288,7 @@ void MetricsProvider::StartPollingEvent()
             {
                 m_ServerPid = *reinterpret_cast<DWORD*>(message.param1);
             }
+
             else if (message.type == MessageType::Tag)
             {
                 m_ReportTags.insert({std::string(message.param1), std::string(message.param2)});
@@ -388,6 +397,9 @@ void MetricsProvider::SendMetricsReport(std::string status)
     if (GetComputerName(name, &name_len) != 0) {
         tags["computer.name"] = std::string(name);
     }
+
+    // Set the client blame tag
+    m_ReportTags.insert({ "user.blame", m_ClientBlameActive ? "true" : "false" });
     
     // For each tag
     for (auto& tag : m_ReportTags)
@@ -402,6 +414,13 @@ void MetricsProvider::SendMetricsReport(std::string status)
 
 void MetricsProvider::MetricsFileSetStatus(std::string status)
 {
+    // If the client blame is active, don't do anything to prevent overwriting the blame source
+    // that the client told us, ofc proceed if the status is the shutdown one
+    if (m_ClientBlameActive && status != "shutdown")
+    {
+        return;
+    }
+
     if (m_MetricsFile.is_open()) {
         // Don't do anything if the last status is 'Handled Crash' since this means that the server
         // crashed but it handled the crash, we should propagate the report as it is to correctly 
