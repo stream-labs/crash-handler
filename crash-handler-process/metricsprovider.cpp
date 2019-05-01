@@ -47,8 +47,8 @@ public:
     void config_secure_header()
     {
         // add security header
-        std::string security_header = "X-Sentry-Auth: Sentry sentry_version=5,sentry_client=crow/";
-        security_header += std::string("6.8.9") + ",sentry_timestamp=";
+        std::string security_header = "X-Sentry-Auth: Sentry sentry_version=5,sentry_client=Streamlabs Crash Handler/";
+        security_header += std::string("1.0.0") + ",sentry_timestamp=";
         security_header += std::to_string(34546456);
         security_header += ",sentry_key=" + m_public_key;
         security_header += ",sentry_secret=" + m_secret_key;
@@ -409,6 +409,12 @@ void MetricsProvider::SendMetricsReport(std::string status)
     for (auto& tag : m_ReportTags)
     {
         tags[tag.first] = tag.second;
+
+        // If we have a version tag, use it as a release too
+        if (tag.first == "version")
+        {
+            j["release"] = "backend." + tag.second;
+        }
     }
 
     j["tags"] = tags;
