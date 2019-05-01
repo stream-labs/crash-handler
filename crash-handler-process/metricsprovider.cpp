@@ -292,6 +292,10 @@ void MetricsProvider::StartPollingEvent()
             else if (message.type == MessageType::Tag)
             {
                 m_ReportTags.insert({std::string(message.param1), std::string(message.param2)});
+
+                // Now that we received the tag from the server, if we don't receive any other message
+                // from it and a crash happens, we should blame the backend and not the frontend anymore
+                m_LastStatus = "Backend Crash";
             }
         }
     });
