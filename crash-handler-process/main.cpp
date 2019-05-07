@@ -221,8 +221,8 @@ void checkProcesses(std::mutex* m) {
 			}
 			if (!processes.at(index)->getCritical() && criticalProcessAlive) {
 
-                // Metrics
-                metricsServer.BlameFrontend();
+				// Metrics
+				metricsServer.BlameFrontend();
 
 				int code = MessageBox(
 					NULL,
@@ -258,8 +258,8 @@ void checkProcesses(std::mutex* m) {
 			}
 			else {
 
-                // Metrics
-                metricsServer.BlameServer();
+				// Metrics
+				metricsServer.BlameServer();
 
 				closeAll = true;
 			}
@@ -356,7 +356,7 @@ int main(int argc, char** argv)
 	if (processManager.joinable())
 		processManager.join();
 
-    metricsServer.KillPendingIO();
+	metricsServer.KillPendingIO();
 	if (metricsPipe.joinable())
 		metricsPipe.join();
 	close(closeAll);
