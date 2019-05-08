@@ -134,9 +134,9 @@ function(nodejs_init)
     endif()
 
     # Regex patterns used by the init function for component extraction
-    set(HEADERS_MATCH "^([A-Fa-f0-9]+)[ \\t]+(([^-]+)-(.+)-headers\\.tar\\.gz)$")
-    set(LIB32_MATCH "(^[0-9A-Fa-f]+)[ \\t]+(win-x86/([^/]*\\.lib))$")
-    set(LIB64_MATCH "(^[0-9A-Fa-f]+)[ \\t]+(win-x64/(.*\\.lib))$")
+    set(HEADERS_MATCH "^([A-Fa-f0-9]+)[ \t]+([^-]+)-(headers|v?[0-9.]+)-(headers|v?[0-9.]+)([.]tar[.]gz)$")
+    set(LIB32_MATCH "(^[0-9A-Fa-f]+)[\t ]+(win-x86)?(/)?([^/]*)(.lib)$")
+    set(LIB64_MATCH "(^[0-9A-Fa-f]+)[\t ]+(win-)?(x64/)(.*)(.lib)$")
 
     # Parse function arguments
     cmake_parse_arguments(nodejs_init
@@ -282,37 +282,28 @@ function(nodejs_init)
     # from the file. This first extract is what defines / specifies the
     # actual version number and name.
     file(STRINGS
-        ${CHECKSUM_TARGET} HEADERS_CHECKSUMS
+        ${CHECKSUM_TARGET} HEADERS_CHECKSUM
         REGEX ${HEADERS_MATCH}
+        LIMIT_COUNT 1
     )
-
-    if(NOT HEADERS_CHECKSUMS)
+    if(NOT HEADERS_CHECKSUM)
         file(REMOVE ${TEMP}/CHECKSUM)
         if(DEFINED ROOT)
             file(REMOVE ${ROOT}/CHECKSUM)
         endif()
         message(FATAL_ERROR "Unable to extract header archive checksum")
     endif()
-
-    foreach(HEADER ${HEADERS_CHECKSUMS})
-        message("Found headers archive: ${HEADER}")
-        string(REGEX MATCH ${HEADERS_MATCH} HEADERS_CHECKSUM ${HEADER})
-
-        if (HEADERS_CHECKSUM AND CMAKE_MATCH_3 STREQUAL NAME)
-            break()
-        endif()
-
-        unset(HEADERS_CHECKSUM)
-    endforeach()
-
-    if (NOT HEADERS_CHECKSUM)
-        message(FATAL_ERROR "Failed to find matching headers for ${NAME}")
-    endif()
-
+    string(REGEX MATCH ${HEADERS_MATCH} HEADERS_CHECKSUM ${HEADERS_CHECKSUM})
     set(HEADERS_CHECKSUM ${CMAKE_MATCH_1})
-    set(NAME ${CMAKE_MATCH_3})
-    set(VERSION ${CMAKE_MATCH_4})
-    set(HEADERS_ARCHIVE ${CMAKE_MATCH_2})
+    set(NAME ${CMAKE_MATCH_2})
+    if(CMAKE_MATCH_3 STREQUAL "headers")
+        set(VERSION ${CMAKE_MATCH_4})
+    else()
+        set(VERSION ${CMAKE_MATCH_3})
+    endif()
+    set(HEADERS_ARCHIVE
+        ${CMAKE_MATCH_2}-${CMAKE_MATCH_3}-${CMAKE_MATCH_4}${CMAKE_MATCH_5}
+    )
     # Make sure that the root directory exists, and that the checksum
     # file has been moved over from temp
     if(DEFINED ROOT)
@@ -322,7 +313,7 @@ function(nodejs_init)
     if(DEFINED OLD_ROOT AND NOT ROOT STREQUAL "${OLD_ROOT}")
         file(REMOVE ${TEMP}/CHECKSUM)
         file(REMOVE ${ROOT}/CHECKSUM)
-        message(FATAL_ERROR "Version/Name mismatch - ${ROOT} vs ${OLD_ROOT}")
+        message(FATAL_ERROR "Version/Name mismatch")
     endif()
     file(MAKE_DIRECTORY ${ROOT})
     if(EXISTS ${TEMP}/CHECKSUM)
@@ -352,41 +343,26 @@ function(nodejs_init)
             file(REMOVE ${TEMP}/${HEADERS_ARCHIVE})
             message(FATAL_ERROR "Unable to download Node.js headers")
         endif()
-        file(MAKE_DIRECTORY ${TEMP}/${VERSION})
         execute_process(
             COMMAND ${CMAKE_COMMAND} -E tar xfz ${TEMP}/${HEADERS_ARCHIVE}
-            WORKING_DIRECTORY ${TEMP}/${VERSION}
+            WORKING_DIRECTORY ${TEMP}
         )
 
         # This adapts the header extraction to support a number of different
         # header archive contents in addition to the one used by the
         # default Node.js library
         unset(NODEJS_HEADERS_PATH CACHE)
-
-        set(NODEJS_HEADERS_SEARCH_PATHS
-            ${TEMP}/${VERSION}/node_headers
-            ${TEMP}/${VERSION}/${NAME}-${VERSION}-headers
-            ${TEMP}/${VERSION}/${NAME}-${VERSION}
-            ${TEMP}/${VERSION}/${NODEJS_DEFAULT_NAME}-${VERSION}-headers
-            ${TEMP}/${VERSION}/${NODEJS_DEFAULT_NAME}-${VERSION}
-            ${TEMP}/${VERSION}/${NODEJS_DEFAULT_NAME}
-            ${TEMP}
+        find_path(NODEJS_HEADERS_PATH
+            NAMES src include
+            PATHS
+                ${TEMP}/${NAME}-${VERSION}-headers
+                ${TEMP}/${NAME}-${VERSION}
+                ${TEMP}/${NODEJS_DEFAULT_NAME}-${VERSION}-headers
+                ${TEMP}/${NODEJS_DEFAULT_NAME}-${VERSION}
+                ${TEMP}/${NODEJS_DEFAULT_NAME}
+                ${TEMP}
+            NO_DEFAULT_PATH
         )
-
-        foreach(HEADER_PATH ${NODEJS_HEADERS_SEARCH_PATHS})
-            message("Searching path for headers: ${HEADER_PATH}")
-
-            find_path(NODEJS_HEADERS_PATH
-                NAMES src include
-                PATHS ${HEADER_PATH}
-                NO_DEFAULT_PATH
-            )
-
-            if (NODEJS_HEADERS_PATH)
-                break()
-            endif()
-        endforeach()
-
         if(NOT NODEJS_HEADERS_PATH)
             message(FATAL_ERROR "Unable to find extracted headers folder")
         endif()
@@ -448,8 +424,8 @@ function(nodejs_init)
         string(REGEX MATCH ${LIB32_MATCH} LIB32_CHECKSUM ${LIB32_CHECKSUM})
         set(LIB32_CHECKSUM ${CMAKE_MATCH_1})
         set(LIB32_PATH     win-x86)
-        set(LIB32_NAME     ${CMAKE_MATCH_3})
-        set(LIB32_TARGET   ${CMAKE_MATCH_2})
+        set(LIB32_NAME     ${CMAKE_MATCH_4}${CMAKE_MATCH_5})
+        set(LIB32_TARGET   ${CMAKE_MATCH_2}${CMAKE_MATCH_3}${LIB32_NAME})
         if(NOT EXISTS ${ROOT}/${LIB32_PATH})
             file(REMOVE_RECURSE ${TEMP}/${LIB32_PATH})
             download_file(
@@ -486,8 +462,8 @@ function(nodejs_init)
         string(REGEX MATCH ${LIB64_MATCH} LIB64_CHECKSUM ${LIB64_CHECKSUM})
         set(LIB64_CHECKSUM ${CMAKE_MATCH_1})
         set(LIB64_PATH     win-x64)
-        set(LIB64_NAME     ${CMAKE_MATCH_3})
-        set(LIB64_TARGET   ${CMAKE_MATCH_2})
+        set(LIB64_NAME     ${CMAKE_MATCH_4}${CMAKE_MATCH_5})
+        set(LIB64_TARGET   ${CMAKE_MATCH_2}${CMAKE_MATCH_3}${LIB64_NAME})
         if(NOT EXISTS ${ROOT}/${LIB64_PATH})
             file(REMOVE_RECURSE ${TEMP}/${LIB64_PATH})
             download_file(
