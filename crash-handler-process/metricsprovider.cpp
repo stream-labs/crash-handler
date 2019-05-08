@@ -369,6 +369,13 @@ std::string MetricsProvider::GetMetricsFileStatus()
 
             metrics_file_read.close();
         }
+        else
+        {
+            // If we were unable to open the file it's because it doesn't exist, so this is probably
+            // the first time this user is opening SLOBS or the cache was cleared. By adding the
+            // shutdown string we will prevent from submitting a report on these cases.
+            metrics_string = "shutdown";
+        }
     }
     catch (...) {
     }
