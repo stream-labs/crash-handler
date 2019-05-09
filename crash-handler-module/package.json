@@ -4,8 +4,8 @@
   "description": "Monitor Streamlabs OBS processes.",
   "files": [
     "main.js",
-    "crash-handler.node",
-    "crash-handler.pdb"
+    "crash_handler.node",
+    "crash_handler.pdb"
   ],
   "repository": {
     "type": "git",
