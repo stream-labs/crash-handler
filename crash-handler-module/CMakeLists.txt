@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(crash_handler)
+project(crash-handler)
 
 include(NodeJS)
 include(CPack)
@@ -9,6 +9,9 @@ nodejs_init()
 add_nodejs_module(${PROJECT_NAME} module.cpp)
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_INCLUDE_PATHS})
 target_compile_definitions(${PROJECT_NAME} PRIVATE BUILDING_NODE_EXTENSION)
+
+# Unicode support
+ADD_DEFINITIONS(-DUNICODE)
 
 #############################
 # Distribute

@@ -142,6 +142,14 @@ public:
     std::string        m_store_url;
 };
 
+std::string ws2s(const std::wstring& wstr)
+{
+    using convert_typeX = std::codecvt_utf8<wchar_t>;
+    std::wstring_convert<convert_typeX, wchar_t> converterX;
+
+    return converterX.to_bytes(wstr);
+}
+
 MetricsProvider::MetricsProvider()
 {
     // Start with a Frontend Crash status (if SLOBS crash we know that it happened before receiving the first message)
@@ -171,7 +179,7 @@ MetricsProvider::~MetricsProvider()
     MetricsFileClose();
 }
 
-bool MetricsProvider::Initialize(std::string name)
+bool MetricsProvider::Initialize(std::wstring name)
 {
     m_Pipe = CreateNamedPipe(
         name.c_str(), // name of the pipe // "\\\\.\\pipe\\my_pipe"
@@ -383,7 +391,7 @@ void MetricsProvider::SendMetricsReport(std::string status)
 
     nlohmann::json j;
     nlohmann::json tags;
-    char        name[UNLEN + 1];
+    wchar_t        name[UNLEN + 1];
     DWORD          name_len = UNLEN + 1;
     using convert_typeX     = std::codecvt_utf8<wchar_t>;
     std::wstring_convert<convert_typeX, wchar_t> converterX;
@@ -393,13 +401,13 @@ void MetricsProvider::SendMetricsReport(std::string status)
 
     // User name
     if (GetUserName(name, &name_len) != 0) {
-        tags["user.name"] = std::string(name);
+        tags["user.name"] = ws2s(name);
     }
 
     // Computer name
     name_len = UNLEN + 1;
     if (GetComputerName(name, &name_len) != 0) {
-        tags["computer.name"] = std::string(name);
+        tags["computer.name"] = ws2s(name);
     }
 
     // Set the client blame tag

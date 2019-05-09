@@ -226,11 +226,11 @@ void checkProcesses(std::mutex* m) {
 
 				int code = MessageBox(
 					NULL,
-					"An error occurred which has caused Streamlabs OBS to close. Don't worry! If you were streaming or recording, that is still happening in the background."
-					"\n\nWhenever you're ready, we can relaunch the application, however this will end your stream / recording session.\n\n"
-					"Click the Yes button to keep streaming / recording. \n\n"
-					"Click the No button to stop streaming / recording.",
-					"An error occurred",
+					L"An error occurred which has caused Streamlabs OBS to close. Don't worry! If you were streaming or recording, that is still happening in the background."
+					L"\n\nWhenever you're ready, we can relaunch the application, however this will end your stream / recording session.\n\n"
+					L"Click the Yes button to keep streaming / recording. \n\n"
+					L"Click the No button to stop streaming / recording.",
+					L"An error occurred",
 					MB_YESNO | MB_SYSTEMMODAL
 				);
 				switch (code) {
@@ -238,8 +238,8 @@ void checkProcesses(std::mutex* m) {
 				{
 					MessageBox(
 						NULL,
-						"Your stream / recording session is still running in the background. Whenever you're ready, click the OK button below to end your stream / recording and relaunch the application.",
-						"Choose when to restart",
+						L"Your stream / recording session is still running in the background. Whenever you're ready, click the OK button below to end your stream / recording and relaunch the application.",
+						L"Choose when to restart",
 						MB_OK | MB_SYSTEMMODAL
 					);
 					doRestartApp = true;
@@ -298,7 +298,7 @@ void close(bool doCloseALl) {
 	}
 }
 
-void restartApp(std::string path) {
+void restartApp(std::wstring path) {
 	STARTUPINFO info = { sizeof(info) };
 	PROCESS_INFORMATION processInfo;
 
@@ -306,10 +306,10 @@ void restartApp(std::string path) {
 	memset(&processInfo, 0, sizeof(processInfo));
 
 	path.substr(0, path.size() - strlen("app.asar.unpacked"));
-	path += "\Streamlabs OBS.exe";
+	path += L"\Streamlabs OBS.exe";
 
 	CreateProcess(path.c_str(),
-		"",
+		L"",
 		NULL,
 		NULL,
 		FALSE,
@@ -321,9 +321,9 @@ void restartApp(std::string path) {
 	);
 }
 
-int main(int argc, char** argv)
+int main(int argc, wchar_t** argv)
 {
-	std::string path;
+	std::wstring path;
 	if (argc == 1)
 		path = argv[0];
 
@@ -340,7 +340,7 @@ int main(int argc, char** argv)
 
 	std::thread metricsPipe([&]()
 	{
-		metricsServer.Initialize("\\\\.\\pipe\\metrics_pipe");
+		metricsServer.Initialize(L"\\\\.\\pipe\\metrics_pipe");
 		metricsServer.ConnectToClient();
 		metricsServer.StartPollingEvent();
 	});

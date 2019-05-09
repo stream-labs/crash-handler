@@ -52,6 +52,7 @@ SET(PROJECT_SOURCE
 #############################
 # Building
 #############################
+ADD_DEFINITIONS(-DUNICODE)
 ADD_EXECUTABLE(crash-handler-process ${PROJECT_SOURCE})
 
 # Include/link crash manager dependencies
