@@ -400,9 +400,7 @@ void MetricsProvider::SendMetricsReport(std::string status)
 {
     // Disabled on dev env
     if (m_IsDevEnv)
-    {
         return;
-    }
 
     curl_wrapper curl(
         "https://b1db4ea934a649bca50701198f29b501:22e46ee0fbe54b53ba8571a4c10e31c0@sentry.io/1439562");
