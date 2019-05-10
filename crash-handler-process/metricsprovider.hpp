@@ -31,7 +31,7 @@ class MetricsProvider
     MetricsProvider();
     ~MetricsProvider();
 
-    bool Initialize(std::string name);
+    bool Initialize(std::wstring name);
     void Shutdown();
     bool ConnectToClient();
     void StartPollingEvent();
