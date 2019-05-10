@@ -17,10 +17,10 @@ ADD_DEFINITIONS(-DUNICODE)
 # Distribute
 #############################
 install(TARGETS ${PROJECT_NAME}
-	RUNTIME DESTINATION "./crash-handler-module" COMPONENT Runtime
-	LIBRARY DESTINATION "./crash-handler-module" COMPONENT Runtime
+	RUNTIME DESTINATION "./crash-handler" COMPONENT Runtime
+	LIBRARY DESTINATION "./crash-handler" COMPONENT Runtime
 )
 
-#install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION "./crash-handler-module" OPTIONAL)
-install(FILES "${PROJECT_SOURCE_DIR}/package.json" DESTINATION "./crash-handler-module")
-install(FILES "${PROJECT_SOURCE_DIR}/main.js" DESTINATION "./crash-handler-module")
+install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION "./crash-handler" OPTIONAL)
+install(FILES "${PROJECT_SOURCE_DIR}/package.json" DESTINATION "./crash-handler")
+install(FILES "${PROJECT_SOURCE_DIR}/main.js" DESTINATION "./crash-handler")
