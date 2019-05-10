@@ -31,7 +31,7 @@ class MetricsProvider
     MetricsProvider();
     ~MetricsProvider();
 
-    bool Initialize(std::wstring name);
+    bool Initialize(std::wstring name, std::string version, bool isDevEnv);
     void Shutdown();
     bool ConnectToClient();
     void StartPollingEvent();
@@ -60,6 +60,7 @@ class MetricsProvider
     bool          m_StopPolling = false;
     bool          m_ServerExitedSuccessfully = false;
     bool          m_ClientBlameActive = false;
+    bool          m_IsDevEnv = false;
     std::thread   m_PollingThread;
     std::ofstream m_MetricsFile;
     DWORD         m_ServerPid = 0;

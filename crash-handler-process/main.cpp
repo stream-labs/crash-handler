@@ -321,11 +321,19 @@ void restartApp(std::wstring path) {
 	);
 }
 
-int main(int argc, wchar_t** argv)
+int main(int argc, char** argv)
 {
 	std::wstring path;
-	if (argc == 1)
-		path = argv[0];
+	std::string version;
+	std::string isDevEnv;
+
+	// Frontend pass as non-unicode
+	if (argc >= 1)
+		path = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(argv[0]);
+	if (argc >= 3)
+		version = argv[2];
+	if (argc >= 4)
+		isDevEnv = argv[3];
 
 	std::string pid_path(get_temp_directory());
 	pid_path.append("crash-handler.pid");
@@ -340,7 +348,7 @@ int main(int argc, wchar_t** argv)
 
 	std::thread metricsPipe([&]()
 	{
-		metricsServer.Initialize(L"\\\\.\\pipe\\metrics_pipe");
+		metricsServer.Initialize(L"\\\\.\\pipe\\metrics_pipe", version, isDevEnv == "true");
 		metricsServer.ConnectToClient();
 		metricsServer.StartPollingEvent();
 	});

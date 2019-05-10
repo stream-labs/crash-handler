@@ -179,8 +179,13 @@ MetricsProvider::~MetricsProvider()
     MetricsFileClose();
 }
 
-bool MetricsProvider::Initialize(std::wstring name)
+bool MetricsProvider::Initialize(std::wstring name, std::string version, bool isDevEnv)
 {
+    // Set the initial data
+    m_IsDevEnv = isDevEnv;
+    if(version.length() > 0) 
+        m_ReportTags.insert({ "version", version });
+
     m_Pipe = CreateNamedPipe(
         name.c_str(), // name of the pipe // "\\\\.\\pipe\\my_pipe"
         PIPE_ACCESS_INBOUND, // 1-way pipe -- receive only
@@ -393,6 +398,10 @@ std::string MetricsProvider::GetMetricsFileStatus()
 
 void MetricsProvider::SendMetricsReport(std::string status)
 {
+    // Disabled on dev env
+    if (m_IsDevEnv)
+        return;
+
     curl_wrapper curl(
         "https://b1db4ea934a649bca50701198f29b501:22e46ee0fbe54b53ba8571a4c10e31c0@sentry.io/1439562");
 
