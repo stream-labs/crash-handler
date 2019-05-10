@@ -31,7 +31,7 @@ class MetricsProvider
     MetricsProvider();
     ~MetricsProvider();
 
-    bool Initialize(std::wstring name);
+    bool Initialize(std::wstring name, std::string version, bool isDevEnv);
     void Shutdown();
     bool ConnectToClient();
     void StartPollingEvent();
@@ -55,11 +55,12 @@ class MetricsProvider
     private:
 
     HANDLE        m_Pipe;
-    HANDLE        m_ClientConnectionThread = nullptr;
-    bool		  m_PipeActive = false;
-    bool          m_StopPolling = false;
+    HANDLE        m_ClientConnectionThread   = nullptr;
+    bool		  m_PipeActive               = false;
+    bool          m_StopPolling              = false;
     bool          m_ServerExitedSuccessfully = false;
-    bool          m_ClientBlameActive = false;
+    bool          m_ClientBlameActive        = false;
+    bool          m_IsDevEnv                 = false;
     std::thread   m_PollingThread;
     std::ofstream m_MetricsFile;
     DWORD         m_ServerPid = 0;
