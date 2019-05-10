@@ -65,7 +65,7 @@ struct ProcessInfo
 ProcessInfo open_process(uint64_t handle)
 {
 	ProcessInfo pi;
-	DWORD       flags = PROCESS_QUERY_INFORMATION | PROCESS_TERMINATE | PROCESS_VM_READ;
+	DWORD	   flags = PROCESS_QUERY_INFORMATION | PROCESS_TERMINATE | PROCESS_VM_READ;
 	pi.handle = (uint64_t)OpenProcess(flags, false, (DWORD)handle);
 	return pi;
 }
@@ -80,7 +80,7 @@ std::string get_process_name(ProcessInfo pi)
 	HANDLE  hProcess = (HANDLE)pi.handle;
 	HMODULE hModule;
 	DWORD   unused1;
-	BOOL    bSuccess;
+	BOOL	bSuccess;
 	/* We rely on undocumented behavior here where
 	* enumerating a process' modules will provide
 	* the process HMODULE first every time. */
@@ -123,7 +123,7 @@ static void check_pid_file(std::string& pid_path)
 	union
 	{
 		uint64_t pid;
-		char     pid_char[sizeof(uint64_t)];
+		char	 pid_char[sizeof(uint64_t)];
 	};
 	if (!pid_file)
 		return;
@@ -140,7 +140,7 @@ static void check_pid_file(std::string& pid_path)
 std::string get_temp_directory()
 {
 	constexpr DWORD tmp_size = MAX_PATH + 1;
-	std::wstring    tmp(tmp_size, wchar_t());
+	std::wstring	tmp(tmp_size, wchar_t());
 	GetTempPathW(tmp_size, &tmp[0]);
 	/* Here we resize an in-use string and then re-use it.
 	* Note this is only okay because the long path name
@@ -323,17 +323,17 @@ void restartApp(std::wstring path) {
 
 int main(int argc, char** argv)
 {
-    std::wstring path;
-    std::string version;
-    std::string isDevEnv;
+	std::wstring path;
+	std::string version;
+	std::string isDevEnv;
 
-    // Frontend pass as non-unicode
+	// Frontend pass as non-unicode
 	if (argc >= 1)
 		path = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(argv[0]);
-    if (argc >= 3)
-        version = argv[2];
-    if (argc >= 4)
-        isDevEnv = argv[3];
+	if (argc >= 3)
+		version = argv[2];
+	if (argc >= 4)
+		isDevEnv = argv[3];
 
 	std::string pid_path(get_temp_directory());
 	pid_path.append("crash-handler.pid");
