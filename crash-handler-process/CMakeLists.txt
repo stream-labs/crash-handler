@@ -65,8 +65,6 @@ target_link_libraries(crash-handler-process libcurl)
 #############################
 # Distribute
 #############################
-INSTALL(TARGETS crash-handler-process
-	RUNTIME DESTINATION "./" COMPONENT Runtime
-)
-INSTALL(FILES $<TARGET_PDB_FILE:crash-handler-process> DESTINATION "./" OPTIONAL)
-INSTALL(DIRECTORY ${PROJECT_DATA} DESTINATION "./" OPTIONAL)
+INSTALL(TARGETS crash-handler-process RUNTIME DESTINATION "./crash-handler-module" COMPONENT Runtime )
+#INSTALL(FILES $<TARGET_PDB_FILE:crash-handler-process> DESTINATION "./crash-handler-module" OPTIONAL)
+INSTALL(DIRECTORY ${PROJECT_DATA} DESTINATION "./crash-handler-module" OPTIONAL)
