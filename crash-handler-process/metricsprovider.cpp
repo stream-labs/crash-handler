@@ -417,12 +417,18 @@ void MetricsProvider::SendMetricsReport(std::string status)
 
     // User name
     if (GetUserName(name, &name_len) != 0) {
+        if (ws2s(name) == "appveyor")
+            return;
+
         tags["user.name"] = ws2s(name);
     }
 
     // Computer name
     name_len = UNLEN + 1;
     if (GetComputerName(name, &name_len) != 0) {
+        if (ws2s(name) == "APPVYR-WIN")
+            return;
+
         tags["computer.name"] = ws2s(name);
     }
 
