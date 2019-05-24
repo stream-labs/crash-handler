@@ -237,7 +237,7 @@ void checkProcesses(std::mutex* m) {
 			index--;
 			bool criticalProcessAlive = false;
 			uint64_t criticalProcessDeathTime = 0;
-			uint64_t normalProcessFirstDeathTime = -1; // Start with a huge number to proper retrieve the lowest one
+			uint64_t normalProcessFirstDeathTime = UINT64_MAX;
 			for (size_t i = 0; i < processes.size(); i++) {
 				if (processes.at(i)->getCritical()) {
 					criticalProcessAlive = processes.at(i)->getAlive();
@@ -288,12 +288,15 @@ void checkProcesses(std::mutex* m) {
 
 			// Metrics
 			if (normalProcessFirstDeathTime > criticalProcessDeathTime) {
+				std::cout << "Frontend will be blamed" << std::endl;
 				metricsServer.BlameFrontend();
 			}
 			else if (normalProcessFirstDeathTime < criticalProcessDeathTime) {
+				std::cout << "Backend will be blamed" << std::endl;
 				metricsServer.BlameServer();
 			}
 			else {
+				std::cout << "Can't verify process death times, checking if critical process is alive" << std::endl;
 				(!processes.at(index)->getCritical() && criticalProcessAlive) ? metricsServer.BlameFrontend() : metricsServer.BlameServer();
 			}
 
