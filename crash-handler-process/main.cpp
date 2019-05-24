@@ -28,6 +28,10 @@
 #include <windows.h>
 #include <psapi.h>
 
+// Undefine windows min and max
+#undef min
+#undef max
+
 VOID DisconnectAndReconnect(DWORD);
 BOOL ConnectToNewClient(HANDLE, LPOVERLAPPED);
 
@@ -232,14 +236,19 @@ void checkProcesses(std::mutex* m) {
 		if (!alive) {
 			index--;
 			bool criticalProcessAlive = false;
+			long long criticalProcessDeathTime = 0;
+			long long normalProcessFirstDeathTime = 0;
 			for (size_t i = 0; i < processes.size(); i++) {
-				if (processes.at(i)->getCritical())
+				if (processes.at(i)->getCritical()) {
 					criticalProcessAlive = processes.at(i)->getAlive();
+					criticalProcessDeathTime = processes.at(i)->getStopTime();
+				}
+				else {
+					normalProcessFirstDeathTime = std::max(criticalProcessDeathTime = processes.at(i)->getStopTime(), normalProcessFirstDeathTime);
+				}
 			}
 			if (!processes.at(index)->getCritical() && criticalProcessAlive) {
 				log_error << "checkProcesses critical process alive" << std::endl;
-				// Metrics
-				metricsServer.BlameFrontend();
 
 				int code = MessageBox(
 					NULL,
@@ -271,16 +280,23 @@ void checkProcesses(std::mutex* m) {
 					break;
 				}
 				terminalCriticalProcesses();
-				closeAll = true;
+
 				log_debug << "checkProcesses critical process ended" << std::endl;
 			}
-			else {
 
-				// Metrics
-				metricsServer.BlameServer();
+			closeAll = true;
 
-				closeAll = true;
+			// Metrics
+			if (normalProcessFirstDeathTime > criticalProcessDeathTime) {
+				metricsServer.BlameFrontend();
 			}
+			else if (normalProcessFirstDeathTime < criticalProcessDeathTime) {
+				metricsServer.BlameServer();
+			}
+			else {
+				(!processes.at(index)->getCritical() && criticalProcessAlive) ? metricsServer.BlameFrontend() : metricsServer.BlameServer();
+			}
+
 			*exitApp = true;
 		}
 		else {

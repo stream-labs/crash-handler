@@ -73,11 +73,16 @@ void Process::setAlive(bool isAlive) {
 }
 
 void Process::stopWorker() {
+	m_stopTime = std::chrono::system_clock::now().time_since_epoch().count();
 	m_stop = true;
 }
 
 bool Process::getStopped(void) {
 	return m_stop;
+}
+
+long long Process::getStopTime(void) {
+	return m_stopTime;
 }
 
 std::thread* Process::getWorker(void) {
