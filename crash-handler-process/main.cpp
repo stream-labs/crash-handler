@@ -236,15 +236,15 @@ void checkProcesses(std::mutex* m) {
 		if (!alive) {
 			index--;
 			bool criticalProcessAlive = false;
-			long long criticalProcessDeathTime = 0;
-			long long normalProcessFirstDeathTime = 0;
+			uint64_t criticalProcessDeathTime = 0;
+			uint64_t normalProcessFirstDeathTime = -1; // Start with a huge number to proper retrieve the lowest one
 			for (size_t i = 0; i < processes.size(); i++) {
 				if (processes.at(i)->getCritical()) {
 					criticalProcessAlive = processes.at(i)->getAlive();
 					criticalProcessDeathTime = processes.at(i)->getStopTime();
 				}
 				else {
-					normalProcessFirstDeathTime = std::max(criticalProcessDeathTime = processes.at(i)->getStopTime(), normalProcessFirstDeathTime);
+					normalProcessFirstDeathTime = std::min(processes.at(i)->getStopTime(), normalProcessFirstDeathTime);
 				}
 			}
 			if (!processes.at(index)->getCritical() && criticalProcessAlive) {
