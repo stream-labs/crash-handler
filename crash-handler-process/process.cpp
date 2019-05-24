@@ -54,7 +54,7 @@ void Process::setAlive(bool isAlive) {
 }
 
 void Process::stopWorker() {
-	m_stopTime = std::chrono::system_clock::now().time_since_epoch().count();
+	m_stopTime = static_cast<uint64_t>(std::chrono::system_clock::now().time_since_epoch().count());
 	m_stop = true;
 }
 
@@ -62,7 +62,7 @@ bool Process::getStopped(void) {
 	return m_stop;
 }
 
-long long Process::getStopTime(void) {
+uint64_t Process::getStopTime(void) {
 	return m_stopTime;
 }
 

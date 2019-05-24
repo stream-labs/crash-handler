@@ -13,7 +13,7 @@ private:
 	std::thread* m_worker;
 	bool m_isAlive;
 	bool m_stop;
-	long long m_stopTime = 0;
+	uint64_t m_stopTime = 0;
 	std::string m_name;
 	HANDLE m_hdl;
 
@@ -27,7 +27,7 @@ public:
 	bool getAlive(void);
 	void setAlive(bool isAlive);
 	bool getStopped(void);
-	long long getStopTime(void);
+    uint64_t getStopTime(void);
 	std::thread* getWorker(void);
 	HANDLE getHandle(void);
 
