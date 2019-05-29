@@ -27,7 +27,7 @@ public:
 	bool getAlive(void);
 	void setAlive(bool isAlive);
 	bool getStopped(void);
-    uint64_t getStopTime(void);
+	uint64_t getStopTime(void);
 	std::thread* getWorker(void);
 	HANDLE getHandle(void);
 

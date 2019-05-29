@@ -276,7 +276,7 @@ bool NamedSocket_win::read(std::vector<Process*>* processes, std::mutex* mu, boo
 		if (Pipe[i].cbRead > 0) {
 			Pipe[i].fPendingIO = FALSE;
 
-            processRequest(Pipe[i].chRequest, processes, mu, exit);
+			processRequest(Pipe[i].chRequest, processes, mu, exit);
 		}
 		dwErr = GetLastError();
 		if (!fSuccess && (dwErr == ERROR_IO_PENDING))
