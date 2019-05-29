@@ -194,100 +194,99 @@ void terminalCriticalProcesses(void) {
 	}
 }
 
-void checkProcesses(std::mutex* m) {
-
-	while (!(*exitApp)) {
-		m->lock();
-		bool alive = true;
-		size_t index = 0;
-
-		if (monitoring && processes.size() == 0) {
-			*exitApp = true;
-			break;
-		}
-
-		while (alive && index < processes.size()) {
-			monitoring = true;
-			processes.at(index)->mutex.lock();
-			alive = processes.at(index)->getAlive();
-			processes.at(index)->mutex.unlock();
-			index++;
-		}
-
-		m->unlock();
-
-		if (!alive) {
-			index--;
-			bool criticalProcessAlive = false;
-			uint64_t criticalProcessDeathTime = 0;
-			uint64_t normalProcessFirstDeathTime = UINT64_MAX;
-			for (size_t i = 0; i < processes.size(); i++) {
-				if (processes.at(i)->getCritical()) {
-					criticalProcessAlive = processes.at(i)->getAlive();
-					criticalProcessDeathTime = processes.at(i)->getStopTime();
-				}
-				else {
-					normalProcessFirstDeathTime = std::min(processes.at(i)->getStopTime(), normalProcessFirstDeathTime);
-				}
-			}
-
-			if (!processes.at(index)->getCritical() && criticalProcessAlive) {
-
-				int code = MessageBox(
-					NULL,
-					L"An error occurred which has caused Streamlabs OBS to close. Don't worry! If you were streaming or recording, that is still happening in the background."
-					L"\n\nWhenever you're ready, we can relaunch the application, however this will end your stream / recording session.\n\n"
-					L"Click the Yes button to keep streaming / recording. \n\n"
-					L"Click the No button to stop streaming / recording.",
-					L"An error occurred",
-					MB_YESNO | MB_SYSTEMMODAL
-				);
-				switch (code) {
-				case IDYES:
-				{
-					MessageBox(
-						NULL,
-						L"Your stream / recording session is still running in the background. Whenever you're ready, click the OK button below to end your stream / recording and relaunch the application.",
-						L"Choose when to restart",
-						MB_OK | MB_SYSTEMMODAL
-					);
-					doRestartApp = true;
-					break;
-				}
-				case IDNO:
-				{
-					doRestartApp = false;
-					break;
-				}
-				default:
-					break;
-				}
-				terminalCriticalProcesses();
-			}
-
-			closeAll = true;
-
-			// Metrics
-			if (normalProcessFirstDeathTime > criticalProcessDeathTime) {
-				std::cout << "Frontend will be blamed" << std::endl;
-				metricsServer.BlameFrontend();
-			}
-			else if (normalProcessFirstDeathTime < criticalProcessDeathTime) {
-				std::cout << "Backend will be blamed" << std::endl;
-				metricsServer.BlameServer();
-			}
-			else {
-				std::cout << "Can't verify process death times, checking if critical process is alive" << std::endl;
-				(!processes.at(index)->getCritical() && criticalProcessAlive) ? metricsServer.BlameFrontend() : metricsServer.BlameServer();
-			}
-
-			*exitApp = true;
-		}
-		else {
-			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+bool isCriticalProcessAlive() {
+	bool criticalProcessAlive = false;
+	for (size_t i = 0; i < processes.size(); i++) {
+		if (processes.at(i)->getCritical()) {
+			criticalProcessAlive = processes.at(i)->getAlive();
 		}
 	}
-	*exitApp = true;
+
+	return criticalProcessAlive;
+}
+
+void getProcessDeathTimes(uint64_t& criticalProcessDeathTime, uint64_t& normalProcessDeathTime)
+{
+	criticalProcessDeathTime = 0;
+	normalProcessDeathTime = UINT64_MAX;
+	for (size_t i = 0; i < processes.size(); i++) {
+		if (processes.at(i)->getCritical()) {
+			criticalProcessDeathTime = processes.at(i)->getStopTime();
+		}
+		else {
+			normalProcessDeathTime = std::min(processes.at(i)->getStopTime(), normalProcessDeathTime);
+		}
+	}
+}
+
+bool isApplicationAlive() {
+
+	if (monitoring && processes.size() == 0) {
+		*exitApp = true;
+		return false;
+	}
+
+	for (auto& process : processes) {
+		monitoring = true;
+		std::unique_lock<std::mutex> lock(process->mutex);
+		bool alive = process->getAlive();
+		if (!alive) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void performCrashAnswer(bool criticalProcessAlive, uint64_t criticalProcessDeathTime, uint64_t normalProcessDeathTime) {
+
+	if (criticalProcessAlive) {
+
+		int code = MessageBox(
+			NULL,
+			L"An error occurred which has caused Streamlabs OBS to close. Don't worry! If you were streaming or recording, that is still happening in the background."
+			L"\n\nWhenever you're ready, we can relaunch the application, however this will end your stream / recording session.\n\n"
+			L"Click the Yes button to keep streaming / recording. \n\n"
+			L"Click the No button to stop streaming / recording.",
+			L"An error occurred",
+			MB_YESNO | MB_SYSTEMMODAL
+		);
+		switch (code) {
+		case IDYES:
+		{
+			MessageBox(
+				NULL,
+				L"Your stream / recording session is still running in the background. Whenever you're ready, click the OK button below to end your stream / recording and relaunch the application.",
+				L"Choose when to restart",
+				MB_OK | MB_SYSTEMMODAL
+			);
+			doRestartApp = true;
+			break;
+		}
+		case IDNO:
+		{
+			doRestartApp = false;
+			break;
+		}
+		default:
+			break;
+		}
+		terminalCriticalProcesses();
+	}
+
+	// Metrics
+	if (normalProcessDeathTime > criticalProcessDeathTime) {
+		std::cout << "Frontend will be blamed" << std::endl;
+		metricsServer.BlameFrontend();
+	}
+	else if (normalProcessDeathTime < criticalProcessDeathTime) {
+		std::cout << "Backend will be blamed" << std::endl;
+		metricsServer.BlameServer();
+	}
+	else {
+		std::cout << "Can't verify process death times, checking if critical process is alive" << std::endl;
+		criticalProcessAlive ? metricsServer.BlameFrontend() : metricsServer.BlameServer();
+	}
 }
 
 void close(bool doCloseALl) {
@@ -362,8 +361,6 @@ int main(int argc, char** argv)
 
 	exitApp = new bool(false);
 
-	std::thread processManager(checkProcesses, mu);
-
 	std::thread metricsPipe([&]()
 	{
 		metricsServer.Initialize(L"\\\\.\\pipe\\metrics_pipe", version, isDevEnv == "true");
@@ -375,12 +372,34 @@ int main(int argc, char** argv)
 
 	while (!(*exitApp) && !sock->read(&processes, mu, exitApp))
 	{
+		// Check if a process crashed
+		bool application_alive = isApplicationAlive();
+		if (!application_alive)
+			continue;
+		
+		bool critical_process_alive = isCriticalProcessAlive();
 
+		uint64_t criticalProcessDeathTime = 0;
+		uint64_t normalProcessDeathTime = 0;
+		getProcessDeathTimes(criticalProcessDeathTime, normalProcessDeathTime);
+
+		// It could happen that a message to exit was sent but
+		// one of our watched processed finished before we could
+		// read and process that message, so we must perform a 
+		// last attempt to read the exit message to not end up
+		// blaming wrongly one process for crashing
+		sock->read(&processes, mu, exitApp);
+		if (*exitApp)
+			break;
+
+		// Show the crash message to the user (if any) and perform the metrics blame
+		performCrashAnswer(critical_process_alive, criticalProcessDeathTime, normalProcessDeathTime);
+
+		// Make sure we will finish this process since a crash
+		// happened
+		*exitApp = true;
+		closeAll = true;
 	}
-
-	*exitApp = true;
-	if (processManager.joinable())
-		processManager.join();
 
 	metricsServer.KillPendingIO();
 	if (metricsPipe.joinable())

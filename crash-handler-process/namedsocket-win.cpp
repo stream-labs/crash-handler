@@ -211,7 +211,7 @@ bool NamedSocket_win::read(std::vector<Process*>* processes, std::mutex* mu, boo
 		INSTANCES,
 		hEvents,
 		FALSE,
-		500);
+		1000);
 
 	i = dwWait - WAIT_OBJECT_0;  // get current pipe
 	if (i < 0 || i >(INSTANCES - 1))
@@ -276,8 +276,7 @@ bool NamedSocket_win::read(std::vector<Process*>* processes, std::mutex* mu, boo
 		if (Pipe[i].cbRead > 0) {
 			Pipe[i].fPendingIO = FALSE;
 
-			// Start thread here
-			requests.push_back(new std::thread(processRequest, Pipe[i].chRequest, processes, mu, exit));
+            processRequest(Pipe[i].chRequest, processes, mu, exit);
 		}
 		dwErr = GetLastError();
 		if (!fSuccess && (dwErr == ERROR_IO_PENDING))
