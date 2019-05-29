@@ -311,6 +311,14 @@ void MetricsProvider::StartPollingEvent()
                     // if there is a considerable amount of occurrences of invalid pid it will require
                     // future treatment
                     m_LastStatus = "Invalid Server Pid";
+
+					// Set the server as if it exited successfully since we wouldn't be able to keep
+					// track of it on shutdown, if the pid is invalid we won't wait for the server
+					// shutdown message and this could cause an invalid blame to the server
+					// By setting this to true we guarantee that the Shutdown() will be called in 
+					// that case, so shutdown crashes won't be reported, other then that it will
+					// work as intended
+					m_ServerExitedSuccessfully = true;
                 }
                 else {
                     m_LastStatus = "Backend Crash";
