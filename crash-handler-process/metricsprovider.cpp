@@ -300,15 +300,26 @@ void MetricsProvider::StartPollingEvent()
             else if (message.type == MessageType::Pid)
             {
                 m_ServerPid = *reinterpret_cast<DWORD*>(message.param1);
+
+                // Now that we received the pid from the server, if we don't receive any other message
+                // from it and a crash happens, we should blame the backend and not the frontend anymore
+
+                // Check if server pid is valid and the server is active
+                if (!ServerIsActive()) {
+
+                    // This is more for debug purposes, the pid received should always be valid and
+                    // if there is a considerable amount of occurrences of invalid pid it will require
+                    // future treatment
+                    m_LastStatus = "Invalid Server Pid";
+                }
+                else {
+                    m_LastStatus = "Backend Crash";
+                }
             }
 
             else if (message.type == MessageType::Tag)
             {
-                m_ReportTags.insert({std::string(message.param1), std::string(message.param2)});
-
-                // Now that we received the tag from the server, if we don't receive any other message
-                // from it and a crash happens, we should blame the backend and not the frontend anymore
-                m_LastStatus = "Backend Crash";
+                m_ReportTags.insert({ std::string(message.param1), std::string(message.param2) });
             }
         }
     });
