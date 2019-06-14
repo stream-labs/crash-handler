@@ -29,9 +29,6 @@ build_script:
   - cmake --build %SLBuildDirectory% --target install --config RelWithDebInfo
   - tar cvaf "%DistributionAritfact%.tar.gz" -C "%FullDistributePath%\crash-handler" "crash-handler"
   
-before_deploy:
-  - ps: Push-AppveyorArtifact "$env:DistributionAritfact.tar.gz"
-
 deploy:
   - provider: GitHub
     artifact: $(DistributionAritfact).tar.gz
@@ -42,9 +39,5 @@ deploy:
     force_update: true
     on:
       appveyor_repo_tag: true
-
-artifacts:
-  - path: $(DistributionAritfact).tar.gz
-    name: Distribution Aritfact
 
 test: off

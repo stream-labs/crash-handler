@@ -443,7 +443,7 @@ void MetricsProvider::SendMetricsReport(std::string status)
 
     j["tags"] = tags;
 
-    curl.post(j, true).data;
+    // curl.post(j, true).data;
 }
 
 void MetricsProvider::MetricsFileSetStatus(std::string status)
