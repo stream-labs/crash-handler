@@ -28,7 +28,7 @@ variables:
 
 steps:
 - powershell: git config --global core.autocrlf false
-  displayName: $(System.JobName) git config core.autocrlf
+  displayName: 'Set Unix checkout for git'
 
 - checkout: self
   fetchDepth: 10
