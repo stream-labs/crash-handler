@@ -27,6 +27,12 @@ variables:
   DistributionAritfact: $(RuntimeName)-$(RuntimeVersion)-crash-handler
 
 steps:
+- powershell: git config --global core.autocrlf false
+  displayName: $(System.JobName) git config core.autocrlf
+
+- checkout: self
+  fetchDepth: 10
+
 - task: NodeTool@0
   displayName: 'Install Node'
   inputs:
