@@ -25,10 +25,9 @@ variables:
 
 steps:
 - task: NodeTool@0
-    displayName: Node install
+  displayName: 'Install Node'
     inputs:
       versionSpec: '10.x'
-  displayName: 'Install Node'
 
 - script: 'yarn install'
   displayName: 'Install dependencies'
@@ -49,12 +48,9 @@ steps:
     archiveFile: '$(DistributionAritfact).tar.gz'
 
 - task: GithubRelease@0 
-  displayName: 'Deploy to GitHub'    
+  displayName: 'Deploy to GitHub'
   condition: and(succeeded(), contains(variables['Build.SourceBranch'], 'tags'))  
   inputs:
     gitHubConnection: stream-labs
-    repositoryName: stream-labs/crash-handler           
+    repositoryName: stream-labs/crash-handler
     assets: $(Build.SourcesDirectory)/$(DistributionAritfact).tar.gz
-  
-
-
