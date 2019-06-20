@@ -26,8 +26,8 @@ variables:
 steps:
 - task: NodeTool@0
   displayName: 'Install Node'
-    inputs:
-      versionSpec: '10.x'
+  inputs:
+    versionSpec: '10.x'
 
 - script: 'yarn install'
   displayName: 'Install dependencies'
