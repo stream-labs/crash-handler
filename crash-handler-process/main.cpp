@@ -23,6 +23,7 @@ bool monitoring = false;
 bool closeAll = false;
 std::mutex* mu = new std::mutex();
 MetricsProvider metricsServer;
+static const uint32_t TimeoutSeconds = 10;
 
 static thread_local std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 std::string from_utf16_wide_to_utf8(const wchar_t* from, size_t length = -1)
@@ -355,9 +356,15 @@ int main(int argc, char** argv)
 
 	std::unique_ptr<NamedSocket> sock = NamedSocket::create();
 
+	// Timeout if no process connect
+	auto safe_timeout_start = std::chrono::steady_clock::now();
+	
 	while (!(*exitApp) && !sock->read(&processes, mu, exitApp))
 	{
-
+		auto current_time = std::chrono::steady_clock::now();
+		auto time_elapsed = std::chrono::duration_cast<std::chrono::seconds>(current_time - safe_timeout_start).count();
+		if (processes.size() == 0 && time_elapsed > TimeoutSeconds)
+			break;
 	}
 
 	*exitApp = true;
