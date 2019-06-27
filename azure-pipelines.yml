@@ -50,7 +50,7 @@ steps:
 - task: ArchiveFiles@2
   displayName: 'Generate artifact'
   inputs:
-    rootFolderOrFile: $(FullDistributePath)\crash-handler
+    rootFolderOrFile: $(FullDistributePath)\crash-handler\crash-handler
     includeRootFolder: true
     archiveType: tar
     tarCompression: gz
