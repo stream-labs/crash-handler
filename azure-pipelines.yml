@@ -17,7 +17,7 @@ strategy:
       RuntimeVersion: v5.0.4
 
 pool:
-  vmImage: 'vs2017-win2016'
+  name: 'Default'
 
 variables:
   SLBuildDirectory: build
