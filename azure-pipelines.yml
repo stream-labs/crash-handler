@@ -48,17 +48,19 @@ steps:
   displayName: 'Build crash-handler'
 
 - script: |
-    copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\api-ms-win-core-file-l1-2-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
-    copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\api-ms-win-core-file-l2-1-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
-    copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\api-ms-win-core-localization-l1-2-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
-    copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\api-ms-win-core-processthreads-l1-1-1.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
-    copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\api-ms-win-core-synch-l1-2-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
-    copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\api-ms-win-core-timezone-l1-1-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
-    copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\api-ms-win-crt-convert-l1-1-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
-    copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\api-ms-win-crt-heap-l1-1-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
-    copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\api-ms-win-crt-multibyte-l1-1-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
-    copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\api-ms-win-crt-stdio-l1-1-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
-    copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\api-ms-win-crt-string-l1-1-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64\api-ms-win-core-file-l1-2-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64\api-ms-win-core-file-l2-1-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64\api-ms-win-core-localization-l1-2-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64\api-ms-win-core-processthreads-l1-1-1.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64\api-ms-win-core-synch-l1-2-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64\api-ms-win-core-timezone-l1-1-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64\api-ms-win-crt-convert-l1-1-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64\api-ms-win-crt-heap-l1-1-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64\api-ms-win-crt-multibyte-l1-1-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64\api-ms-win-crt-runtime-l1-1-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64\api-ms-win-crt-stdio-l1-1-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64\api-ms-win-crt-string-l1-1-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Redist\MSVC\14.16.27012\x64\Microsoft.VC141.CRT\vcruntime140.dll" "%SLFullDistributePath%\obs-studio-node\"
     copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\ucrtbase.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
   displayName: 'Copy necessary dll files'
 
