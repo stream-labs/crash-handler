@@ -47,6 +47,21 @@ steps:
 - script: 'cmake --build %SLBuildDirectory% --target install --config RelWithDebInfo'
   displayName: 'Build crash-handler'
 
+- script: |
+    copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\api-ms-win-core-file-l1-2-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\api-ms-win-core-file-l2-1-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\api-ms-win-core-localization-l1-2-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\api-ms-win-core-processthreads-l1-1-1.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\api-ms-win-core-synch-l1-2-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\api-ms-win-core-timezone-l1-1-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\api-ms-win-crt-convert-l1-1-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\api-ms-win-crt-heap-l1-1-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\api-ms-win-crt-multibyte-l1-1-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\api-ms-win-crt-stdio-l1-1-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\api-ms-win-crt-string-l1-1-0.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+    copy "C:\Program Files (x86)\Microsoft Visual Studio\Installer\ucrtbase.dll" "$(FullDistributePath)\crash-handler\crash-handler\"
+  displayName: 'Copy necessary dll files'
+
 - task: ArchiveFiles@2
   displayName: 'Generate artifact'
   inputs:
