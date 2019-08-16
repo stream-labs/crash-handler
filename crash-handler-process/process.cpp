@@ -15,12 +15,15 @@
 #include "process.hpp"
 #include <psapi.h>
 #include <iostream>
+#include <fstream>
+
+#include "logger.hpp"
 
 void check(void* p) {
 	Process* proc = reinterpret_cast<Process*> (p);
-	proc->setAlive(true);
-
+	log_info << "check started" << std::endl;
 	if (!WaitForSingleObject(proc->getHandle(), INFINITE)) {
+		log_info << "check in wait for single object" << std::endl;
 		proc->mutex.lock();
 		proc->setAlive(false);
 		proc->stopWorker();
@@ -29,10 +32,12 @@ void check(void* p) {
 }
 
 Process::Process(uint64_t pid, bool isCritical) {
+	log_info << "Process created" << std::endl;
 	m_pid = pid;
 	m_isCritical = isCritical;
 	m_isAlive = true;
 	m_stop = false;
+	m_worker = nullptr;
 	m_hdl = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 
 	if (m_hdl)

@@ -45,6 +45,7 @@ SET(PROJECT_SOURCE
 	"${PROJECT_SOURCE_DIR}/message.cpp" "${PROJECT_SOURCE_DIR}/message.hpp"
 	"${PROJECT_SOURCE_DIR}/namedsocket-win.cpp" "${PROJECT_SOURCE_DIR}/namedsocket-win.hpp"
 	"${PROJECT_SOURCE_DIR}/namedsocket.cpp" "${PROJECT_SOURCE_DIR}/namedsocket.hpp"
+	"${PROJECT_SOURCE_DIR}/logger.cpp" "${PROJECT_SOURCE_DIR}/logger.hpp"
 	"${PROJECT_SOURCE_DIR}/main.cpp"
 )
 

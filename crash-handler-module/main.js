@@ -5,12 +5,12 @@ const net = require('net');
 
 function tryConnect(buffer, attempt = 5, waitMs = 100) {
     const socket = net.connect('\\\\.\\pipe\\slobs-crash-handler');
-     socket.on('connect', () => {
+    socket.on('connect', () => {
       socket.write(buffer);
-      socket.destroy();
+      socket.end();
       socket.unref();
     });
-     socket.on('error', () => {
+    socket.on('error', () => {
       socket.destroy();
       socket.unref();
       if (attempt > 0) {
@@ -22,7 +22,7 @@ function tryConnect(buffer, attempt = 5, waitMs = 100) {
 }
 
 function registerProcess(pid, isCritial = false) {
-    const buffer = new Buffer(512);
+    const buffer = new Buffer(6);
     let offset = 0;
     buffer.writeUInt32LE(0, offset++);
     buffer.writeUInt32LE(isCritial, offset++);
@@ -32,7 +32,7 @@ function registerProcess(pid, isCritial = false) {
 }
 
 function unregisterProcess(pid) {
-    const buffer = new Buffer(512);
+    const buffer = new Buffer(6);
     let offset = 0;
     buffer.writeUInt32LE(1, offset++);
     buffer.writeUInt32LE(pid, offset++);
@@ -41,7 +41,7 @@ function unregisterProcess(pid) {
 }
 
 function terminateCrashHandler(pid) {
-    const buffer = new Buffer(512);
+    const buffer = new Buffer(5);
     let offset = 0;
     buffer.writeUInt32LE(2, offset++);
     buffer.writeUInt32LE(pid, offset++);
