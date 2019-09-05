@@ -351,11 +351,10 @@ void restartApp(std::wstring path) {
 int main(int argc, char** argv)
 {
 	std::wstring path;
+	std::wstring log_path = L"";
 	std::string version;
 	std::string isDevEnv;
 	
-	logging_start();
-	log_info << "main just started "<< std::endl;
 	// Frontend pass as non-unicode
 	if (argc >= 1)
 		path = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(argv[0]);
@@ -363,6 +362,11 @@ int main(int argc, char** argv)
 		version = argv[2];
 	if (argc >= 4)
 		isDevEnv = argv[3];
+	if (argc >= 5)
+		log_path = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(argv[4]);
+
+	logging_start(log_path);
+	log_info << "main just started "<< std::endl;
 
 	std::string pid_path(get_temp_directory());
 	pid_path.append("crash-handler.pid");
