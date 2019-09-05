@@ -49,14 +49,19 @@ function terminateCrashHandler(pid) {
     tryConnect(buffer);
   }
 
-function startCrashHandler(workingDirectory, version, isDevEnv, cachePath) {
+function startCrashHandler(workingDirectory, version, isDevEnv, cachePath = "") {
     const { spawn } = require('child_process');
 
     const processPath = workingDirectory.replace('app.asar', 'app.asar.unpacked') +
     '\\node_modules\\crash-handler';
 
+    let spawnArguments = [workingDirectory, version, isDevEnv ];
+
+    if ( cachePath.length > 0 ) 
+      spawnArguments.push( cachePath+'\\crash-handler.log' );
+
     const subprocess = spawn(processPath +
-      '\\crash-handler-process.exe', [workingDirectory, version, isDevEnv, cachePath+"\\crash-handler.log"], {
+      '\\crash-handler-process.exe', spawnArguments, {
       detached: true,
       stdio: 'ignore'
     });

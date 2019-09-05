@@ -4,10 +4,10 @@
 #include <fstream>
 #include <string>
 
-#ifndef NDEBUG
-    const bool log_output_disabled = false;
-#else
+#ifdef NDEBUG
     const bool log_output_disabled = true;
+#else
+    const bool log_output_disabled = false;
 #endif
 
 const std::string getTimeStamp();
