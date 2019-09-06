@@ -19,6 +19,7 @@
 #include <vector>
 #include "namedsocket-win.hpp"
 #include "metricsprovider.hpp"
+#include "logger.hpp"
 
 #include <queue>
 #include <sstream>
@@ -213,6 +214,7 @@ void checkProcesses(std::mutex* m) {
 		size_t index = 0;
 
 		if (monitoring && processes.size() == 0) {
+			log_debug << "checkProcesses no processes" << std::endl;
 			*exitApp = true;
 			break;
 		}
@@ -235,7 +237,7 @@ void checkProcesses(std::mutex* m) {
 					criticalProcessAlive = processes.at(i)->getAlive();
 			}
 			if (!processes.at(index)->getCritical() && criticalProcessAlive) {
-
+				log_error << "checkProcesses critical process alive" << std::endl;
 				// Metrics
 				metricsServer.BlameFrontend();
 
@@ -270,6 +272,7 @@ void checkProcesses(std::mutex* m) {
 				}
 				terminalCriticalProcesses();
 				closeAll = true;
+				log_debug << "checkProcesses critical process ended" << std::endl;
 			}
 			else {
 
@@ -285,9 +288,11 @@ void checkProcesses(std::mutex* m) {
 		}
 	}
 	*exitApp = true;
+	log_debug << "checkProcesses end" << std::endl;
 }
 
 void close(bool doCloseALl) {
+	log_info << "close all "<< doCloseALl << std::endl;
 	for (size_t i = 0; i < processes.size(); i++) {
 		processes.at(i)->stopWorker();
 	}
@@ -296,16 +301,23 @@ void close(bool doCloseALl) {
 			!processes.at(i)->getCritical() && closeAll) {
 			HANDLE hdl = OpenProcess(PROCESS_TERMINATE, FALSE, processes.at(i)->getPID());
 			TerminateProcess(hdl, 1);
-			processes.at(i)->getWorker()->join();
+			log_info << "close pid "<< processes.at(i)->getPID() << std::endl;
+			
+			if(processes.at(i)->getWorker())
+				processes.at(i)->getWorker()->join();
 		}
 		else if (processes.at(i)->getCritical()) {
 			auto start = std::chrono::high_resolution_clock::now();
+			log_info << "close critical pid "<< processes.at(i)->getPID() << std::endl;
 			while (processes.at(i)->getAlive()) {
 				auto t = std::chrono::high_resolution_clock::now();
 				auto delta = t - start;
 				if (std::chrono::duration_cast<std::chrono::milliseconds>(delta).count() > 2000) {
 					HANDLE hdl = OpenProcess(PROCESS_TERMINATE, FALSE, processes.at(i)->getPID());
 					TerminateProcess(hdl, 1);
+					log_info << "close critical pid "<< processes.at(i)->getPID() << std::endl;
+					if(processes.at(i)->getWorker())
+						processes.at(i)->getWorker()->join();
 					processes.at(i)->setAlive(false);
 				}
 			}
@@ -321,7 +333,7 @@ void restartApp(std::wstring path) {
 	memset(&processInfo, 0, sizeof(processInfo));
 
 	path.substr(0, path.size() - strlen("app.asar.unpacked"));
-	path += L"\Streamlabs OBS.exe";
+	path += L"\\Streamlabs OBS.exe";
 
 	CreateProcess(path.c_str(),
 		L"",
@@ -339,9 +351,10 @@ void restartApp(std::wstring path) {
 int main(int argc, char** argv)
 {
 	std::wstring path;
+	std::wstring log_path = L"";
 	std::string version;
 	std::string isDevEnv;
-
+	
 	// Frontend pass as non-unicode
 	if (argc >= 1)
 		path = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(argv[0]);
@@ -349,6 +362,11 @@ int main(int argc, char** argv)
 		version = argv[2];
 	if (argc >= 4)
 		isDevEnv = argv[3];
+	if (argc >= 5)
+		log_path = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(argv[4]);
+
+	logging_start(log_path);
+	log_info << "main just started "<< std::endl;
 
 	std::string pid_path(get_temp_directory());
 	pid_path.append("crash-handler.pid");
@@ -380,7 +398,7 @@ int main(int argc, char** argv)
 		if (processes.size() == 0 && time_elapsed > TimeoutSeconds)
 			break;
 	}
-
+	log_info << "main got exit from loop with exitApp "<< *exitApp << std::endl;
 	*exitApp = true;
 	if (processManager.joinable())
 		processManager.join();
@@ -389,7 +407,7 @@ int main(int argc, char** argv)
 	if (metricsPipe.joinable())
 		metricsPipe.join();
 	close(closeAll);
-
+	
 	if (doRestartApp) {
 		restartApp(path);
 	}
@@ -405,7 +423,8 @@ int main(int argc, char** argv)
 	{
 		metricsServer.Shutdown();
 	}
-
+  	log_info << "main finished " << std::endl;
+	logging_end();
 	return 0;
 }
 

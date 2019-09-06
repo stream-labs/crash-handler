@@ -5,12 +5,12 @@ const net = require('net');
 
 function tryConnect(buffer, attempt = 5, waitMs = 100) {
     const socket = net.connect('\\\\.\\pipe\\slobs-crash-handler');
-     socket.on('connect', () => {
+    socket.on('connect', () => {
       socket.write(buffer);
-      socket.destroy();
+      socket.end();
       socket.unref();
     });
-     socket.on('error', () => {
+    socket.on('error', () => {
       socket.destroy();
       socket.unref();
       if (attempt > 0) {
@@ -22,41 +22,46 @@ function tryConnect(buffer, attempt = 5, waitMs = 100) {
 }
 
 function registerProcess(pid, isCritial = false) {
-    const buffer = new Buffer(512);
+    const buffer = new Buffer(6);
     let offset = 0;
-    buffer.writeUInt32LE(0, offset++);
-    buffer.writeUInt32LE(isCritial, offset++);
+    buffer.writeUInt8(0, offset++);
+    buffer.writeUInt8(isCritial, offset++);
     buffer.writeUInt32LE(pid, offset++);
   
     tryConnect(buffer);
 }
 
 function unregisterProcess(pid) {
-    const buffer = new Buffer(512);
+    const buffer = new Buffer(5);
     let offset = 0;
-    buffer.writeUInt32LE(1, offset++);
+    buffer.writeUInt8(1, offset++);
     buffer.writeUInt32LE(pid, offset++);
     
     tryConnect(buffer);
 }
 
 function terminateCrashHandler(pid) {
-    const buffer = new Buffer(512);
+    const buffer = new Buffer(5);
     let offset = 0;
-    buffer.writeUInt32LE(2, offset++);
+    buffer.writeUInt8(2, offset++);
     buffer.writeUInt32LE(pid, offset++);
 
     tryConnect(buffer);
   }
 
-function startCrashHandler(workingDirectory, version, isDevEnv) {
+function startCrashHandler(workingDirectory, version, isDevEnv, cachePath = "") {
     const { spawn } = require('child_process');
 
     const processPath = workingDirectory.replace('app.asar', 'app.asar.unpacked') +
     '\\node_modules\\crash-handler';
 
+    let spawnArguments = [workingDirectory, version, isDevEnv ];
+
+    if ( cachePath.length > 0 ) 
+      spawnArguments.push( cachePath+'\\crash-handler.log' );
+
     const subprocess = spawn(processPath +
-      '\\crash-handler-process.exe', [workingDirectory, version, isDevEnv], {
+      '\\crash-handler-process.exe', spawnArguments, {
       detached: true,
       stdio: 'ignore'
     });
