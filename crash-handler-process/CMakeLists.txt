@@ -56,6 +56,9 @@ SET(PROJECT_SOURCE
 ADD_DEFINITIONS(-DUNICODE)
 ADD_EXECUTABLE(crash-handler-process ${PROJECT_SOURCE})
 
+set_property(TARGET crash-handler-process PROPERTY CXX_STANDARD 17)
+set_property(TARGET crash-handler-process PROPERTY CXX_STANDARD_REQUIRED ON)
+
 # Include/link crash manager dependencies
 target_include_directories(crash-handler-process PUBLIC 
 	"${nlohmannjson_SOURCE_DIR}/single_include"

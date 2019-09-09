@@ -55,7 +55,7 @@ function startCrashHandler(workingDirectory, version, isDevEnv, cachePath = "") 
     const processPath = workingDirectory.replace('app.asar', 'app.asar.unpacked') +
     '\\node_modules\\crash-handler';
 
-    let spawnArguments = [workingDirectory, version, isDevEnv ];
+    let spawnArguments = [workingDirectory, version, isDevEnv];
 
     if ( cachePath.length > 0 ) 
       spawnArguments.push( cachePath+'\\crash-handler.log' );
