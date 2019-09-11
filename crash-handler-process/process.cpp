@@ -38,7 +38,7 @@ Process::Process(uint64_t pid, bool isCritical) {
 	m_isAlive = true;
 	m_stop = false;
 	m_worker = nullptr;
-	m_hdl = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+	m_hdl = OpenProcess(PROCESS_ALL_ACCESS, FALSE, getPIDDWORD());
 
 	if (m_hdl)
 		m_worker = new std::thread(check, this);
@@ -50,6 +50,10 @@ Process::~Process() {
 
 uint64_t Process::getPID(void) {
 	return m_pid;
+}
+
+DWORD Process::getPIDDWORD(void) {
+	return static_cast<DWORD>(m_pid);
 }
 
 void Process::setPID(uint64_t pid) {

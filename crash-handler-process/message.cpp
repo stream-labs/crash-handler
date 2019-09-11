@@ -27,8 +27,14 @@ bool Message::readBool() {
 	return value;
 }
 
-uint32_t Message::readUInt32() {
-	uint32_t value = reinterpret_cast<uint64_t&> (m_buffer[index]);
+uint8_t Message::readUInt8() {
+	uint8_t value = reinterpret_cast<uint8_t&> (m_buffer[index]);
+	index += sizeof(uint8_t);
+	return value;
+}
+
+uint64_t Message::readUInt64() {
+	uint64_t value = reinterpret_cast<uint64_t&> (m_buffer[index]);
 	index += sizeof(uint64_t);
 	return value;
 }

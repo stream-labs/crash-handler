@@ -15,6 +15,7 @@
 #include "logger.hpp"
 
 #include <ctime>
+#include <time.h>
 #include <chrono>
 #include <sstream>
 #include <iomanip>
@@ -24,22 +25,27 @@ std::ofstream log_output_file;
 const std::string getTimeStamp() 
 {
     const std::time_t t = std::time(nullptr);
+
+    struct tm buf;
+    localtime_s(&buf, &t);
+
     char mbstr[128]={0};
-    std::strftime(mbstr, sizeof(mbstr), "%Y%m%d:%H%M%S.", std::localtime(&t));
+    std::strftime(mbstr, sizeof(mbstr), "%Y%m%d:%H%M%S.", &buf);
     unsigned __int64 now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    std::ostringstream ss;
+    
+	std::ostringstream ss;
     ss << mbstr << std::setw(3) << std::setfill('0') << now%1000;
     return ss.str();
 }
 
 void logging_start(std::wstring log_path)
 {
-    if( !log_output_disabled && log_path.size() > 0) 
+    if (!log_output_disabled && log_path.size() > 0) 
         log_output_file.open( log_path, std::ios_base::out | std::ios_base::app);
 }
 
 void logging_end()
 {
-    if( !log_output_disabled) 
+    if (!log_output_disabled) 
         log_output_file.close();
 }

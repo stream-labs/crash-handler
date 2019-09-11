@@ -88,8 +88,8 @@ VOID DisconnectAndReconnect(DWORD i)
 		READING_STATE;
 }
 
-NamedSocket_win::NamedSocket_win() {
-	BOOL fSuccess;
+NamedSocket_win::NamedSocket_win() : m_handle(0)
+{
 	LPTSTR lpszPipename = TEXT("\\\\.\\pipe\\slobs-crash-handler");
 
 	for (int i = 0; i < INSTANCES; i++)
@@ -191,10 +191,11 @@ void processRequest(std::vector<char> p_buffer, std::vector<Process*>*  processe
 	Message msg(p_buffer);
 	log_info << "processRequest start" << std::endl;
 	mu->lock();
-	switch (msg.readBool()) {
-	case REGISTER: {
+
+	switch (static_cast<Action>(msg.readUInt8())) {
+	case Action::REGISTER: {
 		bool isCritical = msg.readBool();
-		uint32_t pid = msg.readUInt32();
+		uint64_t pid = msg.readUInt64();
 		log_info << "processRequest register " << pid << ", " << isCritical << std::endl;
 		auto it = std::find_if(processes->begin(), processes->end(), [&pid](Process* p) {
 			return p->getPID() == pid;
@@ -204,8 +205,8 @@ void processRequest(std::vector<char> p_buffer, std::vector<Process*>*  processe
 		}
 		break;
 	}
-	case UNREGISTER: {
-		uint32_t pid = msg.readUInt32();
+	case Action::UNREGISTER: {
+		uint64_t pid = msg.readUInt64();
 		auto it = std::find_if(processes->begin(), processes->end(), [&pid](Process* p) {
 			return p->getPID() == pid;
 		});
@@ -225,8 +226,7 @@ void processRequest(std::vector<char> p_buffer, std::vector<Process*>*  processe
 		acknowledgeUnregister();
 		break;
 	}
-	case EXIT:
-	{
+	case Action::EXIT: {
 		log_info << "processRequest get EXIT command" << std::endl;
 		if(auto_unregister_before_exit) {
 			auto it = std::find_if(processes->begin(), processes->end(), [](Process* p) {

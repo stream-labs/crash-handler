@@ -34,6 +34,7 @@ public:
 	std::mutex mutex;
 
 	uint64_t getPID(void);
+	DWORD getPIDDWORD(void);
 	void setPID(uint64_t pid);
 	bool getCritical(void);
 	void setCritical(bool isCritical);
