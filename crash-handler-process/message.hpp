@@ -14,7 +14,7 @@
 
 #include <vector>
 
-enum Action {
+enum class Action : uint8_t {
 	REGISTER,
 	UNREGISTER,
 	EXIT
@@ -31,5 +31,6 @@ private:
 	
 public:
 	bool readBool();
-	uint32_t readUInt32();
+	uint64_t readUInt64();
+	uint8_t readUInt8();
 };

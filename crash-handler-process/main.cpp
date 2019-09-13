@@ -318,7 +318,7 @@ void close(bool doCloseALl) {
 	for (size_t i = 0; i < processes.size(); i++) {
 		if (processes.at(i)->getAlive() &&
 			!processes.at(i)->getCritical() && closeAll) {
-			HANDLE hdl = OpenProcess(PROCESS_TERMINATE, FALSE, processes.at(i)->getPID());
+			HANDLE hdl = OpenProcess(PROCESS_TERMINATE, FALSE, processes.at(i)->getPIDDWORD());
 			TerminateProcess(hdl, 1);
 			log_info << "close pid "<< processes.at(i)->getPID() << std::endl;
 			
@@ -332,7 +332,7 @@ void close(bool doCloseALl) {
 				auto t = std::chrono::high_resolution_clock::now();
 				auto delta = t - start;
 				if (std::chrono::duration_cast<std::chrono::milliseconds>(delta).count() > 2000) {
-					HANDLE hdl = OpenProcess(PROCESS_TERMINATE, FALSE, processes.at(i)->getPID());
+					HANDLE hdl = OpenProcess(PROCESS_TERMINATE, FALSE, processes.at(i)->getPIDDWORD());
 					TerminateProcess(hdl, 1);
 					log_info << "close critical pid "<< processes.at(i)->getPID() << std::endl;
 					if(processes.at(i)->getWorker())
@@ -351,10 +351,10 @@ void restartApp(std::wstring path) {
 	memset(&info, 0, sizeof(info));
 	memset(&processInfo, 0, sizeof(processInfo));
 
-	path.substr(0, path.size() - strlen("app.asar.unpacked"));
-	path += L"\\Streamlabs OBS.exe";
+	std::wstring slobs_path = path.substr(0, path.size() - strlen("app.asar.unpacked"));
+	slobs_path += L"\\Streamlabs OBS.exe";
 
-	CreateProcess(path.c_str(),
+	CreateProcess(slobs_path.c_str(),
 		L"",
 		NULL,
 		NULL,
