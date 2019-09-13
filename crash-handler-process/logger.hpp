@@ -4,14 +4,11 @@
 #include <fstream>
 #include <string>
 
-#ifdef NDEBUG
-    const bool log_output_disabled = true;
-#else
-    const bool log_output_disabled = false;
-#endif
 
 const std::string getTimeStamp();
+
 extern std::ofstream log_output_file;
+extern bool log_output_disabled;
 
 #define log_info if (log_output_disabled) {} else log_output_file << "INF:" << getTimeStamp() <<  ": " 
 #define log_debug if (log_output_disabled) {} else log_output_file << "DBG:" << getTimeStamp() <<  ": "
