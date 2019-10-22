@@ -195,7 +195,7 @@ void processRequest(std::vector<char> p_buffer, std::vector<Process*>*  processe
 	switch (static_cast<Action>(msg.readUInt8())) {
 	case Action::REGISTER: {
 		bool isCritical = msg.readBool();
-		uint64_t pid = msg.readUInt64();
+		uint32_t pid = msg.readUInt32();
 		log_info << "processRequest register " << pid << ", " << isCritical << std::endl;
 		auto it = std::find_if(processes->begin(), processes->end(), [&pid](Process* p) {
 			return p->getPID() == pid;
@@ -206,7 +206,7 @@ void processRequest(std::vector<char> p_buffer, std::vector<Process*>*  processe
 		break;
 	}
 	case Action::UNREGISTER: {
-		uint64_t pid = msg.readUInt64();
+		uint32_t pid = msg.readUInt32();
 		auto it = std::find_if(processes->begin(), processes->end(), [&pid](Process* p) {
 			return p->getPID() == pid;
 		});
@@ -331,7 +331,7 @@ bool NamedSocket_win::read(std::vector<Process*>* processes, std::mutex* mu, boo
 			// Start thread here
 			requests.push_back(new std::thread(processRequest, Pipe[i].chRequest, processes, mu, exit));
 		} else {
-			log_error << "NamedSocket_win::read failed for " << dwErr << "\n" ;
+			log_error << "NamedSocket_win::read failed with error code " << dwErr << "\n" ;
 			if (!fSuccess && (dwErr == ERROR_IO_PENDING))
 			{
 				Pipe[i].fPendingIO = TRUE;

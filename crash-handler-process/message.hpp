@@ -15,9 +15,10 @@
 #include <vector>
 
 enum class Action : uint8_t {
-	REGISTER,
-	UNREGISTER,
-	EXIT
+	REGISTER = 0,
+	UNREGISTER = 1,
+	EXIT = 2,
+    CRAHS_ID = 3
 };
 
 class Message {
@@ -32,5 +33,6 @@ private:
 public:
 	bool readBool();
 	uint64_t readUInt64();
+    uint32_t readUInt32();
 	uint8_t readUInt8();
 };

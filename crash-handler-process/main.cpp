@@ -240,8 +240,11 @@ void checkProcesses(std::mutex* m) {
 			uint64_t normalProcessFirstDeathTime = UINT64_MAX;
 			for (size_t i = 0; i < processes.size(); i++) {
 				if (processes.at(i)->getCritical()) {
-					criticalProcessAlive = processes.at(i)->getAlive();
+					criticalProcessAlive = processes.at(i)->checkAlive();
 					criticalProcessDeathTime = processes.at(i)->getStopTime();
+
+					if(!criticalProcessAlive)
+						break;
 				}
 				else {
 					normalProcessFirstDeathTime = std::min(processes.at(i)->getStopTime(), normalProcessFirstDeathTime);
@@ -307,7 +310,7 @@ void checkProcesses(std::mutex* m) {
 		}
 	}
 	*exitApp = true;
-	log_debug << "checkProcesses end" << std::endl;
+	log_debug << "checkProcesses finished close all " << ( closeAll? 1:0) << std::endl;
 }
 
 void close(bool doCloseALl) {

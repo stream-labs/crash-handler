@@ -41,6 +41,7 @@ public:
 	void setCritical(bool isCritical);
 	bool getAlive(void);
 	void setAlive(bool isAlive);
+	bool checkAlive(void);
 	bool getStopped(void);
     uint64_t getStopTime(void);
 	std::thread* getWorker(void);
