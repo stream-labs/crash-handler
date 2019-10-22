@@ -43,6 +43,7 @@ bool closeAll = false;
 std::mutex* mu = new std::mutex();
 MetricsProvider metricsServer;
 static const uint32_t TimeoutSeconds = 10;
+extern int obs_server_crash_id;
 
 static thread_local std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 std::string from_utf16_wide_to_utf8(const wchar_t* from, size_t length = -1)
@@ -285,6 +286,16 @@ void checkProcesses(std::mutex* m) {
 				terminalCriticalProcesses();
 
 				log_debug << "checkProcesses critical process ended" << std::endl;
+			} else if (obs_server_crash_id == 0x00001) {
+				int code = MessageBox(
+					NULL,
+					L"Out of memory."
+					L"\n\nProgram cannot allocate memory to continue function properly and will be stopped."
+					L"\nYou may considering closing some programs or reboot computer before starting a program again."
+					L"\nFind more information at howto.streamlabs.com",
+					L"Out of memory.",
+					MB_OK | MB_SYSTEMMODAL
+				);
 			}
 
 			closeAll = true;
