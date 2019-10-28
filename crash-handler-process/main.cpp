@@ -290,8 +290,9 @@ void checkProcesses(std::mutex* m) {
 				int code = MessageBox(
 					NULL,
 					L"Out of memory."
-					L"\n\nProgram cannot allocate memory to continue function properly and will be stopped."
-					L"\nYou may considering closing some programs or reboot computer before starting a program again."
+					L"\n\nThe application can't allocate memory to continue functioning properly."
+					L"\nConsider closing other programs that may be consuming a lot of resources before"
+					L"\nstarting the application again."
 					L"\nFind more information at howto.streamlabs.com",
 					L"Out of memory.",
 					MB_OK | MB_SYSTEMMODAL
