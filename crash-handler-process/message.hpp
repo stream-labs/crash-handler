@@ -18,7 +18,7 @@ enum class Action : uint8_t {
 	REGISTER = 0,
 	UNREGISTER = 1,
 	EXIT = 2,
-    CRAHS_ID = 3
+	CRASH_ID = 3
 };
 
 class Message {
