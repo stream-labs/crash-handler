@@ -41,7 +41,7 @@ typedef struct
 PIPEINST Pipe[INSTANCES];
 HANDLE hEvents[INSTANCES];
 const bool auto_unregister_before_exit = false;
-
+int obs_server_crash_id = 0;
 std::vector<std::thread*> requests;
 
 BOOL ConnectToNewClient(HANDLE hPipe, LPOVERLAPPED lpo)
@@ -240,6 +240,13 @@ void processRequest(std::vector<char> p_buffer, std::vector<Process*>*  processe
 			}
 		}
 		*exitApp = true;
+		break;
+	}
+	case Action::CRASH_ID: {
+		uint32_t crash_id = msg.readUInt32();
+		uint32_t pid = msg.readUInt32();
+		obs_server_crash_id = crash_id;
+		log_info << "processRequest get CRASH_ID command with id " << crash_id << std::endl;
 		break;
 	}
 	default:

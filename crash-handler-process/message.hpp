@@ -33,6 +33,6 @@ private:
 public:
 	bool readBool();
 	uint64_t readUInt64();
-	uint32_t readUInt32();
+  uint32_t readUInt32();
 	uint8_t readUInt8();
 };
