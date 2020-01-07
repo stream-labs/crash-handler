@@ -23,7 +23,7 @@ void check(void* p) {
 	Process* proc = reinterpret_cast<Process*> (p);
 	log_info << "check started" << std::endl;
 	if (!WaitForSingleObject(proc->getHandle(), INFINITE)) {
-		log_info << "check in wait for single object" << std::endl;
+		log_info << "check in wait for single object " << proc->getPID() << ", Critical " << (proc->getCritical() ? 1 : 0) << std::endl;
 		proc->mutex.lock();
 		proc->setAlive(false);
 		proc->stopWorker();
@@ -69,6 +69,25 @@ void Process::setCritical(bool isCritical) {
 }
 
 bool Process::getAlive(void) {
+	return m_isAlive;
+}
+
+bool Process::checkAlive(void) {
+	if(m_isAlive) 
+	{
+		DWORD exitCode = 0;
+		if( GetExitCodeProcess(m_hdl, &exitCode ) != 0)
+		{
+			log_info << "Process exit code "<< exitCode << std::endl;
+			if(exitCode != STILL_ACTIVE) 
+			{
+				m_isAlive = false;
+			}
+		} else {
+			log_error << "Failed to get process status " << std::endl;
+		}
+	} 
+
 	return m_isAlive;
 }
 

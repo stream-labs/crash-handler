@@ -38,3 +38,9 @@ uint64_t Message::readUInt64() {
 	index += sizeof(uint64_t);
 	return value;
 }
+
+uint32_t Message::readUInt32() {
+	uint32_t value = reinterpret_cast<uint32_t&> (m_buffer[index]);
+	index += sizeof(uint32_t);
+	return value;
+}
