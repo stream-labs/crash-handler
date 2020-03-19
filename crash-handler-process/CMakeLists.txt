@@ -43,13 +43,28 @@ ENDIF()
 #############################
 SET(PROJECT_SOURCE
 	"${PROJECT_SOURCE_DIR}/process.cpp" "${PROJECT_SOURCE_DIR}/process.hpp"
-	"${PROJECT_SOURCE_DIR}/metricsprovider.cpp" "${PROJECT_SOURCE_DIR}/metricsprovider.hpp"
+	"${PROJECT_SOURCE_DIR}/process-manager.cpp" "${PROJECT_SOURCE_DIR}/process-manager.hpp"
+	"${PROJECT_SOURCE_DIR}/handler.cpp" "${PROJECT_SOURCE_DIR}/handler.hpp"
 	"${PROJECT_SOURCE_DIR}/message.cpp" "${PROJECT_SOURCE_DIR}/message.hpp"
-	"${PROJECT_SOURCE_DIR}/namedsocket-win.cpp" "${PROJECT_SOURCE_DIR}/namedsocket-win.hpp"
-	"${PROJECT_SOURCE_DIR}/namedsocket.cpp" "${PROJECT_SOURCE_DIR}/namedsocket.hpp"
+	"${PROJECT_SOURCE_DIR}/socket.hpp"
 	"${PROJECT_SOURCE_DIR}/logger.cpp" "${PROJECT_SOURCE_DIR}/logger.hpp"
 	"${PROJECT_SOURCE_DIR}/main.cpp"
+	"${PROJECT_SOURCE_DIR}/util.hpp"
 )
+
+IF(WIN32)
+	SET(WINDOWS_SOURCE
+		"${PROJECT_SOURCE_DIR}/platforms/util-win.cpp"
+		"${PROJECT_SOURCE_DIR}/platforms/socket-win.cpp" "${PROJECT_SOURCE_DIR}/platforms/socket-win.hpp"
+		"${PROJECT_SOURCE_DIR}/platforms/process-win.cpp" "${PROJECT_SOURCE_DIR}/platforms/process-win.hpp"
+	)
+ELSE(APPLE)
+	SET(APPLE_SOURCE
+		"${PROJECT_SOURCE_DIR}/platforms/util-osx.mm"
+		"${PROJECT_SOURCE_DIR}/platforms/socket-osx.cpp" "${PROJECT_SOURCE_DIR}/platforms/socket-osx.hpp"
+		"${PROJECT_SOURCE_DIR}/platforms/process-osx.mm" "${PROJECT_SOURCE_DIR}/platforms/process-osx.hpp"
+	)
+ENDIF()
 
 
 #############################
@@ -58,7 +73,12 @@ SET(PROJECT_SOURCE
 IF(WIN32)
 	ADD_DEFINITIONS(-DUNICODE)
 ENDIF()
-ADD_EXECUTABLE(crash-handler-process ${PROJECT_SOURCE})
+
+IF(WIN32)
+	ADD_EXECUTABLE(crash-handler-process ${PROJECT_SOURCE} ${WINDOWS_SOURCE})
+ELSE(APPLE)
+	ADD_EXECUTABLE(crash-handler-process ${PROJECT_SOURCE} ${APPLE_SOURCE})
+ENDIF()
 
 set_property(TARGET crash-handler-process PROPERTY CXX_STANDARD 17)
 set_property(TARGET crash-handler-process PROPERTY CXX_STANDARD_REQUIRED ON)

@@ -12,28 +12,32 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-#include <windows.h> 
-#include <tchar.h>
 #include <iostream>
 #include <algorithm>
 #include <vector>
-#include "namedsocket-win.hpp"
-#include "metricsprovider.hpp"
 #include "logger.hpp"
 
 #include <queue>
 #include <sstream>
 #include <fstream>
 #include <codecvt>
+#include "process.hpp"
+#ifdef WIN32
 #include <windows.h>
 #include <psapi.h>
+#include <tchar.h>
+#include "namedsocket-win.hpp"
+#include "metricsprovider.hpp"
+#endif
 
 // Undefine windows min and max
 #undef min
 #undef max
 
+#ifdef WIN32
 VOID DisconnectAndReconnect(DWORD);
 BOOL ConnectToNewClient(HANDLE, LPOVERLAPPED);
+#endif
 
 std::vector<Process*> processes;
 bool* exitApp = nullptr;
@@ -41,7 +45,9 @@ bool doRestartApp = false;
 bool monitoring = false;
 bool closeAll = false;
 std::mutex* mu = new std::mutex();
+#ifdef WIN32
 MetricsProvider metricsServer;
+#endif
 static const uint32_t TimeoutSeconds = 10;
 extern int obs_server_crash_id;
 
@@ -86,16 +92,22 @@ struct ProcessInfo
 ProcessInfo open_process(uint64_t handle)
 {
 	ProcessInfo pi;
+#ifdef WIN32
 	DWORD       flags = PROCESS_QUERY_INFORMATION | PROCESS_TERMINATE | PROCESS_VM_READ;
 	pi.handle = (uint64_t)OpenProcess(flags, false, (DWORD)handle);
+#endif
 	return pi;
 }
 bool close_process(ProcessInfo pi)
 {
+#ifdef WIN32
 	return !!CloseHandle((HANDLE)pi.handle);
+#endif
+	return false;
 }
 std::string get_process_name(ProcessInfo pi)
 {
+#ifdef WIN32
 	LPWSTR  lpBuffer = NULL;
 	DWORD   dwBufferLength = 256;
 	HANDLE  hProcess = (HANDLE)pi.handle;
@@ -128,6 +140,8 @@ std::string get_process_name(ProcessInfo pi)
 	}
 	/* Path too long */
 	return {};
+#endif
+	return "";
 }
 std::fstream open_file(std::string& file_path, std::fstream::openmode mode)
 {
@@ -135,7 +149,10 @@ std::fstream open_file(std::string& file_path, std::fstream::openmode mode)
 }
 bool kill(ProcessInfo pinfo, uint32_t code)
 {
+#ifdef WIN32
 	return TerminateProcess(reinterpret_cast<HANDLE>(pinfo.handle), code);
+#endif
+	return true;
 }
 static void check_pid_file(std::string& pid_path)
 {
@@ -160,6 +177,7 @@ static void check_pid_file(std::string& pid_path)
 }
 std::string get_temp_directory()
 {
+#ifdef WIN32
 	constexpr DWORD tmp_size = MAX_PATH + 1;
 	std::wstring    tmp(tmp_size, wchar_t());
 	GetTempPathW(tmp_size, &tmp[0]);
@@ -173,7 +191,11 @@ std::string get_temp_directory()
 	* it's explicitly meant to be used this way per MSDN. */
 	GetLongPathNameW(&tmp[0], &tmp[0], tmp_len);
 	return from_utf16_wide_to_utf8(tmp.data());
+#endif
+	return "";
 }
+
+#ifdef WIN32
 static void write_pid_file(std::string& pid_path, uint64_t pid)
 {
 	std::fstream::openmode mode = std::fstream::out | std::fstream::binary | std::fstream::trunc;
@@ -182,8 +204,10 @@ static void write_pid_file(std::string& pid_path, uint64_t pid)
 		return;
 	pid_file.write(reinterpret_cast<char*>(&pid), sizeof(pid));
 }
+#endif
 
 void terminalCriticalProcesses(void) {
+#ifdef WIN32
 	HANDLE hPipe = CreateFile(
 		TEXT("\\\\.\\pipe\\exit-slobs-crash-handler"),
 		GENERIC_READ |
@@ -209,8 +233,9 @@ void terminalCriticalProcesses(void) {
 
 		CloseHandle(hPipe);
 	}
+#endif
 }
-
+#ifdef WIN32
 void checkProcesses(std::mutex* m) {
 
 	while (!(*exitApp)) {
@@ -253,7 +278,7 @@ void checkProcesses(std::mutex* m) {
 			}
 			if (!processes.at(index)->getCritical() && criticalProcessAlive) {
 				log_error << "checkProcesses critical process alive" << std::endl;
-
+#ifdef WIN32
 				int code = MessageBox(
 					NULL,
 					L"An error occurred which has caused Streamlabs OBS to close. Don't worry! If you were streaming or recording, that is still happening in the background."
@@ -283,10 +308,12 @@ void checkProcesses(std::mutex* m) {
 				default:
 					break;
 				}
+#endif
 				terminalCriticalProcesses();
 
 				log_debug << "checkProcesses critical process ended" << std::endl;
 			} else if (obs_server_crash_id == 0x00001) {
+#ifdef WIN32
 				int code = MessageBox(
 					NULL,
 					L"Out of memory."
@@ -298,21 +325,8 @@ void checkProcesses(std::mutex* m) {
 					MB_OK | MB_SYSTEMMODAL
 				);
 			}
-
+#endif
 			closeAll = true;
-
-			// Metrics
-			if (normalProcessFirstDeathTime > criticalProcessDeathTime) {
-				std::cout << "Frontend will be blamed" << std::endl;
-				metricsServer.BlameFrontend();
-			}
-			else if (normalProcessFirstDeathTime < criticalProcessDeathTime) {
-				std::cout << "Backend will be blamed" << std::endl;
-				metricsServer.BlameServer();
-			}
-			else {
-				std::cout << "Can't verify process death times, checking if critical process is alive" << std::endl;
-				(!processes.at(index)->getCritical() && criticalProcessAlive) ? metricsServer.BlameFrontend() : metricsServer.BlameServer();
 			}
 
 			*exitApp = true;
@@ -326,37 +340,41 @@ void checkProcesses(std::mutex* m) {
 }
 
 void close(bool doCloseALl) {
-	log_info << "close all "<< doCloseALl << std::endl;
-	for (size_t i = 0; i < processes.size(); i++) {
-		processes.at(i)->stopWorker();
-	}
-	for (size_t i = 0; i < processes.size(); i++) {
-		if (processes.at(i)->getAlive() &&
-			!processes.at(i)->getCritical() && closeAll) {
-			HANDLE hdl = OpenProcess(PROCESS_TERMINATE, FALSE, processes.at(i)->getPIDDWORD());
-			TerminateProcess(hdl, 1);
-			log_info << "close pid "<< processes.at(i)->getPID() << std::endl;
+// 	log_info << "close all "<< doCloseALl << std::endl;
+// 	for (size_t i = 0; i < processes.size(); i++) {
+// 		processes.at(i)->stopWorker();
+// 	}
+// 	for (size_t i = 0; i < processes.size(); i++) {
+// 		if (processes.at(i)->getAlive() &&
+// 			!processes.at(i)->getCritical() && closeAll) {
+// #ifdef WIN32
+// 			HANDLE hdl = OpenProcess(PROCESS_TERMINATE, FALSE, processes.at(i)->getPIDDWORD());
+// 			TerminateProcess(hdl, 1);
+// #endif
+// 			log_info << "close pid "<< processes.at(i)->getPID() << std::endl;
 			
-			if(processes.at(i)->getWorker())
-				processes.at(i)->getWorker()->join();
-		}
-		else if (processes.at(i)->getCritical()) {
-			auto start = std::chrono::high_resolution_clock::now();
-			log_info << "close critical pid "<< processes.at(i)->getPID() << std::endl;
-			while (processes.at(i)->getAlive()) {
-				auto t = std::chrono::high_resolution_clock::now();
-				auto delta = t - start;
-				if (std::chrono::duration_cast<std::chrono::milliseconds>(delta).count() > 2000) {
-					HANDLE hdl = OpenProcess(PROCESS_TERMINATE, FALSE, processes.at(i)->getPIDDWORD());
-					TerminateProcess(hdl, 1);
-					log_info << "close critical pid "<< processes.at(i)->getPID() << std::endl;
-					if(processes.at(i)->getWorker())
-						processes.at(i)->getWorker()->join();
-					processes.at(i)->setAlive(false);
-				}
-			}
-		}
-	}
+// 			if(processes.at(i)->getWorker())
+// 				processes.at(i)->getWorker()->join();
+// 		}
+// 		else if (processes.at(i)->getCritical()) {
+// 			auto start = std::chrono::high_resolution_clock::now();
+// 			log_info << "close critical pid "<< processes.at(i)->getPID() << std::endl;
+// 			while (processes.at(i)->getAlive()) {
+// 				auto t = std::chrono::high_resolution_clock::now();
+// #ifdef WIN32
+// 				auto delta = t - start;
+// 				if (std::chrono::duration_cast<std::chrono::milliseconds>(delta).count() > 2000) {
+// 					HANDLE hdl = OpenProcess(PROCESS_TERMINATE, FALSE, processes.at(i)->getPIDDWORD());
+// 					TerminateProcess(hdl, 1);
+// 					log_info << "close critical pid "<< processes.at(i)->getPID() << std::endl;
+// 					if(processes.at(i)->getWorker())
+// 						processes.at(i)->getWorker()->join();
+// 					processes.at(i)->setAlive(false);
+// 				}
+// #endif
+// 			}
+// 		}
+// 	}
 }
 
 void restartApp(std::wstring path) {
@@ -381,6 +399,7 @@ void restartApp(std::wstring path) {
 		&processInfo
 	);
 }
+#endif
 
 int main(int argc, char** argv)
 {
@@ -405,26 +424,20 @@ int main(int argc, char** argv)
 	std::string pid_path(get_temp_directory());
 	pid_path.append("crash-handler.pid");
 	check_pid_file(pid_path);
-
+#ifdef WIN32
 	uint64_t currentPID = GetCurrentProcessId();
 	write_pid_file(pid_path, currentPID);
-
 	exitApp = new bool(false);
 
 	std::thread processManager(checkProcesses, mu);
 
-	std::thread metricsPipe([&]()
-	{
-		metricsServer.Initialize(L"\\\\.\\pipe\\metrics_pipe", version, isDevEnv == "true");
-		metricsServer.ConnectToClient();
-		metricsServer.StartPollingEvent();
-	});
-
 	std::unique_ptr<NamedSocket> sock = NamedSocket::create();
+#endif
 
 	// Timeout if no process connect
 	auto safe_timeout_start = std::chrono::steady_clock::now();
 	
+#ifdef WIN32
 	while (!(*exitApp) && !sock->read(&processes, mu, exitApp))
 	{
 		auto current_time = std::chrono::steady_clock::now();
@@ -437,26 +450,12 @@ int main(int argc, char** argv)
 	if (processManager.joinable())
 		processManager.join();
 
-	metricsServer.KillPendingIO();
-	if (metricsPipe.joinable())
-		metricsPipe.join();
 	close(closeAll);
 	
 	if (doRestartApp) {
 		restartApp(path);
 	}
-
-	// Wait until the server process dies or the metrics provider signals that we can shutdown
-	while (metricsServer.ServerIsActive() && !metricsServer.ServerExitedSuccessfully())
-	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(50));
-	}
-
-	// Only perform the shutdown for the metrics server if it exited successfully
-	if (metricsServer.ServerExitedSuccessfully())
-	{
-		metricsServer.Shutdown();
-	}
+#endif
   	log_info << "main finished " << std::endl;
 	logging_end();
 	return 0;

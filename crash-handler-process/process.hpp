@@ -14,7 +14,10 @@
 
 #include <thread>
 #include <mutex>
+#ifdef WIN32
 #include <windows.h>
+#include <psapi.h>
+#endif
 
 class Process {
 public:
@@ -29,13 +32,13 @@ private:
 	bool m_stop;
 	uint64_t m_stopTime = 0;
 	std::string m_name;
-	HANDLE m_hdl;
+	// HANDLE m_hdl;
 
 public:
 	std::mutex mutex;
 
 	uint64_t getPID(void);
-	DWORD getPIDDWORD(void);
+	// DWORD getPIDDWORD(void);
 	void setPID(uint64_t pid);
 	bool getCritical(void);
 	void setCritical(bool isCritical);
@@ -45,7 +48,7 @@ public:
 	bool getStopped(void);
     uint64_t getStopTime(void);
 	std::thread* getWorker(void);
-	HANDLE getHandle(void);
+	// HANDLE getHandle(void);
 
 	void stopWorker();
 };

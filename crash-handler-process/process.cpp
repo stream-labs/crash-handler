@@ -13,7 +13,6 @@
 ******************************************************************************/
 
 #include "process.hpp"
-#include <psapi.h>
 #include <iostream>
 #include <fstream>
 
@@ -22,13 +21,13 @@
 void check(void* p) {
 	Process* proc = reinterpret_cast<Process*> (p);
 	log_info << "check started" << std::endl;
-	if (!WaitForSingleObject(proc->getHandle(), INFINITE)) {
-		log_info << "check in wait for single object " << proc->getPID() << ", Critical " << (proc->getCritical() ? 1 : 0) << std::endl;
-		proc->mutex.lock();
-		proc->setAlive(false);
-		proc->stopWorker();
-		proc->mutex.unlock();
-	}
+	// if (!WaitForSingleObject(proc->getHandle(), INFINITE)) {
+	// 	log_info << "check in wait for single object " << proc->getPID() << ", Critical " << (proc->getCritical() ? 1 : 0) << std::endl;
+	// 	proc->mutex.lock();
+	// 	proc->setAlive(false);
+	// 	proc->stopWorker();
+	// 	proc->mutex.unlock();
+	// }
 }
 
 Process::Process(uint64_t pid, bool isCritical) {
@@ -38,10 +37,10 @@ Process::Process(uint64_t pid, bool isCritical) {
 	m_isAlive = true;
 	m_stop = false;
 	m_worker = nullptr;
-	m_hdl = OpenProcess(PROCESS_ALL_ACCESS, FALSE, getPIDDWORD());
+	// m_hdl = OpenProcess(PROCESS_ALL_ACCESS, FALSE, getPIDDWORD());
 
-	if (m_hdl)
-		m_worker = new std::thread(check, this);
+	// if (m_hdl)
+	// 	m_worker = new std::thread(check, this);
 }
 
 Process::~Process() {
@@ -52,9 +51,9 @@ uint64_t Process::getPID(void) {
 	return m_pid;
 }
 
-DWORD Process::getPIDDWORD(void) {
-	return static_cast<DWORD>(m_pid);
-}
+// DWORD Process::getPIDDWORD(void) {
+// 	return static_cast<DWORD>(m_pid);
+// }
 
 void Process::setPID(uint64_t pid) {
 	m_pid = pid;
@@ -75,17 +74,17 @@ bool Process::getAlive(void) {
 bool Process::checkAlive(void) {
 	if(m_isAlive) 
 	{
-		DWORD exitCode = 0;
-		if( GetExitCodeProcess(m_hdl, &exitCode ) != 0)
-		{
-			log_info << "Process exit code "<< exitCode << std::endl;
-			if(exitCode != STILL_ACTIVE) 
-			{
-				m_isAlive = false;
-			}
-		} else {
-			log_error << "Failed to get process status " << std::endl;
-		}
+		// DWORD exitCode = 0;
+		// if( GetExitCodeProcess(m_hdl, &exitCode ) != 0)
+		// {
+		// 	log_info << "Process exit code "<< exitCode << std::endl;
+		// 	if(exitCode != STILL_ACTIVE) 
+		// 	{
+		// 		m_isAlive = false;
+		// 	}
+		// } else {
+		// 	log_error << "Failed to get process status " << std::endl;
+		// }
 	} 
 
 	return m_isAlive;
@@ -112,6 +111,6 @@ std::thread* Process::getWorker(void) {
 	return m_worker;
 }
 
-HANDLE Process::getHandle(void) {
-	return m_hdl;
-}
+// HANDLE Process::getHandle(void) {
+// 	return m_hdl;
+// }

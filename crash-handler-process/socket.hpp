@@ -11,3 +11,17 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
+
+#include <memory>
+#ifdef WIN32
+#include <windows.h>
+#endif
+#include "message.hpp"
+
+#define MINIMUM_BUFFER_SIZE 512
+
+class Socket {
+public:
+	static std::unique_ptr<Socket> create();
+	virtual std::vector<char> read() = 0;
+};

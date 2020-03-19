@@ -12,7 +12,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-#include "namedsocket.hpp"
+#include "../socket.hpp"
 #include <vector>
 
 class NamedSocket_win : public NamedSocket {
