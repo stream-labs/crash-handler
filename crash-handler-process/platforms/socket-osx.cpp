@@ -20,3 +20,7 @@ std::vector<char> Socket_OSX::read() {
 	buffer.resize(bytes_read);
 	return buffer;
 }
+
+void Socket_OSX::disconnect() {
+	remove(FILE_NAME);
+}

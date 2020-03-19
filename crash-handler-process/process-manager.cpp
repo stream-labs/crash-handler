@@ -5,16 +5,16 @@ void ProcessManager::runWatcher() {
     m_watcher->isRunnning = false;
     m_watcher->stop = false;
     m_watcher->worker =
-        new std::thread(&ProcessManager::watcher, this, m_watcher);
+        new std::thread(&ProcessManager::watcher, this);
 
     if (m_watcher->worker->joinable())
         m_watcher->worker->join();
 }
 
-void ProcessManager::watcher(ThreadData* td) {
+void ProcessManager::watcher() {
     std::unique_ptr<Socket> socket = Socket::create();
 
-    while (!td->stop) {
+    while (!m_watcher->stop) {
         std::vector<char> buffer = socket->read();
         if (!buffer.size())
             continue;
@@ -37,7 +37,10 @@ void ProcessManager::watcher(ThreadData* td) {
                 break;
             }
             case Action::EXIT: {
-                td->stop = true;
+                log_info << "exit message received" << std::endl;
+                m_watcher->stop = true;
+                socket->disconnect();
+                socket.reset();
                 break;
             }
             case Action::CRASH_ID: {
@@ -50,10 +53,10 @@ void ProcessManager::watcher(ThreadData* td) {
     }
 }
 
-void ProcessManager::monitor(ThreadData* td) {
-    while (!td->stop) {
-        // TODO
-    }
+void ProcessManager::monitor() {
+    // while (!m_monitor->stop) {
+    //     // TODO
+    // }
 }
 
 void ProcessManager::startMonitoring() {
@@ -63,7 +66,7 @@ void ProcessManager::startMonitoring() {
     m_monitor->stop = false;
 
     m_watcher->worker =
-        new std::thread(&ProcessManager::monitor, this, m_monitor);
+        new std::thread(&ProcessManager::monitor, this);
 }
 
 void ProcessManager::stopMonitoring() {

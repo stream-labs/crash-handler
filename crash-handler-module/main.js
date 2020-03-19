@@ -5,7 +5,6 @@ const net = require('net');
 const fs = require('fs');
 
 function tryConnect(buffer, attempt = 5, waitMs = 100) {
-    console.log('try connecting ' + attempt);
     // const socket = net.connect('./slobs-crash-handler');
     // socket.on('connect', () => {
     //   console.log('Connected')
@@ -23,26 +22,19 @@ function tryConnect(buffer, attempt = 5, waitMs = 100) {
     //     }, waitMs);
     //   }
     // });
-    const ret = fs.open('./slobs-crash-handler',
+    const ret = fs.open('/tmp/slobs-crash-handler',
       fs.constants.O_WRONLY | fs.constants.O_DSYNC, (err, fd) => {
-        console.log('############HEREEEEEEE###################');
       if (err) {
-        console.log('error openning');
         if (attempt > 0) {
           setTimeout(() => {
-            console.log('trying agin now');
             tryConnect(buffer, attempt - 1, waitMs * 2);
           }, waitMs);
         }
         return;
       }
       const socket = new net.Socket({ fd });
-      console.log('Writing data');
       socket.write(buffer);
-      // socket.end();
-      // socket.unref();
     });
-    console.log('RET ' + ret);
 }
 
 function registerProcess(pid, isCritial = false) {
@@ -52,10 +44,8 @@ function registerProcess(pid, isCritial = false) {
     buffer.writeUInt8(0, offset++);
     buffer.writeUInt8(isCritial, offset++);
     buffer.writeUInt32LE(pid, offset++);
-  
-    setTimeout(() => {
-      tryConnect(buffer);
-    }, 1000);
+
+    tryConnect(buffer);
 }
 
 function unregisterProcess(pid) {

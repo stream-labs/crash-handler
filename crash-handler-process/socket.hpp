@@ -24,4 +24,5 @@ class Socket {
 public:
 	static std::unique_ptr<Socket> create();
 	virtual std::vector<char> read() = 0;
+    virtual void disconnect() = 0;
 };

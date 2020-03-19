@@ -5,7 +5,7 @@
 #include <sys/stat.h>
 #include "../logger.hpp"
 
-#define FILE_NAME "./slobs-crash-handler"
+#define FILE_NAME "/tmp/slobs-crash-handler"
 
 class Socket_OSX : public Socket {
 public:
@@ -14,4 +14,5 @@ public:
 
 public:
 	virtual std::vector<char> read() override;
+	virtual void disconnect() override;
 };

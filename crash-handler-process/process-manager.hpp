@@ -24,8 +24,8 @@ private:
     std::vector<Process*> processes;
     std::mutex m_mtx;
 
-    void watcher(ThreadData* td);
-    void monitor(ThreadData* td);
+    void watcher();
+    void monitor();
 
     void startMonitoring();
     void stopMonitoring();
