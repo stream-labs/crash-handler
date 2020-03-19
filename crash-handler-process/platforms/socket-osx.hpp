@@ -1,4 +1,11 @@
 #include "../socket.hpp"
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include "../logger.hpp"
+
+#define FILE_NAME "./slobs-crash-handler"
 
 class Socket_OSX : public Socket {
 public:

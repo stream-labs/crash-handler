@@ -2,6 +2,7 @@
 #include <thread>
 #include "socket.hpp"
 #include "process.hpp"
+#include "logger.hpp"
 
 struct ThreadData {
     bool         isRunnning;
@@ -20,7 +21,7 @@ public:
 private:
     ThreadData* m_watcher;
     ThreadData* m_monitor;
-    std::vector<Process*>* processes;
+    std::vector<Process*> processes;
     std::mutex m_mtx;
 
     void watcher(ThreadData* td);

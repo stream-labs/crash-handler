@@ -21,7 +21,6 @@
 #include <sstream>
 #include <fstream>
 #include <codecvt>
-#include "process.hpp"
 #ifdef WIN32
 #include <windows.h>
 #include <psapi.h>
@@ -29,6 +28,8 @@
 #include "namedsocket-win.hpp"
 #include "metricsprovider.hpp"
 #endif
+#include "process-manager.hpp"
+#include <unistd.h>
 
 // Undefine windows min and max
 #undef min
@@ -419,44 +420,46 @@ int main(int argc, char** argv)
 		log_path = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(argv[4]);
 
 	logging_start(log_path);
-	log_info << "main just started "<< std::endl;
 
-	std::string pid_path(get_temp_directory());
-	pid_path.append("crash-handler.pid");
-	check_pid_file(pid_path);
-#ifdef WIN32
-	uint64_t currentPID = GetCurrentProcessId();
-	write_pid_file(pid_path, currentPID);
-	exitApp = new bool(false);
+// 	std::string pid_path(get_temp_directory());
+// 	pid_path.append("crash-handler.pid");
+// 	check_pid_file(pid_path);
+// #ifdef WIN32
+// 	uint64_t currentPID = GetCurrentProcessId();
+// 	write_pid_file(pid_path, currentPID);
+// 	exitApp = new bool(false);
 
-	std::thread processManager(checkProcesses, mu);
+// 	std::thread processManager(checkProcesses, mu);
 
-	std::unique_ptr<NamedSocket> sock = NamedSocket::create();
-#endif
+// 	std::unique_ptr<NamedSocket> sock = NamedSocket::create();
+// #endif
 
-	// Timeout if no process connect
-	auto safe_timeout_start = std::chrono::steady_clock::now();
+// 	// Timeout if no process connect
+// 	auto safe_timeout_start = std::chrono::steady_clock::now();
 	
-#ifdef WIN32
-	while (!(*exitApp) && !sock->read(&processes, mu, exitApp))
-	{
-		auto current_time = std::chrono::steady_clock::now();
-		auto time_elapsed = std::chrono::duration_cast<std::chrono::seconds>(current_time - safe_timeout_start).count();
-		if (processes.size() == 0 && time_elapsed > TimeoutSeconds)
-			break;
-	}
-	log_info << "main got exit from loop with exitApp "<< *exitApp << std::endl;
-	*exitApp = true;
-	if (processManager.joinable())
-		processManager.join();
+// #ifdef WIN32
+// 	while (!(*exitApp) && !sock->read(&processes, mu, exitApp))
+// 	{
+// 		auto current_time = std::chrono::steady_clock::now();
+// 		auto time_elapsed = std::chrono::duration_cast<std::chrono::seconds>(current_time - safe_timeout_start).count();
+// 		if (processes.size() == 0 && time_elapsed > TimeoutSeconds)
+// 			break;
+// 	}
+// 	log_info << "main got exit from loop with exitApp "<< *exitApp << std::endl;
+// 	*exitApp = true;
+// 	if (processManager.joinable())
+// 		processManager.join();
 
-	close(closeAll);
+// 	close(closeAll);
 	
-	if (doRestartApp) {
-		restartApp(path);
-	}
-#endif
-  	log_info << "main finished " << std::endl;
+// 	if (doRestartApp) {
+// 		restartApp(path);
+// 	}
+// #endif
+
+	ProcessManager* pm = new ProcessManager();
+	pm->runWatcher();
+
 	logging_end();
 	return 0;
 }
