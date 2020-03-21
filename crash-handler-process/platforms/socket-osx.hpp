@@ -14,5 +14,5 @@ public:
 
 public:
 	virtual std::vector<char> read() override;
-	virtual void disconnect() override;
+	virtual void disconnect()        override;
 };

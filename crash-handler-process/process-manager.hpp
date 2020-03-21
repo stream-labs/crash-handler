@@ -21,7 +21,7 @@ public:
 private:
     ThreadData* m_watcher;
     ThreadData* m_monitor;
-    std::vector<Process*> processes;
+    std::vector<std::unique_ptr<Process>> processes;
     std::mutex m_mtx;
 
     void watcher();

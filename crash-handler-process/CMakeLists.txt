@@ -42,7 +42,7 @@ ENDIF()
 # Source, Libraries & Directories
 #############################
 SET(PROJECT_SOURCE
-	"${PROJECT_SOURCE_DIR}/process.cpp" "${PROJECT_SOURCE_DIR}/process.hpp"
+	"${PROJECT_SOURCE_DIR}/process.hpp"
 	"${PROJECT_SOURCE_DIR}/process-manager.cpp" "${PROJECT_SOURCE_DIR}/process-manager.hpp"
 	"${PROJECT_SOURCE_DIR}/handler.cpp" "${PROJECT_SOURCE_DIR}/handler.hpp"
 	"${PROJECT_SOURCE_DIR}/message.cpp" "${PROJECT_SOURCE_DIR}/message.hpp"
@@ -65,6 +65,8 @@ ELSE(APPLE)
 		"${PROJECT_SOURCE_DIR}/platforms/process-osx.mm" "${PROJECT_SOURCE_DIR}/platforms/process-osx.hpp"
 	)
 ENDIF()
+
+find_library(COCOA Cocoa)
 
 
 #############################
@@ -90,6 +92,8 @@ IF(WIN32)
 		"${cpr_SOURCE_DIR}/include")
 	target_link_libraries(crash-handler-process cpr)
 	target_link_libraries(crash-handler-process libcurl)
+ELSE()
+	target_link_libraries(crash-handler-process ${COCOA})
 ENDIF()
 
 #############################

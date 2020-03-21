@@ -17,38 +17,22 @@
 #ifdef WIN32
 #include <windows.h>
 #include <psapi.h>
+#else
+#include <sys/types.h>
+#include <signal.h>
 #endif
 
 class Process {
 public:
-	Process(uint64_t pid, bool isCritical);
-	~Process();
+	static std::unique_ptr<Process> create(int32_t pid, bool isCritical);
 
-private:
-	uint64_t m_pid;
-	bool m_isCritical;
-	std::thread* m_worker;
-	bool m_isAlive;
-	bool m_stop;
-	uint64_t m_stopTime = 0;
-	std::string m_name;
-	// HANDLE m_hdl;
+protected:
+	int32_t  PID;
+	bool     critical;
+	bool     alive;
 
 public:
-	std::mutex mutex;
-
-	uint64_t getPID(void);
-	// DWORD getPIDDWORD(void);
-	void setPID(uint64_t pid);
-	bool getCritical(void);
-	void setCritical(bool isCritical);
-	bool getAlive(void);
-	void setAlive(bool isAlive);
-	bool checkAlive(void);
-	bool getStopped(void);
-    uint64_t getStopTime(void);
-	std::thread* getWorker(void);
-	// HANDLE getHandle(void);
-
-	void stopWorker();
+	virtual int32_t  getPID(void)     = 0;
+	virtual bool     isCritical(void) = 0;
+	virtual bool     isAlive(void)    = 0;
 };

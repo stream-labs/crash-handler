@@ -24,8 +24,8 @@ void ProcessManager::watcher() {
             case Action::REGISTER: {
                 bool isCritical = msg.readBool();
                 uint32_t pid = msg.readUInt32();
-                size_t size = registerProcess(isCritical, pid);
-                if (size == 1)
+                size_t size = registerProcess(isCritical, (int32_t)pid);
+                if (size > 0)
                     startMonitoring();
                 break;
             }
@@ -54,9 +54,23 @@ void ProcessManager::watcher() {
 }
 
 void ProcessManager::monitor() {
-    // while (!m_monitor->stop) {
-    //     // TODO
-    // }
+    while (!m_monitor->stop) {
+        m_mtx.lock();
+
+        if (!processes.size())
+            goto sleep;
+
+        for (int i = 0; i < processes.size(); i++) {
+            if (!processes.at(i)->isAlive()) {
+                log_info << "process died: " << processes.at(i)->getPID() << std::endl;
+                m_monitor->stop = true;
+            }
+        }
+
+sleep:
+        m_mtx.unlock();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
 }
 
 void ProcessManager::startMonitoring() {
@@ -85,11 +99,13 @@ size_t ProcessManager::registerProcess(bool isCritical, uint32_t PID) {
     const std::lock_guard<std::mutex> lock(m_mtx);
 
     auto it = 
-        std::find_if(processes.begin(), processes.end(), [&PID](Process* p) {
+        std::find_if(processes.begin(),
+                    processes.end(),
+                    [&PID](std::unique_ptr<Process>& p) {
             return p->getPID() == PID;
     });
     if (it == processes.end()) {
-        processes.push_back(new Process(PID, isCritical));
+        processes.push_back(Process::create(PID, isCritical));
     }
     log_info << "Processes size: " << processes.size() << std::endl;
     return processes.size();
@@ -101,7 +117,9 @@ size_t ProcessManager::unregisterProcess(uint32_t PID) {
     const std::lock_guard<std::mutex> lock(m_mtx);
 
     auto it = 
-        std::find_if(processes.begin(), processes.end(), [&PID](Process* p) {
+        std::find_if(processes.begin(),
+                    processes.end(),
+                    [&PID](std::unique_ptr<Process>& p) {
             return p->getPID() == PID;
     });
 

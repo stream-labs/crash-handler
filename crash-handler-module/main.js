@@ -5,36 +5,20 @@ const net = require('net');
 const fs = require('fs');
 
 function tryConnect(buffer, attempt = 5, waitMs = 100) {
-    // const socket = net.connect('./slobs-crash-handler');
-    // socket.on('connect', () => {
-    //   console.log('Connected')
-    //   socket.write(buffer);
-    //   socket.end();
-    //   socket.unref();
-    // });
-    // socket.on('error', () => {
-    //   console.log('Socket error connecting');
-    //   socket.destroy();
-    //   socket.unref();
-    //   if (attempt > 0) {
-    //     setTimeout(() => {
-    //       tryConnect(buffer, attempt - 1, waitMs * 2);
-    //     }, waitMs);
-    //   }
-    // });
-    const ret = fs.open('/tmp/slobs-crash-handler',
-      fs.constants.O_WRONLY | fs.constants.O_DSYNC, (err, fd) => {
-      if (err) {
-        if (attempt > 0) {
-          setTimeout(() => {
-            tryConnect(buffer, attempt - 1, waitMs * 2);
-          }, waitMs);
-        }
-        return;
+    try {
+      const fd = fs.openSync('/tmp/slobs-crash-handler',
+        fs.constants.O_WRONLY | fs.constants.O_DSYNC);
+
+        const socket = new net.Socket({ fd });
+        console.log('Writing');
+        socket.write(buffer);
+    } catch (error) {
+      if (attempt > 0) {
+        setTimeout(() => {
+          tryConnect(buffer, attempt - 1, waitMs * 2);
+        }, waitMs);
       }
-      const socket = new net.Socket({ fd });
-      socket.write(buffer);
-    });
+    }
 }
 
 function registerProcess(pid, isCritial = false) {
@@ -69,6 +53,10 @@ function terminateCrashHandler(pid) {
 
 function startCrashHandler(workingDirectory, version, isDevEnv, cachePath = "") {
     const { spawn } = require('child_process');
+
+    try {
+      fs.unlinkSync('/tmp/slobs-crash-handler');
+    } catch (error) {}
 
     const processPath = workingDirectory.replace('app.asar', 'app.asar.unpacked') +
     '/node_modules/crash-handler';
