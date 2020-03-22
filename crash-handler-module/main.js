@@ -10,7 +10,6 @@ function tryConnect(buffer, attempt = 5, waitMs = 100) {
         fs.constants.O_WRONLY | fs.constants.O_DSYNC);
 
         const socket = new net.Socket({ fd });
-        console.log('Writing');
         socket.write(buffer);
     } catch (error) {
       if (attempt > 0) {
