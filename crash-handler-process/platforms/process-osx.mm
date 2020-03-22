@@ -33,9 +33,10 @@ bool Process_OSX::isAlive(void) {
          struct proc_bsdinfo proc;
          int st = proc_pidinfo(pids[i], PROC_PIDTBSDINFO, 0,
                               &proc, PROC_PIDTBSDINFO_SIZE);
-		if (pids[i] == PID && (strcmp(proc.pbi_name, "obs64") == 0 ||
-                               strncmp(proc.pbi_name, "Electron", strlen("Electron")) == 0 || // DEV env
-							   strncmp(proc.pbi_name, "Streamlabs", strlen("Streamlabs")) == 0)) // PRODUCTION env
+		if (pids[i] == PID &&
+			(strcmp(proc.pbi_name, "obs64") == 0 ||
+			strncmp(proc.pbi_name, "Electron", strlen("Electron")) == 0 || // DEV env
+			strncmp(proc.pbi_name, "Streamlabs", strlen("Streamlabs")) == 0)) // PRODUCTION env
 			return true;
     }
 	return false;
