@@ -44,7 +44,6 @@ ENDIF()
 SET(PROJECT_SOURCE
 	"${PROJECT_SOURCE_DIR}/process.hpp"
 	"${PROJECT_SOURCE_DIR}/process-manager.cpp" "${PROJECT_SOURCE_DIR}/process-manager.hpp"
-	"${PROJECT_SOURCE_DIR}/handler.cpp" "${PROJECT_SOURCE_DIR}/handler.hpp"
 	"${PROJECT_SOURCE_DIR}/message.cpp" "${PROJECT_SOURCE_DIR}/message.hpp"
 	"${PROJECT_SOURCE_DIR}/socket.hpp"
 	"${PROJECT_SOURCE_DIR}/logger.cpp" "${PROJECT_SOURCE_DIR}/logger.hpp"
