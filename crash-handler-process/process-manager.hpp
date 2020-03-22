@@ -32,4 +32,6 @@ private:
 
     size_t registerProcess(bool isCritical, uint32_t PID);
     size_t unregisterProcess(uint32_t PID);
+
+    void handleCrash(bool criticalCrash);
 };

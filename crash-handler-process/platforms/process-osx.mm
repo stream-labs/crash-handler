@@ -41,3 +41,7 @@ bool Process_OSX::isAlive(void) {
     }
 	return false;
 }
+
+void Process_OSX::terminate(void) {
+	kill(PID, SIGKILL);
+}

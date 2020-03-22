@@ -54,6 +54,9 @@ void ProcessManager::watcher() {
 }
 
 void ProcessManager::monitor() {
+    bool crashed       = false;
+    bool criticalCrash = false;
+
     while (!m_monitor->stop) {
         m_mtx.lock();
 
@@ -62,8 +65,13 @@ void ProcessManager::monitor() {
 
         for (int i = 0; i < processes.size(); i++) {
             if (!processes.at(i)->isAlive()) {
-                log_info << "process died: " << processes.at(i)->getPID() << std::endl;
-                m_monitor->stop = true;
+                // Log information about the process that just crashed
+                log_info << "process died" << std::endl;
+                log_info << "process.pid: " << processes.at(i)->getPID() << std::endl;
+                log_info << "process.isCritical: " << processes.at(i)->isCritical() << std::endl;
+
+                criticalCrash = processes.at(i)->isCritical();
+                crashed = m_monitor->stop = true;
             }
         }
 
@@ -71,6 +79,9 @@ sleep:
         m_mtx.unlock();
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
+
+    if (crashed)
+        handleCrash(criticalCrash);
 }
 
 void ProcessManager::startMonitoring() {
@@ -127,4 +138,31 @@ size_t ProcessManager::unregisterProcess(uint32_t PID) {
         processes.erase(it);
     }
     return processes.size();
+}
+
+void ProcessManager::handleCrash(bool criticalCrash) {
+    // Log process alive for debuggigng purposes
+    // TODO: also log processes names
+    log_info << "process alive" << std::endl;
+    for (int i = 0; i < processes.size(); i++) {
+        if(processes.at(i)->isAlive()) {
+            log_info << "----" << std::endl;
+            log_info << "process.pid: " << processes.at(i)->getPID() << std::endl;
+            log_info << "process.isCritical: " << processes.at(i)->isCritical() << std::endl;
+            log_info << "----" << std::endl;
+        }
+    }
+
+    // Stop registering / unregistering new processes
+    m_watcher->stop = true;
+    if(m_watcher->worker->joinable())
+        m_watcher->worker->join();
+
+    if (criticalCrash) {
+        for (int i = 0; i < processes.size(); i++) {
+            processes.at(i)->terminate();
+        }
+    } else {
+        // TODO
+    }
 }

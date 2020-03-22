@@ -9,4 +9,5 @@ public:
     virtual int32_t  getPID(void)     override;
     virtual bool     isCritical(void) override;
     virtual bool     isAlive(void)    override;
+    virtual void     terminate(void)  override;
 };
