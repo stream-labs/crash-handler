@@ -10,8 +10,8 @@ variables:
   SLBuildDirectory: build
   SLGenerator: Visual Studio 15 2017 Win64
   SLDistributeDirectory: distribute
-  FullDistributePath: ${SLBuildDirectory}/${SLDistributeDirectory}
-  DistributionAritfact: ${RuntimeName}-${RuntimeVersion}-crash-handler
+  FullDistributePath: $(SLBuildDirectory)/$(SLDistributeDirectory)
+  DistributionAritfact: $(RuntimeName)-$(RuntimeVersion)-crash-handler
   RuntimeURL: https://atom.io/download/atom-shell
   RuntimeName: iojs
   RuntimeVersion: v6.0.3
@@ -83,20 +83,17 @@ jobs:
   - script: 'yarn install'
     displayName: 'Install dependencies'
 
-  - script: 'cmake $(SLBuildDirectory) -DCMAKE_INSTALL_PREFIX=$(FullDistributePath)/crash-handler -DNODEJS_NAME=$(RuntimeName) -DNODEJS_URL=$(RuntimeURL) -DNODEJS_VERSION=$(RuntimeVersion) -DCMAKE_BUILD_TYPE=RelWithDebInfo'
-    displayName: 'Configure crash-handler'
-
-  - script: 'cmake --build $(SLBuildDirectory) --target install --config RelWithDebInfo'
+  - script: './ci/build-osx.sh'
     displayName: 'Build crash-handler'
 
   - task: ArchiveFiles@2
     displayName: 'Generate artifact'
     inputs:
-      rootFolderOrFile: ${FullDistributePath)/crash-handler/crash-handler
+      rootFolderOrFile: $(FullDistributePath)/crash-handler/crash-handler
       includeRootFolder: true
       archiveType: tar
       tarCompression: gz
-      archiveFile: '${DistributionAritfact}-osx.tar.gz'
+      archiveFile: '$(DistributionAritfact)-osx.tar.gz'
 
   - task: GithubRelease@0
     displayName: 'Deploy to GitHub'
@@ -104,4 +101,4 @@ jobs:
     inputs:
       gitHubConnection: stream-labs_deploy
       repositoryName: stream-labs/crash-handler
-      assets: ${Build.SourcesDirectory}/${DistributionAritfact}-osx.tar.gz
+      assets: $(Build.SourcesDirectory)/$(DistributionAritfact)-osx.tar.gz
