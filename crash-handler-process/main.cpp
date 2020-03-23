@@ -426,8 +426,6 @@ int main(int argc, char** argv)
 
     if (pm->m_applicationCrashed)
         pm->handleCrash();
-    else
-        pm->sendExitMessage();
 
 	delete pm;
 	logging_end();
