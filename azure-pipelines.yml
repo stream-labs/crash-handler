@@ -83,7 +83,7 @@ jobs:
   - script: 'yarn install'
     displayName: 'Install dependencies'
 
-  - script: 'cmake -H. -B"%SLBuildDirectory%" -G"%SLGenerator%"  -DCMAKE_INSTALL_PREFIX="%FullDistributePath%\crash-handler" -DNODEJS_NAME=%RuntimeName% -DNODEJS_URL=%RuntimeURL% -DNODEJS_VERSION=%RuntimeVersion%'
+  - script: 'cmake -H. -B"%SLBuildDirectory%"  -DCMAKE_INSTALL_PREFIX="%FullDistributePath%\crash-handler" -DNODEJS_NAME=%RuntimeName% -DNODEJS_URL=%RuntimeURL% -DNODEJS_VERSION=%RuntimeVersion%' -DCMAKE_BUILD_TYPE=RelWithDebInfo
     displayName: 'Configure crash-handler'
 
   - script: 'cmake --build %SLBuildDirectory% --target install --config RelWithDebInfo'
