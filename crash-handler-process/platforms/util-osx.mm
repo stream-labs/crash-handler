@@ -49,7 +49,6 @@ void Util::runTerminateWindow(void) {
         NSApplication *app = [NSApplication sharedApplication];
         AppDelegate *del = [[AppDelegate alloc] init];
         app.delegate = del;
-        log_info << "run app" << std::endl;
         [app run];
     }
 }
