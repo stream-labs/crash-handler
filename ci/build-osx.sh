@@ -1,4 +1,8 @@
-mkdir ${SLBuildDirectory}
-cmake ${SLBuildDirectory} -DCMAKE_INSTALL_PREFIX=${FullDistributePath}/crash-handler -DNODEJS_NAME=${RuntimeName} -DNODEJS_URL=${RuntimeURL} -DNODEJS_VERSION=${RuntimeVersion} -DCMAKE_BUILD_TYPE=RelWithDebInfo
+mkdir build
+cd build
 
-cmake --build ${SLBuildDirectory} --target install --config RelWithDebInfo
+cmake .. -DCMAKE_INSTALL_PREFIX=${FullDistributePath}/crash-handler -DNODEJS_NAME=${RuntimeName} -DNODEJS_URL=${RuntimeURL} -DNODEJS_VERSION=${RuntimeVersion} -DCMAKE_BUILD_TYPE=RelWithDebInfo
+
+cd ..
+
+cmake --build build --target install --config RelWithDebInfo
