@@ -10,8 +10,8 @@ variables:
   SLBuildDirectory: build
   SLGenerator: Visual Studio 15 2017 Win64
   SLDistributeDirectory: distribute
-  FullDistributePath: $(SLBuildDirectory)\$(SLDistributeDirectory)
-  DistributionAritfact: $(RuntimeName)-$(RuntimeVersion)-crash-handler
+  FullDistributePath: ${SLBuildDirectory}/${SLDistributeDirectory}
+  DistributionAritfact: ${RuntimeName}-${RuntimeVersion}-crash-handler
   RuntimeURL: https://atom.io/download/atom-shell
   RuntimeName: iojs
   RuntimeVersion: v6.0.3
