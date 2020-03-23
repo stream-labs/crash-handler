@@ -20,10 +20,16 @@
 
 #define MINIMUM_BUFFER_SIZE 512
 
+#ifdef __APPLE__
+#define FILE_NAME "/tmp/slobs-crash-handler"
+#define FILE_NAME_EXIT "/tmp/exit-slobs-crash-handler"
+#endif
+
 class Socket {
 public:
     static std::unique_ptr<Socket> create();
 
     virtual std::vector<char> read() = 0;
-    virtual void              disconnect() = 0;
+    virtual int write(const char* filename, std::vector<char> buffer) = 0;
+    virtual void disconnect() = 0;
 };

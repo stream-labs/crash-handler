@@ -424,6 +424,12 @@ int main(int argc, char** argv)
 	ProcessManager* pm = new ProcessManager();
 	pm->runWatcher();
 
+    if (pm->m_applicationCrashed)
+        pm->handleCrash();
+    else
+        pm->sendExitMessage();
+
+	delete pm;
 	logging_end();
 	return 0;
 }

@@ -1,5 +1,15 @@
 #include "process-manager.hpp"
 
+ProcessManager::ProcessManager() {
+    m_applicationCrashed = false;
+    m_criticalCrash = false;
+}
+
+ProcessManager::~ProcessManager() {
+    m_socket->disconnect();
+    m_socket.reset();
+}
+
 void ProcessManager::runWatcher() {
     m_watcher = new ThreadData();
     m_watcher->isRunnning = false;
@@ -12,10 +22,10 @@ void ProcessManager::runWatcher() {
 }
 
 void ProcessManager::watcher() {
-    std::unique_ptr<Socket> socket = Socket::create();
+    m_socket = Socket::create();
 
     while (!m_watcher->stop) {
-        std::vector<char> buffer = socket->read();
+        std::vector<char> buffer = m_socket->read();
         if (!buffer.size())
             continue;
 
@@ -25,7 +35,7 @@ void ProcessManager::watcher() {
                 bool isCritical = msg.readBool();
                 uint32_t pid = msg.readUInt32();
                 size_t size = registerProcess(isCritical, (int32_t)pid);
-                if (size > 0)
+                if (size == 1)
                     startMonitoring();
                 break;
             }
@@ -39,8 +49,6 @@ void ProcessManager::watcher() {
             case Action::EXIT: {
                 log_info << "exit message received" << std::endl;
                 m_watcher->stop = true;
-                socket->disconnect();
-                socket.reset();
                 break;
             }
             case Action::CRASH_ID: {
@@ -60,18 +68,18 @@ void ProcessManager::monitor() {
     while (!m_monitor->stop) {
         m_mtx.lock();
 
-        if (!processes.size())
+        if (!m_processes.size())
             goto sleep;
 
-        for (int i = 0; i < processes.size(); i++) {
-            if (!processes.at(i)->isAlive()) {
+        for (int i = 0; i < m_processes.size(); i++) {
+            if (!m_processes.at(i)->isAlive()) {
                 // Log information about the process that just crashed
                 log_info << "process died" << std::endl;
-                log_info << "process.pid: " << processes.at(i)->getPID() << std::endl;
-                log_info << "process.isCritical: " << processes.at(i)->isCritical() << std::endl;
+                log_info << "process.pid: " << m_processes.at(i)->getPID() << std::endl;
+                log_info << "process.isCritical: " << m_processes.at(i)->isCritical() << std::endl;
 
-                criticalCrash = processes.at(i)->isCritical();
-                crashed = m_monitor->stop = true;
+                m_criticalCrash = m_processes.at(i)->isCritical();
+                m_applicationCrashed = m_monitor->stop = true;
             }
         }
 
@@ -80,8 +88,13 @@ sleep:
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
-    if (crashed)
-        handleCrash(criticalCrash);
+    // Stop registering / unregistering new processes
+    m_watcher->stop = true;
+    std::vector<char> buffer;
+    buffer.push_back('1');
+    m_socket->write(FILE_NAME, buffer);
+    // if(m_watcher->worker->joinable())
+    //     m_watcher->worker->join();
 }
 
 void ProcessManager::startMonitoring() {
@@ -110,16 +123,16 @@ size_t ProcessManager::registerProcess(bool isCritical, uint32_t PID) {
     const std::lock_guard<std::mutex> lock(m_mtx);
 
     auto it = 
-        std::find_if(processes.begin(),
-                    processes.end(),
+        std::find_if(m_processes.begin(),
+                    m_processes.end(),
                     [&PID](std::unique_ptr<Process>& p) {
             return p->getPID() == PID;
     });
-    if (it == processes.end()) {
-        processes.push_back(Process::create(PID, isCritical));
+    if (it == m_processes.end()) {
+        m_processes.push_back(Process::create(PID, isCritical));
     }
-    log_info << "Processes size: " << processes.size() << std::endl;
-    return processes.size();
+    log_info << "Processes size: " << m_processes.size() << std::endl;
+    return m_processes.size();
 }
 
 size_t ProcessManager::unregisterProcess(uint32_t PID) {
@@ -128,41 +141,51 @@ size_t ProcessManager::unregisterProcess(uint32_t PID) {
     const std::lock_guard<std::mutex> lock(m_mtx);
 
     auto it = 
-        std::find_if(processes.begin(),
-                    processes.end(),
+        std::find_if(m_processes.begin(),
+                    m_processes.end(),
                     [&PID](std::unique_ptr<Process>& p) {
             return p->getPID() == PID;
     });
 
-    if (it != processes.end()) {
-        processes.erase(it);
+    if (it != m_processes.end()) {
+        m_processes.erase(it);
     }
-    return processes.size();
+    return m_processes.size();
 }
 
-void ProcessManager::handleCrash(bool criticalCrash) {
+void ProcessManager::handleCrash(void) {
     // Log process alive for debuggigng purposes
     // TODO: also log processes names
     log_info << "process alive" << std::endl;
-    for (int i = 0; i < processes.size(); i++) {
-        if(processes.at(i)->isAlive()) {
+    for (int i = 0; i < m_processes.size(); i++) {
+        if(m_processes.at(i)->isAlive()) {
             log_info << "----" << std::endl;
-            log_info << "process.pid: " << processes.at(i)->getPID() << std::endl;
-            log_info << "process.isCritical: " << processes.at(i)->isCritical() << std::endl;
+            log_info << "process.pid: " << m_processes.at(i)->getPID() << std::endl;
+            log_info << "process.isCritical: " << m_processes.at(i)->isCritical() << std::endl;
             log_info << "----" << std::endl;
         }
     }
 
-    // Stop registering / unregistering new processes
-    m_watcher->stop = true;
-    if(m_watcher->worker->joinable())
-        m_watcher->worker->join();
-
-    if (criticalCrash) {
-        for (int i = 0; i < processes.size(); i++) {
-            processes.at(i)->terminate();
-        }
+    if (m_criticalCrash) {
+        log_info << "Critical process crashed" << std::endl;
     } else {
-        // TODO
+        // Blocking operation that will return once the user
+        // decides to terminate the application
+        Util::runTerminateWindow();
+    }
+    terminateAll();
+}
+
+void ProcessManager::sendExitMessage(void) {
+    std::vector<char> buffer;
+    buffer.push_back('1');
+
+    if (m_socket->write(FILE_NAME_EXIT, buffer) <= 0)
+        log_info << "Failed to send exit message";
+}
+
+void ProcessManager::terminateAll(void) {
+    for (int i = 0; i < m_processes.size(); i++) {
+        m_processes.at(i)->terminate();
     }
 }
