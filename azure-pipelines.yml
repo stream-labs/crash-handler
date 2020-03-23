@@ -6,60 +6,102 @@ trigger:
     include:
       - v*
 
-workspace:
-  clean: all
-
-strategy:
-  matrix:
-    Electron2:
-      RuntimeURL: https://atom.io/download/atom-shell
-      RuntimeName: iojs
-      RuntimeVersion: v6.0.3
-
-pool:
-  vmImage: 'vs2017-win2016'
-
 variables:
   SLBuildDirectory: build
   SLGenerator: Visual Studio 15 2017 Win64
   SLDistributeDirectory: distribute
   FullDistributePath: $(SLBuildDirectory)\$(SLDistributeDirectory)
   DistributionAritfact: $(RuntimeName)-$(RuntimeVersion)-crash-handler
+  RuntimeURL: https://atom.io/download/atom-shell
+  RuntimeName: iojs
+  RuntimeVersion: v6.0.3
 
-steps:
-- powershell: git config --global core.autocrlf false
-  displayName: 'Set Unix checkout for git'
 
-- checkout: self
-  fetchDepth: 10
+jobs:
+- job: 'Windows'
+  pool:
+    vmImage: 'vs2017-win2016'
+  workspace:
+    clean: all
 
-- task: NodeTool@0
-  displayName: 'Install Node'
-  inputs:
-    versionSpec: '10.x'
+  steps:
+  - powershell: git config --global core.autocrlf false
+    displayName: 'Set Unix checkout for git'
 
-- script: 'yarn install'
-  displayName: 'Install dependencies'
+  - checkout: self
+    fetchDepth: 10
 
-- script: 'cmake -H. -B"%SLBuildDirectory%" -G"%SLGenerator%"  -DCMAKE_INSTALL_PREFIX="%FullDistributePath%\crash-handler" -DNODEJS_NAME=%RuntimeName% -DNODEJS_URL=%RuntimeURL% -DNODEJS_VERSION=%RuntimeVersion%'
-  displayName: 'Configure crash-handler'
+  - task: NodeTool@0
+    displayName: 'Install Node'
+    inputs:
+      versionSpec: '10.x'
 
-- script: 'cmake --build %SLBuildDirectory% --target install --config RelWithDebInfo'
-  displayName: 'Build crash-handler'
+  - script: 'yarn install'
+    displayName: 'Install dependencies'
 
-- task: ArchiveFiles@2
-  displayName: 'Generate artifact'
-  inputs:
-    rootFolderOrFile: $(FullDistributePath)\crash-handler\crash-handler
-    includeRootFolder: true
-    archiveType: tar
-    tarCompression: gz
-    archiveFile: '$(DistributionAritfact).tar.gz'
+  - script: 'cmake -H. -B"%SLBuildDirectory%" -G"%SLGenerator%"  -DCMAKE_INSTALL_PREFIX="%FullDistributePath%\crash-handler" -DNODEJS_NAME=%RuntimeName% -DNODEJS_URL=%RuntimeURL% -DNODEJS_VERSION=%RuntimeVersion%'
+    displayName: 'Configure crash-handler'
 
-- task: GithubRelease@0 
-  displayName: 'Deploy to GitHub'
-  condition: and(succeeded(), contains(variables['Build.SourceBranch'], 'tags'))  
-  inputs:
-    gitHubConnection: stream-labs_deploy
-    repositoryName: stream-labs/crash-handler
-    assets: $(Build.SourcesDirectory)/$(DistributionAritfact).tar.gz
+  - script: 'cmake --build %SLBuildDirectory% --target install --config RelWithDebInfo'
+    displayName: 'Build crash-handler'
+
+  - task: ArchiveFiles@2
+    displayName: 'Generate artifact'
+    inputs:
+      rootFolderOrFile: $(FullDistributePath)\crash-handler\crash-handler
+      includeRootFolder: true
+      archiveType: tar
+      tarCompression: gz
+      archiveFile: '$(DistributionAritfact)-win.tar.gz'
+
+  - task: GithubRelease@0
+    displayName: 'Deploy to GitHub'
+    condition: and(succeeded(), contains(variables['Build.SourceBranch'], 'tags'))
+    inputs:
+      gitHubConnection: stream-labs_deploy
+      repositoryName: stream-labs/crash-handler
+      assets: $(Build.SourcesDirectory)/$(DistributionAritfact)-win.tar.gz
+
+- job: 'MacOSX'
+  pool:
+    vmImage: 'macos-10.14'
+  workspace:
+    clean: all
+
+  steps:
+  - powershell: git config --global core.autocrlf false
+    displayName: 'Set Unix checkout for git'
+
+  - checkout: self
+    fetchDepth: 10
+
+  - task: NodeTool@0
+    displayName: 'Install Node'
+    inputs:
+      versionSpec: '10.x'
+
+  - script: 'yarn install'
+    displayName: 'Install dependencies'
+
+  - script: 'cmake -H. -B"%SLBuildDirectory%" -G"%SLGenerator%"  -DCMAKE_INSTALL_PREFIX="%FullDistributePath%\crash-handler" -DNODEJS_NAME=%RuntimeName% -DNODEJS_URL=%RuntimeURL% -DNODEJS_VERSION=%RuntimeVersion%'
+    displayName: 'Configure crash-handler'
+
+  - script: 'cmake --build %SLBuildDirectory% --target install --config RelWithDebInfo'
+    displayName: 'Build crash-handler'
+
+  - task: ArchiveFiles@2
+    displayName: 'Generate artifact'
+    inputs:
+      rootFolderOrFile: $(FullDistributePath)\crash-handler\crash-handler
+      includeRootFolder: true
+      archiveType: tar
+      tarCompression: gz
+      archiveFile: '$(DistributionAritfact)-osx.tar.gz'
+
+  - task: GithubRelease@0
+    displayName: 'Deploy to GitHub'
+    condition: and(succeeded(), contains(variables['Build.SourceBranch'], 'tags'))
+    inputs:
+      gitHubConnection: stream-labs_deploy
+      repositoryName: stream-labs/crash-handler
+      assets: $(Build.SourcesDirectory)/$(DistributionAritfact)-osx.tar.gz
