@@ -36,6 +36,7 @@ void stopApplication(void) {
 
         if ([alert2 runModal] == NSAlertFirstButtonReturn) {
             stopApplication();
+            [[NSWorkspace sharedWorkspace] launchApplication:@"/Applications/Streamlabs OBS.app"];
         }
     }
 }
