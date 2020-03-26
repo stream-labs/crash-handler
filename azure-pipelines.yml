@@ -64,7 +64,7 @@ jobs:
 
 - job: 'MacOSX'
   pool:
-    vmImage: 'macos-10.15'
+    vmImage: 'macos-10.14'
   workspace:
     clean: all
 

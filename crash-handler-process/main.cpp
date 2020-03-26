@@ -144,10 +144,10 @@ std::string get_process_name(ProcessInfo pi)
 #endif
 	return "";
 }
-std::fstream open_file(std::string& file_path, std::fstream::openmode mode)
-{
-	return std::fstream(from_utf8_to_utf16_wide(file_path.c_str()), mode);
-}
+// std::fstream open_file(std::string& file_path, std::fstream::openmode mode)
+// {
+// 	return std::fstream(from_utf8_to_utf16_wide(file_path.c_str()), mode);
+// }
 bool kill(ProcessInfo pinfo, uint32_t code)
 {
 #ifdef WIN32
@@ -155,27 +155,27 @@ bool kill(ProcessInfo pinfo, uint32_t code)
 #endif
 	return true;
 }
-static void check_pid_file(std::string& pid_path)
-{
-	std::fstream::openmode mode = std::fstream::in | std::fstream::binary;
-	std::fstream pid_file(open_file(pid_path, mode));
-	union
-	{
-		uint64_t pid;
-		char     pid_char[sizeof(uint64_t)];
-	};
-	if (!pid_file)
-		return;
-	pid_file.read(&pid_char[0], 8);
-	ProcessInfo pi = open_process(pid);
-	if (pi.handle == 0)
-		return;
-	std::string name = get_process_name(pi);
-	if (name.find("crash-handler-process.exe") != std::string::npos) {
-		kill(pi, -1);
-	}
-	close_process(pi);
-}
+// static void check_pid_file(std::string& pid_path)
+// {
+// 	std::fstream::openmode mode = std::fstream::in | std::fstream::binary;
+// 	std::fstream pid_file(open_file(pid_path, mode));
+// 	union
+// 	{
+// 		uint64_t pid;
+// 		char     pid_char[sizeof(uint64_t)];
+// 	};
+// 	if (!pid_file)
+// 		return;
+// 	pid_file.read(&pid_char[0], 8);
+// 	ProcessInfo pi = open_process(pid);
+// 	if (pi.handle == 0)
+// 		return;
+// 	std::string name = get_process_name(pi);
+// 	if (name.find("crash-handler-process.exe") != std::string::npos) {
+// 		kill(pi, -1);
+// 	}
+// 	close_process(pi);
+// }
 std::string get_temp_directory()
 {
 #ifdef WIN32
