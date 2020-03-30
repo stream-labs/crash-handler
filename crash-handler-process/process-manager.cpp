@@ -48,6 +48,7 @@ void ProcessManager::watcher() {
             }
             case Action::EXIT: {
                 log_info << "exit message received" << std::endl;
+                stopMonitoring();
                 m_watcher->stop = true;
                 break;
             }
