@@ -343,8 +343,8 @@ bool NamedSocket_win::read(std::vector<Process*>* processes, std::mutex* mu, boo
 				Pipe[i].fPendingIO = TRUE;
 				return false;
 			}
-			DisconnectAndReconnect(i);
 		}
+		DisconnectAndReconnect(i);
 		break;
 	}
 	}
