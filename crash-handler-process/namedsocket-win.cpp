@@ -270,9 +270,8 @@ bool NamedSocket_win::read(std::vector<Process*>* processes, std::mutex* mu, boo
 	{
 		return false;
 	}
-	ResetEvent(hEvents[i]);
 
-	log_info << "NamedSocket_win::read from instance " << i << std::endl;
+	log_info << "NamedSocket_win::read from instance " << i << " pendingIO state "<<  (Pipe[i].fPendingIO? 1:0)<< std::endl;
 	if (Pipe[i].fPendingIO)
 	{
 		fSuccess = GetOverlappedResult(
@@ -344,8 +343,8 @@ bool NamedSocket_win::read(std::vector<Process*>* processes, std::mutex* mu, boo
 				Pipe[i].fPendingIO = TRUE;
 				return false;
 			}
-			DisconnectAndReconnect(i);
 		}
+		DisconnectAndReconnect(i);
 		break;
 	}
 	}
