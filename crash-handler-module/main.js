@@ -9,18 +9,15 @@ function tryConnect(buffer, attempt = 5, waitMs = 100) {
   });
   socket.on('ready', () => {
     socket.write(buffer);
-    console.log('tryConnect ready for buffer ' + buffer.toString('hex'))
   });
   socket.on('data', (in_data) => {
     socket.end();
     socket.destroy();
     socket.unref();
-    console.log('tryConnect data for buffer ' + buffer.toString('hex'))
   });
   socket.on('error', (err) => {
     socket.destroy();
     socket.unref();
-    console.log('tryConnect with error ' + err +' for buffer ' + buffer.toString('hex'))
     if (attempt > 0) {
       setTimeout(() => {
         tryConnect(buffer, attempt - 1, waitMs * 2);
