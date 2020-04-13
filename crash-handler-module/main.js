@@ -4,34 +4,42 @@ const crash_handler = require('./crash-handler.node');
 const net = require('net');
 
 function tryConnect(buffer, attempt = 5, waitMs = 100) {
-    const socket = net.connect('\\\\.\\pipe\\slobs-crash-handler');
-    socket.on('connect', () => {
-      socket.write(buffer);
-      socket.end();
-      socket.unref();
-    });
-    socket.on('error', () => {
-      socket.destroy();
-      socket.unref();
-      if (attempt > 0) {
-        setTimeout(() => {
-          tryConnect(buffer, attempt - 1, waitMs * 2);
-        }, waitMs);
-      }
-    });
+  const socket = new net.Socket();
+  socket.on('connect', () => {
+  });
+  socket.on('ready', () => {
+    socket.write(buffer);
+    console.log('tryConnect ready for buffer ' + buffer.toString('hex'))
+  });
+  socket.on('data', (in_data) => {
+    socket.end();
+    socket.destroy();
+    socket.unref();
+    console.log('tryConnect data for buffer ' + buffer.toString('hex'))
+  });
+  socket.on('error', (err) => {
+    socket.destroy();
+    socket.unref();
+    console.log('tryConnect with error ' + err +' for buffer ' + buffer.toString('hex'))
+    if (attempt > 0) {
+      setTimeout(() => {
+        tryConnect(buffer, attempt - 1, waitMs * 2);
+      }, waitMs);
+    }
+  });
+  socket.connect('\\\\.\\pipe\\slobs-crash-handler');
 }
 
-function registerProcess(pid, isCritial = false) {
+async function registerProcess(pid, isCritial = false) {
     const buffer = new Buffer(6);
     let offset = 0;
     buffer.writeUInt8(0, offset++);
     buffer.writeUInt8(isCritial, offset++);
     buffer.writeUInt32LE(pid, offset++);
-  
     tryConnect(buffer);
 }
 
-function unregisterProcess(pid) {
+async function unregisterProcess(pid) {
     const buffer = new Buffer(5);
     let offset = 0;
     buffer.writeUInt8(1, offset++);
@@ -40,14 +48,13 @@ function unregisterProcess(pid) {
     tryConnect(buffer);
 }
 
-function terminateCrashHandler(pid) {
+async function terminateCrashHandler(pid) {
     const buffer = new Buffer(5);
     let offset = 0;
     buffer.writeUInt8(2, offset++);
     buffer.writeUInt32LE(pid, offset++);
-
     tryConnect(buffer);
-  }
+}
 
 function startCrashHandler(workingDirectory, version, isDevEnv, cachePath = "") {
     const { spawn } = require('child_process');
