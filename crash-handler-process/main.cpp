@@ -289,12 +289,11 @@ void checkProcesses(std::mutex* m) {
 			} else if (obs_server_crash_id == 0x00001) {
 				int code = MessageBox(
 					NULL,
-					L"Out of memory."
-					L"\n\nThe application can't allocate memory to continue functioning properly."
-					L"\nConsider closing other programs that may be consuming a lot of resources before"
-					L"\nstarting the application again."
-					L"\nFind more information at howto.streamlabs.com",
-					L"Out of memory.",
+					L"The application can't allocate memory to continue functioning properly. "
+					L"Consider closing other programs that may be consuming a lot of resources "
+					L"before starting the application again."
+					L"\n\nFind more information at howto.streamlabs.com",
+					L"An error occurred",
 					MB_OK | MB_SYSTEMMODAL
 				);
 			}
