@@ -60,6 +60,6 @@ steps:
   displayName: 'Deploy to GitHub'
   condition: and(succeeded(), contains(variables['Build.SourceBranch'], 'tags'))  
   inputs:
-    gitHubConnection: stream-labs_deploy
+    gitHubConnection: SLOBS_BE_DEPLOY
     repositoryName: stream-labs/crash-handler
     assets: $(Build.SourcesDirectory)/$(DistributionAritfact).tar.gz
