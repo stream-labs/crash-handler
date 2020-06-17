@@ -53,3 +53,11 @@ void Util::runTerminateWindow(void) {
         [app run];
     }
 }
+
+void Util::check_pid_file(std::string& pid_path) {
+    //TODO
+}
+
+std::string Util::get_temp_directory() {
+    //TODO
+}

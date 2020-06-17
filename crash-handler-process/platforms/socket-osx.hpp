@@ -5,7 +5,6 @@
 #include <sys/stat.h>
 #include "../logger.hpp"
 
-
 class Socket_OSX : public Socket {
 public:
 	Socket_OSX() {};
