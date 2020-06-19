@@ -26,12 +26,12 @@
 class Process_WIN : public Process {
 private:
 	std::thread *checker;
-	HANDLE handle;
     std::mutex mtx;
+	HANDLE hdl;
 
 public:
     Process_WIN(int32_t pid, bool isCritical);
-    virtual ~Process_WIN() {};
+    ~Process_WIN();
 
 public:
     virtual int32_t  getPID(void)     override;

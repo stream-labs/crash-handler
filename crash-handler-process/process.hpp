@@ -30,6 +30,9 @@ class Process {
 public:
 	static std::unique_ptr<Process> create(int32_t pid, bool isCritical);
 
+	Process() {};
+	virtual ~Process() {};
+
 protected:
 	int32_t  PID;
 	bool     critical;

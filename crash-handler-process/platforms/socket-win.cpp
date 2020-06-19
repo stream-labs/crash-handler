@@ -68,7 +68,8 @@ void Socket_WIN::DisconnectAndReconnect(DWORD i)
 }
 
 Socket_WIN::Socket_WIN() {
-	LPTSTR lpszPipename = TEXT("\\\\.\\pipe\\slobs-crash-handler");
+	this->name = L"\\\\.\\pipe\\slobs-crash-handler";
+	this->name_exit = L"\\\\.\\pipe\\exit-slobs-crash-handler";
 
 	for (int i = 0; i < INSTANCES; i++)
 	{
@@ -86,7 +87,7 @@ Socket_WIN::Socket_WIN() {
 		Pipe[i].oOverlap.hEvent = hEvents[i];
 
 		Pipe[i].hPipeInst = CreateNamedPipe(
-			lpszPipename,
+			const_cast<LPWSTR>(this->name.c_str()),
 			PIPE_ACCESS_DUPLEX |
 			FILE_FLAG_OVERLAPPED,
 			PIPE_TYPE_MESSAGE |
@@ -125,14 +126,151 @@ std::unique_ptr<Socket> Socket::create() {
 
 std::vector<char> Socket_WIN::read() {
 	std::vector<char> buffer;
-	buffer.resize(30000);
 
+	DWORD i, dwWait, cbRet = 0, dwErr;
+	BOOL fSuccess;
+
+	dwWait = WaitForMultipleObjects(
+		INSTANCES,
+		hEvents,
+		FALSE,
+		500);
+
+	i = dwWait - WAIT_OBJECT_0;
+	if (i < 0 || i >(INSTANCES - 1))
+		return buffer;
+
+	log_info << "Socket::read instance_" << i << " pendingIO state " << (Pipe[i].fPendingIO ? 1 : 0) << std::endl;
+	if (Pipe[i].fPendingIO)
+	{
+		fSuccess = GetOverlappedResult(
+			Pipe[i].hPipeInst,
+			&Pipe[i].oOverlap,
+			&cbRet,
+			FALSE);
+		dwErr = GetLastError();
+		log_debug << "Socket::read instance_" << i << " GetOverlappedResult read " << cbRet << ", dwErr " << dwErr << "\n";
+
+		switch (Pipe[i].dwState)
+		{
+		case CONNECTING_STATE: {
+			if (!fSuccess)
+				return buffer;
+
+			Pipe[i].dwState = READING_STATE;
+			Pipe[i].cbRead = 0;
+			break;
+		}
+		case READING_STATE: {
+			if (!fSuccess && (dwErr == ERROR_IO_PENDING))
+			{
+				log_debug << "Socket::read instance_" << i << " pending " << dwErr << "\n";
+				return buffer;
+			}
+			if (!fSuccess || cbRet == 0)
+			{
+				log_error << "Socket::read instance_" << i << " pending check failed for  " << dwErr << "\n";
+				DisconnectAndReconnect(i);
+				return buffer;
+			}
+			Pipe[i].cbRead = cbRet;
+			break;
+		}
+		default:
+		{
+			return  buffer;
+		}
+		}
+	}
+
+	switch (Pipe[i].dwState)
+	{
+		case READING_STATE: {
+		if (cbRet == 0)
+		{
+			fSuccess = ReadFile(
+				Pipe[i].hPipeInst,
+				Pipe[i].chRequest.data(),
+				BUFSIZE,
+				&Pipe[i].cbRead,
+				&Pipe[i].oOverlap);
+			dwErr = GetLastError();
+			log_debug << "Socket::read instance_" << i << " read size " << Pipe[i].cbRead << ", fSuccess " << fSuccess << "\n";
+		}
+
+		// The read operation completed successfully. 
+		if (Pipe[i].cbRead > 0 && fSuccess) {
+			Pipe[i].fPendingIO = FALSE;
+			return Pipe[i].chRequest;
+		}
+		else {
+			log_error << "Socket::read instance_" << i << " failed with error code " << dwErr << "\n";
+			if (!fSuccess && (dwErr == ERROR_IO_PENDING))
+			{
+				Pipe[i].fPendingIO = TRUE;
+				return buffer;
+			}
+			DisconnectAndReconnect(i);
+		}
+		Pipe[i].dwState = WRITING_STATE;
+		Pipe[i].fPendingIO = false;
+
+		break;
+		}
+	case WRITING_STATE: {
+		log_error << "Socket::read instance_" << i << " ready to write and disconnect \n";
+		const char finish_data[4] = {};
+		DWORD sent_bytes = 0;
+		fSuccess = WriteFile(Pipe[i].hPipeInst, finish_data, 4, &sent_bytes, &Pipe[i].oOverlap);
+
+		if (fSuccess && sent_bytes == 4)
+		{
+			Pipe[i].fPendingIO = false;
+			Pipe[i].dwState = READING_STATE;
+		}
+		else {
+			dwErr = GetLastError();
+			if (!fSuccess && (dwErr == ERROR_IO_PENDING))
+			{
+				Pipe[i].fPendingIO = true;
+			}
+			else {
+				DisconnectAndReconnect(i);
+			}
+		}
+		break;
+	}
+	}
 	return buffer;
 }
 
-int Socket_WIN::write(const char* filename, std::vector<char> buffer) {
+int Socket_WIN::write(bool exit, std::vector<char> buffer) {
+	HANDLE hPipe = CreateFile(
+		exit ? const_cast<LPWSTR>(this->name_exit.c_str()) : const_cast<LPWSTR>(this->name.c_str()),
+		GENERIC_READ |
+		GENERIC_WRITE,
+		0,
+		NULL,
+		OPEN_EXISTING,
+		0,
+		NULL);
 
-	return 0;
+	if (hPipe == INVALID_HANDLE_VALUE)
+		return 0;
+
+	if (GetLastError() == ERROR_PIPE_BUSY)
+		return 0;
+
+	DWORD bytesWritten;
+
+	WriteFile(
+		hPipe,
+		buffer.data(),
+		buffer.size(), &bytesWritten,
+		NULL);
+
+	CloseHandle(hPipe);
+	return (int)bytesWritten;
 }
 
 void Socket_WIN::disconnect() {
@@ -145,271 +283,3 @@ void Socket_WIN::disconnect() {
 		CloseHandle(hEvents[i]);
 	}
 }
-
-// Socket_WIN::Socket_WIN() : m_handle(0)
-// {
-// 	LPTSTR lpszPipename = TEXT("\\\\.\\pipe\\slobs-crash-handler");
-
-// 	for (int i = 0; i < INSTANCES; i++)
-// 	{
-// 		hEvents[i] = CreateEvent(
-// 			NULL,
-// 			TRUE,
-// 			TRUE,
-// 			NULL);
-
-// 		if (hEvents[i] == NULL)
-// 		{
-// 			return;
-// 		}
-// 		memset( &Pipe[i].oOverlap, 0x00, sizeof(OVERLAPPED) );
-// 		Pipe[i].oOverlap.hEvent = hEvents[i];
-
-// 		Pipe[i].hPipeInst = CreateNamedPipe(
-// 			lpszPipename,
-// 			PIPE_ACCESS_DUPLEX |
-// 			FILE_FLAG_OVERLAPPED,
-// 			PIPE_TYPE_MESSAGE |
-// 			PIPE_READMODE_MESSAGE |
-// 			PIPE_WAIT, 
-// 			INSTANCES,
-// 			BUFSIZE,
-// 			BUFSIZE,
-// 			PIPE_TIMEOUT, 
-// 			NULL);
-
-// 		if (Pipe[i].hPipeInst == INVALID_HANDLE_VALUE)
-// 		{
-// 			return;
-// 		}
-		
-// 		Pipe[i].fPendingIO = ConnectToNewClient(
-// 			Pipe[i].hPipeInst,
-// 			&(Pipe[i].oOverlap));
-
-// 		Pipe[i].dwState = Pipe[i].fPendingIO ?
-// 			CONNECTING_STATE : 
-// 			READING_STATE;
-
-// 		Pipe[i].chRequest.resize(BUFSIZE);
-
-// 	}
-// }
-
-// std::unique_ptr<Socket> Socket::create() {
-// 	return std::make_unique<Socket_WIN>();
-// }
-
-// bool Socket_WIN::connect() {
-// 	return ConnectNamedPipe(m_handle, NULL);
-// }
-
-// HANDLE Socket_WIN::getHandle() {
-// 	return m_handle;
-// }
-
-// void Socket_WIN::disconnect() {
-// 	CloseHandle(m_handle);
-// }
-
-// Socket_WIN::~Socket_WIN() {
-// 	DisconnectNamedPipe(m_handle);
-// }
-
-// void acknowledgeUnregister(void) {
-// 	std::string buffer = "exit";
-// 	HANDLE hPipe = CreateFile(
-// 		TEXT("\\\\.\\pipe\\exit-slobs-crash-handler"),
-// 		GENERIC_READ |
-// 		GENERIC_WRITE,
-// 		0,
-// 		NULL,
-// 		OPEN_EXISTING,
-// 		0,
-// 		NULL);
-
-// 	if (hPipe == INVALID_HANDLE_VALUE)
-// 		return;
-
-// 	if (GetLastError() == ERROR_PIPE_BUSY)
-// 		return;
-
-// 	DWORD bytesWritten;
-
-// 	WriteFile(
-// 		hPipe,
-// 		buffer.data(),
-// 		buffer.size(), &bytesWritten,
-// 		NULL);
-
-// 	CloseHandle(hPipe);
-// }
-
-// void processRequest(std::vector<char> p_buffer, std::vector<Process*>*  processes, std::mutex* mu, bool* exitApp) {
-// 	Message msg(p_buffer);
-// 	log_info << "processRequest start" << std::endl;
-// 	mu->lock();
-
-// 	switch (static_cast<Action>(msg.readUInt8())) {
-// 	case Action::REGISTER: {
-// 		bool isCritical = msg.readBool();
-// 		uint32_t pid = msg.readUInt32();
-// 		log_info << "processRequest register " << pid << ", " << isCritical << std::endl;
-// 		auto it = std::find_if(processes->begin(), processes->end(), [&pid](Process* p) {
-// 			return p->getPID() == pid;
-// 		});
-// 		if (it == processes->end()) {
-// 			processes->push_back(new Process(pid, isCritical));
-// 		}
-// 		break;
-// 	}
-// 	case Action::UNREGISTER: {
-// 		uint32_t pid = msg.readUInt32();
-// 		auto it = std::find_if(processes->begin(), processes->end(), [&pid](Process* p) {
-// 			return p->getPID() == pid;
-// 		});
-// 		log_info << "processRequest unregister " << pid <<std::endl ;
-
-// 		if (it != processes->end()) {
-// 			Process* p = (Process*)(*it);
-// 			p->stopWorker();
-
-// 			processes->erase(it);
-
-// 			if (p->getCritical()) {
-// 				log_error << "processRequest failed for critical , set exitApp" << std::endl;
-// 				*exitApp = true;
-// 			}
-// 		}
-// 		acknowledgeUnregister();
-// 		break;
-// 	}
-// 	case Action::EXIT: {
-// 		log_info << "processRequest get EXIT command" << std::endl;
-// 		if(auto_unregister_before_exit) {
-// 			auto it = std::find_if(processes->begin(), processes->end(), [](Process* p) {
-// 				return p->getCritical();
-// 			});
-// 			if (it != processes->end()) {
-// 				Process* p = (Process*)(*it);
-// 				p->stopWorker();
-
-// 				processes->erase(it);
-// 			}
-// 		}
-// 		*exitApp = true;
-// 		break;
-// 	}
-// 	case Action::CRASH_ID: {
-// 		uint32_t crash_id = msg.readUInt32();
-// 		uint32_t pid = msg.readUInt32();
-// 		obs_server_crash_id = crash_id;
-// 		log_info << "processRequest get CRASH_ID command with id " << crash_id << std::endl;
-// 		break;
-// 	}
-// 	default:
-// 		break;
-// 	}
-// 	mu->unlock();
-// }
-
-// bool Socket_WIN::read(std::vector<Process*>* processes, std::mutex* mu, bool* exit) {
-// 	DWORD i, dwWait, cbRet = 0, dwErr;
-// 	BOOL fSuccess;
-
-// 	dwWait = WaitForMultipleObjects(
-// 		INSTANCES,
-// 		hEvents,
-// 		FALSE,
-// 		500);
-
-// 	i = dwWait - WAIT_OBJECT_0;  // get current pipe
-// 	if (i < 0 || i >(INSTANCES - 1))
-// 	{
-// 		return false;
-// 	}
-// 	ResetEvent(hEvents[i]);
-
-// 	log_info << "NamedSocket_win::read from instance " << i << std::endl;
-// 	if (Pipe[i].fPendingIO)
-// 	{
-// 		fSuccess = GetOverlappedResult(
-// 			Pipe[i].hPipeInst,
-// 			&Pipe[i].oOverlap,
-// 			&cbRet,
-// 			FALSE); 
-// 		dwErr = GetLastError();
-// 		log_debug << "NamedSocket_win::read GetOverlappedResult read " << cbRet << ", dwErr " << dwErr << "\n";
-		
-// 		switch (Pipe[i].dwState)
-// 		{
-// 		case CONNECTING_STATE: {
-// 			if (!fSuccess)
-// 			{
-// 				return false;
-// 			}
-// 			Pipe[i].dwState = READING_STATE;
-// 			Pipe[i].cbRead = 0;
-// 			break;
-// 		}
-// 		case READING_STATE: {
-// 			if( !fSuccess && (dwErr == ERROR_IO_PENDING) )
-// 			{
-// 				log_debug << "NamedSocket_win::read pending " << dwErr << "\n" ;
-// 				return false;
-// 			}
-// 			if (!fSuccess || cbRet == 0)
-// 			{
-// 				log_error << "NamedSocket_win::read pending check failed for  " << dwErr << "\n" ;
-// 				DisconnectAndReconnect(i);
-// 				return false;
-// 			}
-// 			Pipe[i].cbRead = cbRet;
-// 			break;
-// 		}
-// 		default:
-// 		{
-// 			return  false;
-// 		}
-// 		}
-// 	}
-
-// 	switch (Pipe[i].dwState)
-// 	{
-// 	case READING_STATE: {
-// 		if(cbRet == 0)
-// 		{
-// 			fSuccess = ReadFile(
-// 				Pipe[i].hPipeInst,
-// 				Pipe[i].chRequest.data(),
-// 				BUFSIZE,
-// 				&Pipe[i].cbRead,
-// 				&Pipe[i].oOverlap);
-// 			dwErr = GetLastError();
-// 			log_debug << "NamedSocket_win::read read size " << Pipe[i].cbRead << ", fSuccess " << fSuccess << "\n" ;
-// 		}
-		
-// 		// The read operation completed successfully. 
-// 		if (Pipe[i].cbRead > 0 && fSuccess) {
-// 			Pipe[i].fPendingIO = FALSE;
-
-// 			// Start thread here
-// 			requests.push_back(new std::thread(processRequest, Pipe[i].chRequest, processes, mu, exit));
-// 		} else {
-// 			log_error << "NamedSocket_win::read failed with error code " << dwErr << "\n" ;
-// 			if (!fSuccess && (dwErr == ERROR_IO_PENDING))
-// 			{
-// 				Pipe[i].fPendingIO = TRUE;
-// 				return false;
-// 			}
-// 			DisconnectAndReconnect(i);
-// 		}
-// 		break;
-// 	}
-// 	}
-// 	return false;
-// }
-
-// bool Socket_WIN::flush() {
-// 	return true;
-// }

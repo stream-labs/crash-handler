@@ -4,9 +4,13 @@ const crash_handler = require('./crash-handler.node');
 const net = require('net');
 const fs = require('fs');
 
+const socket_name = process.platform === "win32" ?
+'\\\\.\\pipe\\slobs-crash-handler' :
+'/tmp/slobs-crash-handler';
+
 function tryConnect(buffer, attempt = 5, waitMs = 100) {
     try {
-      const fd = fs.openSync('/tmp/slobs-crash-handler',
+      const fd = fs.openSync(socket_name,
         fs.constants.O_WRONLY | fs.constants.O_DSYNC);
 
         const socket = new net.Socket({ fd });
@@ -54,7 +58,7 @@ function startCrashHandler(workingDirectory, version, isDevEnv, cachePath = "") 
     const { spawn } = require('child_process');
 
     try {
-      fs.unlinkSync('/tmp/slobs-crash-handler');
+      fs.unlinkSync(socket_name);
     } catch (error) {}
 
     const processPath = workingDirectory.replace('app.asar', 'app.asar.unpacked') +

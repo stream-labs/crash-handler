@@ -23,10 +23,20 @@ std::unique_ptr<Process> Process::create(int32_t pid, bool isCritical) {
 }
 
 Process_WIN::Process_WIN(int32_t pid, bool isCritical) {
-	PID = pid;
-	critical = isCritical;
-	alive = true;
-    handle = NULL;
+	this->PID = pid;
+	this->critical = isCritical;
+	this->alive = true;
+	this->hdl = OpenProcess(PROCESS_ALL_ACCESS, FALSE, getPIDDWORD());
+
+	this->checker = new std::thread(&Process_WIN::worker, this);
+}
+
+Process_WIN::~Process_WIN() {
+	if(this->hdl)
+		CloseHandle(this->hdl);
+
+	if (this->checker->joinable())
+		this->checker->join();
 }
 
 int32_t Process_WIN::getPID(void) {
@@ -38,12 +48,13 @@ bool Process_WIN::isCritical(void) {
 }
 
 void Process_WIN::worker() {
-    if (!handle)
+    if (!this->hdl)
         return;
 
-    if (!WaitForSingleObject(handle, INFINITE)) {
+    if (!WaitForSingleObject(this->hdl, INFINITE)) {
         std::unique_lock<std::mutex> ul(this->mtx);
         this->alive = false;
+		this->hdl = NULL;
     }
 }
 
@@ -53,8 +64,7 @@ bool Process_WIN::isAlive(void) {
 }
 
 void Process_WIN::terminate(void) {
-    HANDLE hdl = OpenProcess(PROCESS_TERMINATE, FALSE, getPIDDWORD());
-    if (hdl && hdl != INVALID_HANDLE_VALUE) {
+    if (this->hdl && this->hdl != INVALID_HANDLE_VALUE) {
         TerminateProcess(hdl, 1);
         CloseHandle(hdl);
     }

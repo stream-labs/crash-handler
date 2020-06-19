@@ -40,7 +40,7 @@ int main(int argc, char** argv)
 		log_path = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(argv[4]);
 
 	logging_start(log_path);
-	
+
 #ifdef WIN32
 	std::string pid_path(Util::get_temp_directory());
 	pid_path.append("crash-handler.pid");
@@ -51,7 +51,7 @@ int main(int argc, char** argv)
 	pm->runWatcher();
 
     if (pm->m_applicationCrashed)
-        pm->handleCrash();
+        pm->handleCrash(path);
 
 	delete pm;
 	logging_end();

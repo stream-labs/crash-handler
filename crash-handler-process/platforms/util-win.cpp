@@ -24,7 +24,7 @@
 #include <codecvt>
 #include <psapi.h>
 
-void restartApp(std::wstring path) {
+void Util::restartApp(std::wstring path) {
 	STARTUPINFO info = { sizeof(info) };
 	PROCESS_INFORMATION processInfo;
 
@@ -47,7 +47,7 @@ void restartApp(std::wstring path) {
 	);
 }
 
-void Util::runTerminateWindow(void) {
+void Util::runTerminateWindow() {
     int code = MessageBox(
         NULL,
         L"An error occurred which has caused Streamlabs OBS to close. Don't worry! If you were streaming or recording, that is still happening in the background."
@@ -66,7 +66,6 @@ void Util::runTerminateWindow(void) {
                 L"Choose when to restart",
                 MB_OK | MB_SYSTEMMODAL
             );
-            restartApp(L"");
             break;
         }
         case IDNO:

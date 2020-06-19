@@ -20,30 +20,24 @@
 #define SOCKET_H
 
 #include <memory>
+#include <string>
+
 #ifdef WIN32
 #include <windows.h>
 #endif
+
 #include "message.hpp"
 
-#define MINIMUM_BUFFER_SIZE 512
-
-#ifdef WIN32
-// TODO: FIX ME
-#define FILE_NAME ""
-#define FILE_NAME_EXIT ""
-#endif
-
-#ifdef __APPLE__
-#define FILE_NAME "/tmp/slobs-crash-handler"
-#define FILE_NAME_EXIT "/tmp/exit-slobs-crash-handler"
-#endif
-
 class Socket {
+protected:
+	std::wstring name;
+	std::wstring name_exit;
+
 public:
     static std::unique_ptr<Socket> create();
 
     virtual std::vector<char> read() = 0;
-    virtual int write(const char* filename, std::vector<char> buffer) = 0;
+    virtual int write(bool exit, std::vector<char> buffer) = 0;
     virtual void disconnect() = 0;
 };
 

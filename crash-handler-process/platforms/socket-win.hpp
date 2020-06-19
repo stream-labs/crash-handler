@@ -24,7 +24,7 @@
 #define CONNECTING_STATE 0 
 #define READING_STATE 1 
 #define WRITING_STATE 2 
-#define INSTANCES 4 
+#define INSTANCES 8
 #define PIPE_TIMEOUT 5000
 #define BUFSIZE 128
 
@@ -44,9 +44,6 @@ class Socket_WIN : public Socket {
 private:
     PIPEINST Pipe[INSTANCES];
     HANDLE hEvents[INSTANCES];
-    // const bool auto_unregister_before_exit = false;
-    // int obs_server_crash_id = 0;
-    // std::vector<std::thread*> requests;
 
     BOOL Socket_WIN::ConnectToNewClient(HANDLE hPipe, LPOVERLAPPED lpo);
     void Socket_WIN::DisconnectAndReconnect(DWORD i);
@@ -56,15 +53,7 @@ public:
 	virtual ~Socket_WIN();
 
 public:
-    // LEGACY
-	// virtual bool connect() override;
-	// virtual bool read(std::vector<Process*>*, std::mutex* mu, bool* exit) override;
-	// virtual void disconnect() override;
-	// virtual bool flush() override;
-
-	// virtual HANDLE getHandle() override;
-
     virtual std::vector<char> read() override;
-	virtual int write(const char* filename, std::vector<char> buffer) override;
+	virtual int write(bool exit, std::vector<char> buffer) override;
 	virtual void disconnect() override;
 };

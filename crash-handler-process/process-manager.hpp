@@ -43,24 +43,24 @@ public:
     bool m_applicationCrashed;
     bool m_criticalCrash;
 
-    void handleCrash(void);
+    void handleCrash(std::wstring path);
     void sendExitMessage(void);
 
 private:
-    ThreadData* m_watcher;
-    ThreadData* m_monitor;
-    std::vector<std::unique_ptr<Process>> m_processes;
-    std::mutex m_mtx;
-    std::unique_ptr<Socket> m_socket;
+    ThreadData* watcher;
+    ThreadData* monitor;
+    std::vector<std::unique_ptr<Process>> processes;
+    std::mutex mtx;
+    std::unique_ptr<Socket> socket;
 
-    void watcher();
-    void monitor();
+    void watcher_fnc();
+    void monitor_fnc();
 
     void startMonitoring();
     void stopMonitoring();
 
     size_t registerProcess(bool isCritical, uint32_t PID);
-    size_t unregisterProcess(uint32_t PID);
+    void unregisterProcess(uint32_t PID);
 
     void terminateAll(void);
 };
