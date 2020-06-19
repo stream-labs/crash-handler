@@ -8,7 +8,7 @@ trigger:
 
 variables:
   SLBuildDirectory: build
-  SLGenerator: Visual Studio 15 2017 Win64
+  SLGenerator: Visual Studio 16 2019
   SLDistributeDirectory: distribute
   FullDistributePath: $(SLBuildDirectory)/$(SLDistributeDirectory)
   RuntimeURL: https://atom.io/download/atom-shell
@@ -19,7 +19,7 @@ variables:
 jobs:
 - job: 'Windows'
   pool:
-    vmImage: 'vs2017-win2016'
+    vmImage: 'windows-2019'
   workspace:
     clean: all
 
@@ -41,7 +41,7 @@ jobs:
   - script: 'yarn install'
     displayName: 'Install dependencies'
 
-  - script: 'cmake -H. -B"%SLBuildDirectory%" -G"%SLGenerator%"  -DCMAKE_INSTALL_PREFIX="%FullDistributePath%\crash-handler" -DNODEJS_NAME=%RuntimeName% -DNODEJS_URL=%RuntimeURL% -DNODEJS_VERSION=%RuntimeVersion%'
+  - script: 'cmake -H. -B"%SLBuildDirectory%" -G"%SLGenerator%" -A x64 -DCMAKE_INSTALL_PREFIX="%FullDistributePath%\crash-handler" -DNODEJS_NAME=%RuntimeName% -DNODEJS_URL=%RuntimeURL% -DNODEJS_VERSION=%RuntimeVersion%'
     displayName: 'Configure crash-handler'
 
   - script: 'cmake --build %SLBuildDirectory% --target install --config RelWithDebInfo'
