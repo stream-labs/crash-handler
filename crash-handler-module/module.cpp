@@ -1,7 +1,7 @@
 #include <node.h>
 
 using namespace v8;
-
+/*
 void init(Local<Object> exports)
 {
     /// Functions ///
@@ -9,3 +9,4 @@ void init(Local<Object> exports)
 }
 
 NODE_MODULE(crash_handler, init);
+*/

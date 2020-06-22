@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const crash_handler = require('./crash-handler.node');
+//const crash_handler = require('./crash-handler.node');
 const net = require('net');
 const fs = require('fs');
 
@@ -87,4 +87,4 @@ exports.registerProcess = registerProcess;
 exports.unregisterProcess = unregisterProcess;
 exports.terminateCrashHandler = terminateCrashHandler;
 
-exports = crash_handler;
+//exports = crash_handler;
