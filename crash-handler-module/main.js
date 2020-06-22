@@ -45,14 +45,13 @@ function unregisterProcess(pid) {
     tryConnect(buffer);
 }
 
-function terminateCrashHandler(pid) {
+async function terminateCrashHandler(pid) {
     const buffer = new Buffer(5);
     let offset = 0;
     buffer.writeUInt8(2, offset++);
     buffer.writeUInt32LE(pid, offset++);
-
     tryConnect(buffer);
-  }
+}
 
 function startCrashHandler(workingDirectory, version, isDevEnv, cachePath = "") {
     const { spawn } = require('child_process');
