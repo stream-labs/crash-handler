@@ -1,14 +1,15 @@
 #include "socket-osx.hpp"
 
-std::unique_ptr<Socket> Socket::create() {
+Socket_OSX::Socket_OSX() {
 	this->name = "/tmp/slobs-crash-handler";
 	this->name_exit = "/tmp/exit-slobs-crash-handler";
 
 	remove(this->name.c_str());
     if (mkfifo(this->name.c_str(), S_IRUSR | S_IWUSR) < 0)
 		log_info << "Could not create " << strerror(errno) << std::endl;
+}
 
-
+std::unique_ptr<Socket> Socket::create() {
 	return std::make_unique<Socket_OSX>();
 }
 
@@ -18,6 +19,7 @@ std::vector<char> Socket_OSX::read() {
 	int file_descriptor = open(this->name.c_str(), O_RDONLY);
 	if (file_descriptor < 0) {
         log_info << "Could not open " << strerror(errno) << std::endl;
+		return buffer;
     }
 	int bytes_read = ::read(file_descriptor, buffer.data(), buffer.size());
 	buffer.resize(bytes_read < 0 ? 0 : bytes_read);
@@ -26,7 +28,7 @@ std::vector<char> Socket_OSX::read() {
 }
 
 int Socket_OSX::write(bool exit, std::vector<char> buffer) {
-	int file_descriptor = open(exit ? this->name.c_str() : this->name_exit.c_str(), O_WRONLY | O_DSYNC);
+	int file_descriptor = open(exit ? this->name_exit.c_str() : this->name.c_str(), O_WRONLY | O_DSYNC);
 	if (file_descriptor < 0) {
         log_info << "Could not open " << strerror(errno) << std::endl;
     }

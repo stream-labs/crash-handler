@@ -54,6 +54,7 @@ int main(int argc, char** argv)
         pm->handleCrash(path);
 
 	delete pm;
+	log_info << "Terminating application" << std::endl;
 	logging_end();
 	return 0;
 }

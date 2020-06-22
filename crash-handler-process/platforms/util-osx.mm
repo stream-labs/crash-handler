@@ -3,6 +3,8 @@
 
 #import <Cocoa/Cocoa.h>
 
+bool restart = false;
+
 @interface AppDelegate : NSObject <NSApplicationDelegate, NSWindowDelegate> {
 }
 - (void)applicationDidFinishLaunching:(NSNotification *)notification;
@@ -36,7 +38,7 @@ void stopApplication(void) {
 
         if ([alert2 runModal] == NSAlertFirstButtonReturn) {
             stopApplication();
-            [[NSWorkspace sharedWorkspace] launchApplication:@"/Applications/Streamlabs OBS.app"];
+            restart = true;
         }
     }
 }
@@ -45,12 +47,13 @@ void stopApplication(void) {
 }
 @end
 
-void Util::runTerminateWindow(void) {
+void Util::runTerminateWindow(bool &shouldRestart) {
     @autoreleasepool {
         NSApplication *app = [NSApplication sharedApplication];
         AppDelegate *del = [[AppDelegate alloc] init];
         app.delegate = del;
         [app run];
+        shouldRestart = restart;
     }
 }
 
@@ -60,4 +63,8 @@ void Util::check_pid_file(std::string& pid_path) {
 
 std::string Util::get_temp_directory() {
     //TODO
+}
+
+void Util::restartApp(std::wstring path) {
+    [[NSWorkspace sharedWorkspace] launchApplication:@"/Applications/Streamlabs OBS.app"];
 }

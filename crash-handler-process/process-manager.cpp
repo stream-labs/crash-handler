@@ -48,8 +48,10 @@ void ProcessManager::watcher_fnc() {
 
     while (!this->watcher->stop) {
         std::vector<char> buffer = this->socket->read();
-        if (!buffer.size())
+        if (!buffer.size()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
             continue;
+        }
 
         Message msg(buffer);
         switch (static_cast<Action>(msg.readUInt8())) {
@@ -77,7 +79,6 @@ void ProcessManager::watcher_fnc() {
 
 void ProcessManager::monitor_fnc() {
     log_info << "Start monitoring" << std::endl;
-    bool crashed       = false;
     bool criticalCrash = false;
 
     while (!this->monitor->stop) {
@@ -89,12 +90,12 @@ void ProcessManager::monitor_fnc() {
         for (int i = 0; i < this->processes.size(); i++) {
             if (!this->processes.at(i)->isAlive()) {
                 // Log information about the process that just crashed
-                std::cout << "process died" << std::endl;
-                std::cout << "process.pid: " << this->processes.at(i)->getPID() << std::endl;
-                std::cout << "process.isCritical: " << this->processes.at(i)->isCritical() << std::endl;
+                log_info << "process died" << std::endl;
+                log_info << "process.pid: " << this->processes.at(i)->getPID() << std::endl;
+                log_info << "process.isCritical: " << this->processes.at(i)->isCritical() << std::endl;
 
                 m_criticalCrash = this->processes.at(i)->isCritical();
-                m_applicationCrashed = this->monitor->stop = this->watcher->stop = true;
+                m_applicationCrashed = this->monitor->stop = true;
             }
         }
 
@@ -103,6 +104,14 @@ sleep:
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
+    this->watcher->stop = true;
+#ifdef __APPLE__
+    if (m_applicationCrashed) {
+        std::vector<char> buffer;
+        buffer.push_back('-1');
+        this->socket->write(false, buffer);
+    }
+#endif
     log_info << "End monitoring" << std::endl;
 }
 
@@ -169,6 +178,7 @@ void ProcessManager::unregisterProcess(uint32_t PID) {
 }
 
 void ProcessManager::handleCrash(std::wstring path) {
+    log_info << "Handling crash - process alive: " << std::endl;
     for (int i = 0; i < this->processes.size(); i++) {
         if(this->processes.at(i)->isAlive()) {
             log_info << "----" << std::endl;
@@ -178,15 +188,21 @@ void ProcessManager::handleCrash(std::wstring path) {
         }
     }
 
+    bool shouldRestart = false;
     if (m_criticalCrash) {
         terminateAll();
     } else {
         // Blocking operation that will return once the user
         // decides to terminate the application
-        Util::runTerminateWindow();
+        Util::runTerminateWindow(shouldRestart);
+        log_info << "Send exit message" << std::endl;
         this->sendExitMessage();
-        Util::restartApp(path);
+        log_info << "Terminate non critical processes" << std::endl;
+        terminateNonCritical();
     }
+
+    if (shouldRestart)
+        Util::restartApp(path);
 }
 
 void ProcessManager::sendExitMessage(void) {
@@ -200,4 +216,11 @@ void ProcessManager::sendExitMessage(void) {
 void ProcessManager::terminateAll(void) {
     for (int i = 0; i < this->processes.size(); i++)
         this->processes.at(i)->terminate();
+}
+
+void ProcessManager::terminateNonCritical(void) {
+    for (int i = 0; i < this->processes.size(); i++) {
+        if (!this->processes.at(i)->isCritical())
+            this->processes.at(i)->terminate();
+    }
 }

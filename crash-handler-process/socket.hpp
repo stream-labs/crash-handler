@@ -29,10 +29,6 @@
 #include "message.hpp"
 
 class Socket {
-protected:
-	std::wstring name;
-	std::wstring name_exit;
-
 public:
     static std::unique_ptr<Socket> create();
 

@@ -44,6 +44,8 @@ class Socket_WIN : public Socket {
 private:
     PIPEINST Pipe[INSTANCES];
     HANDLE hEvents[INSTANCES];
+	std::wstring name;
+	std::wstring name_exit;
 
     BOOL Socket_WIN::ConnectToNewClient(HANDLE hPipe, LPOVERLAPPED lpo);
     void Socket_WIN::DisconnectAndReconnect(DWORD i);

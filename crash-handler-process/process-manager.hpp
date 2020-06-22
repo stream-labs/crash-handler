@@ -63,4 +63,5 @@ private:
     void unregisterProcess(uint32_t PID);
 
     void terminateAll(void);
+    void terminateNonCritical(void);
 };

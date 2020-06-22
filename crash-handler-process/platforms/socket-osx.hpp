@@ -6,12 +6,16 @@
 #include "../logger.hpp"
 
 class Socket_OSX : public Socket {
+private:
+	std::string name;
+	std::string name_exit;
+
 public:
-	Socket_OSX() {};
+	Socket_OSX();
 	virtual ~Socket_OSX() {};
 
 public:
 	virtual std::vector<char> read() override;
-	virtual int write(const char* filename, std::vector<char> buffer) override;
+	virtual int write(bool exit, std::vector<char> buffer) override;
 	virtual void disconnect() override;
 };
