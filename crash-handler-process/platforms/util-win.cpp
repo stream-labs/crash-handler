@@ -47,7 +47,7 @@ void Util::restartApp(std::wstring path) {
 	);
 }
 
-void Util::runTerminateWindow() {
+void Util::runTerminateWindow(bool& shouldRestart) {
     int code = MessageBox(
         NULL,
         L"An error occurred which has caused Streamlabs OBS to close. Don't worry! If you were streaming or recording, that is still happening in the background."
@@ -66,6 +66,7 @@ void Util::runTerminateWindow() {
                 L"Choose when to restart",
                 MB_OK | MB_SYSTEMMODAL
             );
+			shouldRestart = true;
             break;
         }
         case IDNO:
