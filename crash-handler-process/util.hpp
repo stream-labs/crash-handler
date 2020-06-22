@@ -16,30 +16,17 @@
 
 ******************************************************************************/
 
-#ifndef MESSAGE_H
-#define MESSAGE_H
+#ifndef UTIL_H
+#define UTIL_H
 
-#include <vector>
+#include <string>
 
-enum class Action : uint8_t {
-	REGISTER = 0,
-	UNREGISTER = 1
-};
-
-class Message {
+class Util {
 public:
-	Message(std::vector<char> buffer);
-	~Message();
-	
-private:
-	std::vector<char> m_buffer;
-	uint64_t index = 0;
-	
-public:
-	bool readBool();
-	uint64_t readUInt64();
-  uint32_t readUInt32();
-	uint8_t readUInt8();
+    static void runTerminateWindow(bool &shouldRestart);
+    static void check_pid_file(std::string& pid_path);
+	static std::string get_temp_directory();
+	static void restartApp(std::wstring path);
 };
 
 #endif

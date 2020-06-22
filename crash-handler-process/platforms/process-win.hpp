@@ -16,30 +16,30 @@
 
 ******************************************************************************/
 
-#ifndef MESSAGE_H
-#define MESSAGE_H
+#include "../process.hpp"
+#include "../logger.hpp"
 
-#include <vector>
+#include <windows.h>
+#include <thread>
+#include <mutex>
 
-enum class Action : uint8_t {
-	REGISTER = 0,
-	UNREGISTER = 1
-};
-
-class Message {
-public:
-	Message(std::vector<char> buffer);
-	~Message();
-	
+class Process_WIN : public Process {
 private:
-	std::vector<char> m_buffer;
-	uint64_t index = 0;
-	
-public:
-	bool readBool();
-	uint64_t readUInt64();
-  uint32_t readUInt32();
-	uint8_t readUInt8();
-};
+	std::thread *checker;
+    std::mutex mtx;
+	HANDLE hdl;
 
-#endif
+public:
+    Process_WIN(int32_t pid, bool isCritical);
+    ~Process_WIN();
+
+public:
+    virtual int32_t  getPID(void)     override;
+    virtual bool     isCritical(void) override;
+    virtual bool     isAlive(void)    override;
+    virtual void     terminate(void)  override;
+
+private:
+    void worker();
+    DWORD getPIDDWORD();
+};

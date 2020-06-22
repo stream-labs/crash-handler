@@ -16,30 +16,25 @@
 
 ******************************************************************************/
 
-#ifndef MESSAGE_H
-#define MESSAGE_H
+#ifndef SOCKET_H
+#define SOCKET_H
 
-#include <vector>
+#include <memory>
+#include <string>
 
-enum class Action : uint8_t {
-	REGISTER = 0,
-	UNREGISTER = 1
-};
+#ifdef WIN32
+#include <windows.h>
+#endif
 
-class Message {
+#include "message.hpp"
+
+class Socket {
 public:
-	Message(std::vector<char> buffer);
-	~Message();
-	
-private:
-	std::vector<char> m_buffer;
-	uint64_t index = 0;
-	
-public:
-	bool readBool();
-	uint64_t readUInt64();
-  uint32_t readUInt32();
-	uint8_t readUInt8();
+    static std::unique_ptr<Socket> create();
+
+    virtual std::vector<char> read() = 0;
+    virtual int write(bool exit, std::vector<char> buffer) = 0;
+    virtual void disconnect() = 0;
 };
 
 #endif
