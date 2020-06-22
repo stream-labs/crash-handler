@@ -2,10 +2,10 @@
 
 using namespace v8;
 
-NAN_MODULE_INIT(crash_init) 
+void init(Local<Object> exports)
 {
     /// Functions ///
     // NODE_SET_METHOD(exports, "startHook", StartHotkeyThreadJS);
-};
+}
 
-NAN_MODULE_WORKER_ENABLED(crash_handler, crash_init)
+NODE_MODULE(crash_handler, init);
