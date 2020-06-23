@@ -82,25 +82,22 @@ void ProcessManager::monitor_fnc() {
     bool criticalCrash = false;
 
     while (!this->monitor->stop) {
-        this->mtx.lock();
+        if (this->mtx.try_lock()) {
 
-        if (!this->processes.size())
-            goto sleep;
+            for (int i = 0; i < this->processes.size(); i++) {
+                if (!this->processes.at(i)->isAlive()) {
+                    // Log information about the process that just crashed
+                    log_info << "process died" << std::endl;
+                    log_info << "process.pid: " << this->processes.at(i)->getPID() << std::endl;
+                    log_info << "process.isCritical: " << this->processes.at(i)->isCritical() << std::endl;
 
-        for (int i = 0; i < this->processes.size(); i++) {
-            if (!this->processes.at(i)->isAlive()) {
-                // Log information about the process that just crashed
-                log_info << "process died" << std::endl;
-                log_info << "process.pid: " << this->processes.at(i)->getPID() << std::endl;
-                log_info << "process.isCritical: " << this->processes.at(i)->isCritical() << std::endl;
-
-                m_criticalCrash = this->processes.at(i)->isCritical();
-                m_applicationCrashed = this->monitor->stop = true;
+                    m_criticalCrash = this->processes.at(i)->isCritical();
+                    m_applicationCrashed = this->monitor->stop = true;
+                }
             }
-        }
 
-sleep:
-        this->mtx.unlock();
+            this->mtx.unlock();
+        }
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
