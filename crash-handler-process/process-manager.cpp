@@ -168,7 +168,7 @@ void ProcessManager::unregisterProcess(uint32_t PID) {
     if ((*it)->isCritical()) {
         this->stopMonitoring();
         this->watcher->stop = true;
-        this->sendExitMessage();
+        this->sendExitMessage(false);
     }
 
     this->processes.erase(it);
@@ -193,7 +193,7 @@ void ProcessManager::handleCrash(std::wstring path) {
         // decides to terminate the application
         Util::runTerminateWindow(shouldRestart);
         log_info << "Send exit message" << std::endl;
-        this->sendExitMessage();
+        this->sendExitMessage(true);
         log_info << "Terminate non critical processes" << std::endl;
         terminateNonCritical();
     }
@@ -202,9 +202,9 @@ void ProcessManager::handleCrash(std::wstring path) {
         Util::restartApp(path);
 }
 
-void ProcessManager::sendExitMessage(void) {
+void ProcessManager::sendExitMessage(bool appCrashed) {
     std::vector<char> buffer;
-    buffer.push_back('1');
+    buffer.push_back(appCrashed);
 
     if (this->socket->write(true, buffer) <= 0)
         log_info << "Failed to send exit message" << std::endl;
