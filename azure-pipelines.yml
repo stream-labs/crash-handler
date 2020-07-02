@@ -44,6 +44,10 @@ jobs:
   - script: 'cmake -H. -B"%SLBuildDirectory%" -G"%SLGenerator%" -A x64 -DCMAKE_INSTALL_PREFIX="%FullDistributePath%\crash-handler" -DNODEJS_NAME=%RuntimeName% -DNODEJS_URL=%RuntimeURL% -DNODEJS_VERSION=%RuntimeVersion%'
     displayName: 'Configure crash-handler'
 
+  - script: 'node ci/bump-version.js'
+    displayName: 'Bump version number'
+    condition: and(succeeded(), contains(variables['Build.SourceBranch'], 'tags'))
+
   - script: 'cmake --build %SLBuildDirectory% --target install --config RelWithDebInfo'
     displayName: 'Build crash-handler'
 
@@ -95,6 +99,10 @@ jobs:
 
   - script: 'yarn install'
     displayName: 'Install dependencies'
+
+  - script: 'node ci/bump-version.js'
+    displayName: 'Bump version number'
+    condition: and(succeeded(), contains(variables['Build.SourceBranch'], 'tags'))
 
   - script: './ci/build-osx.sh'
     displayName: 'Build crash-handler'
