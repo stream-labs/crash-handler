@@ -18,6 +18,23 @@
 
 #include "process-win.hpp"
 
+struct handle_data {
+    unsigned long process_id;
+    HWND window_handle;
+};
+
+BOOL CALLBACK enum_windows_callback(HWND handle, LPARAM lParam)
+{
+    handle_data& data = *(handle_data*)lParam;
+    unsigned long process_id = 0;
+    GetWindowThreadProcessId(handle, &process_id);
+    if (data.process_id != process_id || !(GetWindow(handle, GW_OWNER) == (HWND)0 ))
+        return TRUE;
+
+    data.window_handle = handle;
+    return FALSE;   
+}
+
 std::unique_ptr<Process> Process::create(int32_t pid, bool isCritical) {
 	return std::make_unique<Process_WIN>(pid, isCritical);
 }
@@ -63,6 +80,15 @@ bool Process_WIN::isAlive(void) {
     return this->alive;
 }
 
+bool Process_WIN::isResponsive(void) {
+    std::unique_lock<std::mutex> ul(this->mtx);
+	HWND window = getTopWindow();
+	if (window)
+		return IsHungAppWindow(window);
+	else 
+		return false;
+}
+
 void Process_WIN::terminate(void) {
     if (this->hdl && this->hdl != INVALID_HANDLE_VALUE) {
         TerminateProcess(hdl, 1);
@@ -75,4 +101,13 @@ void Process_WIN::terminate(void) {
 
 DWORD Process_WIN::getPIDDWORD(void) {
 	return static_cast<DWORD>(PID);
+}
+
+HWND Process_WIN::getTopWindow()
+{
+    handle_data data;
+    data.process_id = PID;
+    data.window_handle = 0;
+    EnumWindows(enum_windows_callback, (LPARAM)&data);
+    return data.window_handle;
 }

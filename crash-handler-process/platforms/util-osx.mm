@@ -68,3 +68,7 @@ std::string Util::get_temp_directory() {
 void Util::restartApp(std::wstring path) {
     [[NSWorkspace sharedWorkspace] launchApplication:@"/Applications/Streamlabs OBS.app"];
 }
+
+void Util::setAppStatePath(std::wstring path) {}
+
+void Util::updateAppState(bool unresponsive_detected) {}
