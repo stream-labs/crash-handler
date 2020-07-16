@@ -54,8 +54,8 @@ jobs:
   - task: ArchiveFiles@2
     displayName: 'Generate artifact'
     inputs:
-      rootFolderOrFile: $(FullDistributePath)\crash-handler\crash-handler
-      includeRootFolder: true
+      rootFolderOrFile: $(FullDistributePath)
+      includeRootFolder: false
       archiveType: tar
       tarCompression: gz
       archiveFile: '$(tagartifact)-win64.tar.gz'
@@ -110,8 +110,8 @@ jobs:
   - task: ArchiveFiles@2
     displayName: 'Generate artifact'
     inputs:
-      rootFolderOrFile: $(FullDistributePath)/crash-handler/crash-handler
-      includeRootFolder: true
+      rootFolderOrFile: $(FullDistributePath)
+      includeRootFolder: false
       archiveType: tar
       tarCompression: gz
       archiveFile: '$(tagartifact)-osx.tar.gz'

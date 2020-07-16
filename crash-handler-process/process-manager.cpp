@@ -80,23 +80,37 @@ void ProcessManager::watcher_fnc() {
 void ProcessManager::monitor_fnc() {
     log_info << "Start monitoring" << std::endl;
     bool criticalCrash = false;
+    bool unresponsiveMarked = false;
 
     while (!this->monitor->stop) {
+        bool detectedUnresponsive = false;
         if (this->mtx.try_lock()) {
-
-            for (int i = 0; i < this->processes.size(); i++) {
-                if (!this->processes.at(i)->isAlive()) {
+            for (auto & process : this->processes) {
+                if (!process->isAlive()) {
                     // Log information about the process that just crashed
                     log_info << "process died" << std::endl;
-                    log_info << "process.pid: " << this->processes.at(i)->getPID() << std::endl;
-                    log_info << "process.isCritical: " << this->processes.at(i)->isCritical() << std::endl;
+                    log_info << "process.pid: " << process->getPID() << std::endl;
+                    log_info << "process.isCritical: " << process->isCritical() << std::endl;
 
-                    m_criticalCrash = this->processes.at(i)->isCritical();
+                    m_criticalCrash = process->isCritical();
                     m_applicationCrashed = this->monitor->stop = true;
+                } else {
+                    detectedUnresponsive |= process->isResponsive();
                 }
             }
 
             this->mtx.unlock();
+            if(unresponsiveMarked && !detectedUnresponsive) 
+            {
+                log_info << "Unresponsive window not detected anymore " << std::endl;
+                Util::updateAppState(true);
+                unresponsiveMarked = false;
+            } else if(!unresponsiveMarked && detectedUnresponsive) 
+            {
+                log_info << "Unresponsive window detected " << std::endl;
+                Util::updateAppState(false);
+                unresponsiveMarked = true;
+            }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
@@ -176,11 +190,11 @@ void ProcessManager::unregisterProcess(uint32_t PID) {
 
 void ProcessManager::handleCrash(std::wstring path) {
     log_info << "Handling crash - process alive: " << std::endl;
-    for (int i = 0; i < this->processes.size(); i++) {
-        if(this->processes.at(i)->isAlive()) {
+    for (auto & process : this->processes) {
+        if (process->isAlive()) {
             log_info << "----" << std::endl;
-            log_info << "process.pid: " << this->processes.at(i)->getPID() << std::endl;
-            log_info << "process.isCritical: " << this->processes.at(i)->isCritical() << std::endl;
+            log_info << "process.pid: " << process->getPID() << std::endl;
+            log_info << "process.isCritical: " << process->isCritical() << std::endl;
             log_info << "----" << std::endl;
         }
     }
@@ -211,13 +225,13 @@ void ProcessManager::sendExitMessage(bool appCrashed) {
 }
 
 void ProcessManager::terminateAll(void) {
-    for (int i = 0; i < this->processes.size(); i++)
-        this->processes.at(i)->terminate();
+    for (auto & process : this->processes) 
+        process->terminate();
 }
 
 void ProcessManager::terminateNonCritical(void) {
-    for (int i = 0; i < this->processes.size(); i++) {
-        if (!this->processes.at(i)->isCritical())
-            this->processes.at(i)->terminate();
+    for (auto & process : this->processes) {
+        if (!process->isCritical())
+            process->terminate();
     }
 }

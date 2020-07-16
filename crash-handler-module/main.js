@@ -66,7 +66,7 @@ function startCrashHandler(workingDirectory, version, isDevEnv, cachePath = "") 
     let spawnArguments = [workingDirectory, version, isDevEnv];
 
     if ( cachePath.length > 0 ) 
-      spawnArguments.push( cachePath+'/crash-handler.log' );
+      spawnArguments.push( cachePath );
 
     const subprocess = spawn(processPath +
       '/crash-handler-process', spawnArguments, {

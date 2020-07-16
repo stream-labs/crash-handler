@@ -19,13 +19,12 @@
 #include "logger.hpp"
 #include "process-manager.hpp"
 #include "util.hpp"
-
 #include <codecvt>
 
 int main(int argc, char** argv)
 {
 	std::wstring path;
-	std::wstring log_path = L"";
+	std::wstring cache_path = L"";
 	std::string version;
 	std::string isDevEnv;
 	
@@ -37,9 +36,11 @@ int main(int argc, char** argv)
 	if (argc >= 4)
 		isDevEnv = argv[3];
 	if (argc >= 5)
-		log_path = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(argv[4]);
+		cache_path = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(argv[4]);
 
-	logging_start(log_path);
+	logging_start(cache_path+L"\\crash-handler.log");
+
+	Util::setAppStatePath(cache_path+L"\\appState");
 
 #ifdef WIN32
 	std::string pid_path(Util::get_temp_directory());

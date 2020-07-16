@@ -28,6 +28,7 @@ private:
 	std::thread *checker;
     std::mutex mtx;
 	HANDLE hdl;
+	HWND getTopWindow();
 
 public:
     Process_WIN(int32_t pid, bool isCritical);
@@ -37,6 +38,7 @@ public:
     virtual int32_t  getPID(void)     override;
     virtual bool     isCritical(void) override;
     virtual bool     isAlive(void)    override;
+	virtual bool     isResponsive(void) override;
     virtual void     terminate(void)  override;
 
 private:

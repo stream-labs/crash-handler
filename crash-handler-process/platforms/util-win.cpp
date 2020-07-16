@@ -17,12 +17,16 @@
 ******************************************************************************/
 
 #include "../util.hpp"
-
+#include "../logger.hpp"
 #include <windows.h>
 #include <string>
 #include <fstream>
+#include <sstream>
 #include <codecvt>
 #include <psapi.h>
+#include "nlohmann/json.hpp"
+
+static std::wstring appStatePath = L"";
 
 void Util::restartApp(std::wstring path) {
 	STARTUPINFO info = { sizeof(info) };
@@ -211,4 +215,51 @@ std::string Util::get_temp_directory() {
 	* it's explicitly meant to be used this way per MSDN. */
 	GetLongPathNameW(&tmp[0], &tmp[0], tmp_len);
 	return from_utf16_wide_to_utf8(tmp.data());
+}
+
+void Util::setAppStatePath(std::wstring path)
+{
+	appStatePath = path;
+}
+
+void Util::updateAppState(bool unresponsive_detected)
+{
+	const std::string freez_flag = "window_unresponsive";
+	const std::string flag_name = "detected";
+
+	std::ifstream state_file(appStatePath, std::ios::in);
+	if (!state_file.is_open())
+		return;
+
+	std::ostringstream buffer; 
+	buffer << state_file.rdbuf(); 
+	state_file.close();
+
+	std::string current_status = buffer.str();
+	if (current_status.size() == 0) 
+		return;
+
+	std::string updated_status = "";
+	std::string existing_flag_value = "";
+	nlohmann::json jsonEntry = nlohmann::json::parse(current_status);
+	try {
+		existing_flag_value = jsonEntry.at(flag_name);
+	} catch (...) {}
+	if (unresponsive_detected) {
+		if (existing_flag_value.empty())
+			jsonEntry[flag_name] = freez_flag;
+	} else {
+		if (existing_flag_value.compare(freez_flag) == 0)
+			jsonEntry[flag_name] = "";
+	}
+	updated_status = jsonEntry.dump(-1);
+
+	std::ofstream out_state_file;
+	out_state_file.open(appStatePath, std::ios::trunc | std::ios::out );
+	if (!out_state_file.is_open())
+		return;
+
+	out_state_file << updated_status << "\n";
+	out_state_file.flush();
+	out_state_file.close();
 }

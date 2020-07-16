@@ -42,5 +42,6 @@ public:
 	virtual int32_t  getPID(void)     = 0;
 	virtual bool     isCritical(void) = 0;
 	virtual bool     isAlive(void)    = 0;
+    virtual bool     isResponsive(void) = 0;
     virtual void     terminate(void)  = 0;
 };

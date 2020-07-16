@@ -24,6 +24,9 @@ int32_t Process_OSX::getPID(void) {
 bool Process_OSX::isCritical(void) {
 	return critical;
 }
+bool Process_OSX::isResponsive(void) {
+	return true; // check for responsiveness not impemented
+}
 
 bool Process_OSX::isAlive(void) {
     pid_t pids[2048];

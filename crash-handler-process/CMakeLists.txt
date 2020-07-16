@@ -74,8 +74,8 @@ ENDIF()
 #############################
 # Distribute
 #############################
-INSTALL(TARGETS crash-handler-process RUNTIME DESTINATION "./crash-handler" COMPONENT Runtime )
+INSTALL(TARGETS crash-handler-process RUNTIME DESTINATION "./" COMPONENT Runtime )
 IF(WIN32)
-	INSTALL(FILES $<TARGET_PDB_FILE:crash-handler-process> DESTINATION "./crash-handler" OPTIONAL)
+	INSTALL(FILES $<TARGET_PDB_FILE:crash-handler-process> DESTINATION "./" OPTIONAL)
 ENDIF()
-INSTALL(DIRECTORY ${PROJECT_DATA} DESTINATION "./crash-handler" OPTIONAL)
+INSTALL(DIRECTORY ${PROJECT_DATA} DESTINATION "./" OPTIONAL)
