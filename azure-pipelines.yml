@@ -55,7 +55,7 @@ jobs:
     displayName: 'Generate artifact'
     inputs:
       rootFolderOrFile: $(FullDistributePath)
-      includeRootFolder: true
+      includeRootFolder: false
       archiveType: tar
       tarCompression: gz
       archiveFile: '$(tagartifact)-win64.tar.gz'
@@ -111,7 +111,7 @@ jobs:
     displayName: 'Generate artifact'
     inputs:
       rootFolderOrFile: $(FullDistributePath)
-      includeRootFolder: true
+      includeRootFolder: false
       archiveType: tar
       tarCompression: gz
       archiveFile: '$(tagartifact)-osx.tar.gz'
