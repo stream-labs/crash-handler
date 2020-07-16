@@ -54,7 +54,7 @@ jobs:
   - task: ArchiveFiles@2
     displayName: 'Generate artifact'
     inputs:
-      rootFolderOrFile: $(FullDistributePath)\crash-handler\crash-handler
+      rootFolderOrFile: $(FullDistributePath)
       includeRootFolder: true
       archiveType: tar
       tarCompression: gz
@@ -110,7 +110,7 @@ jobs:
   - task: ArchiveFiles@2
     displayName: 'Generate artifact'
     inputs:
-      rootFolderOrFile: $(FullDistributePath)/crash-handler/crash-handler
+      rootFolderOrFile: $(FullDistributePath)
       includeRootFolder: true
       archiveType: tar
       tarCompression: gz
