@@ -86,6 +86,9 @@ void ProcessManager::monitor_fnc() {
     while (!this->monitor->stop) {
         bool detectedUnresponsive = false;
         if (this->mtx.try_lock()) {
+            if (++last_responsive_check % 100 == 0)
+                last_responsive_check = 0;
+
             for (auto & process : this->processes) {
                 if (!process->isAlive()) {
                     // Log information about the process that just crashed
@@ -95,8 +98,7 @@ void ProcessManager::monitor_fnc() {
 
                     m_criticalCrash = process->isCritical();
                     m_applicationCrashed = this->monitor->stop = true;
-                } else if (++last_responsive_check % 100 == 0) {
-                    last_responsive_check = 0;
+                } else if (last_responsive_check == 0) {
                     detectedUnresponsive |= process->isResponsive();
                 }
             }
