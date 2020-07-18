@@ -81,6 +81,7 @@ void ProcessManager::monitor_fnc() {
     log_info << "Start monitoring" << std::endl;
     bool criticalCrash = false;
     bool unresponsiveMarked = false;
+    uint32_t last_responsive_check = 0;
 
     while (!this->monitor->stop) {
         bool detectedUnresponsive = false;
@@ -94,7 +95,8 @@ void ProcessManager::monitor_fnc() {
 
                     m_criticalCrash = process->isCritical();
                     m_applicationCrashed = this->monitor->stop = true;
-                } else {
+                } else if (++last_responsive_check % 100 == 0) {
+                    last_responsive_check = 0;
                     detectedUnresponsive |= process->isResponsive();
                 }
             }
