@@ -193,15 +193,19 @@ void ProcessManager::unregisterProcess(uint32_t PID) {
 }
 
 void ProcessManager::handleCrash(std::wstring path) {
-    log_info << "Handling crash - process alive: " << std::endl;
+    log_info << "Handling crash - processes state: " << std::endl;
     for (auto & process : this->processes) {
+        log_info << "----" << std::endl;
         if (process->isAlive()) {
-            log_info << "----" << std::endl;
             log_info << "process.pid: " << process->getPID() << std::endl;
-            log_info << "process.isCritical: " << process->isCritical() << std::endl;
-            log_info << "----" << std::endl;
+        } else {
+            log_info << "process.pid: " << process->getPID() << " (not alive)"<< std::endl;
+            if (process->isCritical())
+                m_criticalCrash = true;
         }
+        log_info << "process.isCritical: " << process->isCritical() << std::endl;
     }
+    log_info << "----" << std::endl;
 
     bool shouldRestart = false;
     if (m_criticalCrash) {
