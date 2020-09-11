@@ -263,3 +263,11 @@ void Util::updateAppState(bool unresponsive_detected)
 	out_state_file.flush();
 	out_state_file.close();
 }
+
+void Util::putProcessID(std::vector<char> &buffer)
+{
+	buffer.push_back(0x02);
+	buffer.resize(sizeof(DWORD)+1);
+	DWORD process_id = GetCurrentProcessId();
+	std::memcpy(buffer.data()+1, &process_id, sizeof(process_id));
+}

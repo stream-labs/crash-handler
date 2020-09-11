@@ -72,3 +72,5 @@ void Util::restartApp(std::wstring path) {
 void Util::setAppStatePath(std::wstring path) {}
 
 void Util::updateAppState(bool unresponsive_detected) {}
+
+void Util::putProcessID(std::vector<char> &buffer) {}

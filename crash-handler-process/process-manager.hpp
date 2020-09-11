@@ -45,6 +45,7 @@ public:
 
     void handleCrash(std::wstring path);
     void sendExitMessage(bool appCrashed);
+    void sendStayMessage();
 
 private:
     ThreadData* watcher;

@@ -219,7 +219,10 @@ std::vector<char> Socket_WIN::read() {
 		}
 	case WRITING_STATE: {
 		log_error << "Socket::read instance_" << i << " ready to write and disconnect \n";
-		const char finish_data[4] = {};
+		char finish_data[4] = {};
+		DWORD process_id = GetCurrentProcessId();
+		std::memcpy(finish_data, &process_id, sizeof(process_id));
+
 		DWORD sent_bytes = 0;
 		fSuccess = WriteFile(Pipe[i].hPipeInst, finish_data, 4, &sent_bytes, &Pipe[i].oOverlap);
 

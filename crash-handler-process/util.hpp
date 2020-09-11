@@ -20,16 +20,18 @@
 #define UTIL_H
 
 #include <string>
+#include <vector>
 
 class Util {
 public:
-    static void runTerminateWindow(bool &shouldRestart);
-    static void check_pid_file(std::string& pid_path);
+	static void runTerminateWindow(bool &shouldRestart);
+	static void check_pid_file(std::string& pid_path);
 	static std::string get_temp_directory();
 	static void restartApp(std::wstring path);
 
 	static void updateAppState(bool unresponsive_detected);
 	static void setAppStatePath(std::wstring path);
+	static void putProcessID(std::vector<char> &buffer);
 };
 
 #endif

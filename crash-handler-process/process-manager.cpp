@@ -211,10 +211,12 @@ void ProcessManager::handleCrash(std::wstring path) {
     if (m_criticalCrash) {
         terminateAll();
     } else {
+        this->sendStayMessage();
+
         // Blocking operation that will return once the user
         // decides to terminate the application
         Util::runTerminateWindow(shouldRestart);
-        log_info << "Send exit message" << std::endl;
+        
         this->sendExitMessage(true);
         log_info << "Terminate non critical processes" << std::endl;
         terminateNonCritical();
@@ -225,11 +227,22 @@ void ProcessManager::handleCrash(std::wstring path) {
 }
 
 void ProcessManager::sendExitMessage(bool appCrashed) {
+    log_info << "Send exit message" << std::endl;
     std::vector<char> buffer;
+    buffer.push_back(0x01);
     buffer.push_back(appCrashed);
 
     if (this->socket->write(true, buffer) <= 0)
         log_info << "Failed to send exit message" << std::endl;
+}
+
+void ProcessManager::sendStayMessage() {
+    log_info << "Send stay message" << std::endl;
+    std::vector<char> buffer;
+    Util::putProcessID(buffer);
+
+    if (this->socket->write(true, buffer) <= 0)
+        log_info << "Failed to send stay message" << std::endl;
 }
 
 void ProcessManager::terminateAll(void) {
