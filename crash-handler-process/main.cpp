@@ -21,6 +21,15 @@
 #include "util.hpp"
 #include <codecvt>
 
+
+#if defined(WIN32)
+	const std::wstring log_file_name = L"\\crash-handler.log";
+	const std::wstring appstate_file_name = L"\\appState";
+#else // for __APPLE__ and other 
+	const std::wstring log_file_name = L"/crash-handler.log";
+	const std::wstring appstate_file_name = L"/appState";
+#endif
+
 int main(int argc, char** argv)
 {
 	std::wstring path;
@@ -38,9 +47,9 @@ int main(int argc, char** argv)
 	if (argc >= 5)
 		cache_path = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(argv[4]);
 
-	logging_start(cache_path+L"\\crash-handler.log");
+	logging_start(cache_path+log_file_name);
 
-	Util::setAppStatePath(cache_path+L"\\appState");
+	Util::setAppStatePath(cache_path+appstate_file_name);
 
 #ifdef WIN32
 	std::string pid_path(Util::get_temp_directory());
