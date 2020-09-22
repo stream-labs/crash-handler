@@ -64,7 +64,11 @@ void logging_start(std::wstring log_path)
 
 	if (!log_output_disabled)
 	{
+#if defined(WIN32)
 		pid = _getpid();
+#else  // for __APPLE__ and other 
+		pid = getpid();
+#endif 	
 		try
 		{
 			std::uintmax_t size = std::filesystem::file_size(log_path);
