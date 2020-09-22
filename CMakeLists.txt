@@ -8,10 +8,6 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 # Configuration
 #############################
 
-SET(NODEJS_URL "https://atom.io/download/atom-shell" CACHE STRING "Node.JS URL")
-SET(NODEJS_NAME "iojs" CACHE STRING "Node.JS Name")
-SET(NODEJS_VERSION "v9.3.1" CACHE STRING "Node.JS Version")
-
 # Installation
 SET(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/distribute" CACHE PATH "Path to install files to")
 

@@ -1,10 +1,5 @@
-#include <node.h>
+#include <napi.h>
 
-using namespace v8;
+Napi::Object main_node(Napi::Env env, Napi::Object exports) { return exports; }
 
-void init(Local<Object> exports) {
-    /// Functions ///
-    // NODE_SET_METHOD(exports, "startHook", StartHotkeyThreadJS);
-}
-
-NODE_MODULE(crash_handler, init)
+NODE_API_MODULE(crash_handler, main_node)

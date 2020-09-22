@@ -13,7 +13,8 @@
   },
   "license": "GPL-3.0-or-later",
   "main": "main.js",
-  "devDependencies": {
-    "nan": "2.14.0"
+  "devDependencies": {},
+  "dependencies": {
+    "node-addon-api": "^3.0.2"
   }
 }
