@@ -32,7 +32,6 @@
 #include <unistd.h>
 #endif
 
-
 bool log_output_disabled = false;
 
 namespace fs = std::filesystem;
@@ -43,8 +42,11 @@ const std::string getTimeStamp()
 {
 	time_t t = time(NULL);
 	struct tm buf;
-
+#if defined(WIN32)
 	localtime_s(&buf, &t);
+#else  // for __APPLE__ and other 
+	localtime_r(&t, &buf);
+#endif 	
 
 	char mbstr[64] = {0};
 	std::strftime(mbstr, sizeof(mbstr), "%Y%m%d:%H%M%S.", &buf);
