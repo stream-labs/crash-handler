@@ -26,7 +26,12 @@
 #include <filesystem>
 #include <sys/types.h>
 #include <stdlib.h>
+#if defined(WIN32)
 #include <process.h>
+#else // for __APPLE__ and other 
+#include <unistd.h>
+#endif
+
 
 bool log_output_disabled = false;
 
