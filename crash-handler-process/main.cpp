@@ -52,7 +52,7 @@ int main(int argc, char** argv)
 	if (argc >= 5) {
 		cache_path = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(argv[4]);
 		logging_start(cache_path + log_file_name);
-		log_info << "Start CrashHandler" << std::endl;
+		log_info << "=== Started CrashHandler ===" << std::endl;
 		Util::setAppStatePath(cache_path + appstate_file_name);
 	}
 
@@ -63,7 +63,7 @@ int main(int argc, char** argv)
 		pm->handleCrash(path);
 
 	delete pm;
-	log_info << "Terminating application" << std::endl;
+	log_info << "=== Terminating CrashHandler ===" << std::endl;
 	logging_end();
 	return 0;
 }
