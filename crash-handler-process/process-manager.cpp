@@ -45,6 +45,8 @@ void ProcessManager::runWatcher() {
 void ProcessManager::watcher_fnc() {
     log_info << "Start Watcher" << std::endl;
     this->socket = Socket::create();
+    if (this->socket->initialization_failed)
+        return;
 
     while (!this->watcher->stop) {
         std::vector<char> buffer = this->socket->read();

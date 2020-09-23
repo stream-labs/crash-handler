@@ -49,6 +49,7 @@ private:
 
     BOOL Socket_WIN::ConnectToNewClient(HANDLE hPipe, LPOVERLAPPED lpo);
     void Socket_WIN::DisconnectAndReconnect(DWORD i);
+    bool initPipe(int& i);
 
 public:
 	Socket_WIN();

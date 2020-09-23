@@ -35,6 +35,7 @@ public:
     virtual std::vector<char> read() = 0;
     virtual int write(bool exit, std::vector<char> buffer) = 0;
     virtual void disconnect() = 0;
+    bool initialization_failed = false;
 };
 
 #endif
