@@ -70,50 +70,72 @@ void Socket_WIN::DisconnectAndReconnect(DWORD i)
 Socket_WIN::Socket_WIN() {
 	this->name = L"\\\\.\\pipe\\slobs-crash-handler";
 	this->name_exit = L"\\\\.\\pipe\\exit-slobs-crash-handler";
+	int retries = 5;
 
-	for (int i = 0; i < INSTANCES; i++)
-	{
-		hEvents[i] = CreateEvent(
-			NULL,
-			TRUE,
-			TRUE,
-			NULL);
-
-		if (hEvents[i] == NULL)
-		{
-			return;
+	for (int i = 0; i < INSTANCES; i++) {
+		if (!initPipe(i)) {
+			retries--;
+			if (retries) {
+				i--;
+				std::this_thread::sleep_for(std::chrono::milliseconds(50));
+				continue;
+			} else {
+				initialization_failed = true;
+				break;
+			}
 		}
-		memset( &Pipe[i].oOverlap, 0x00, sizeof(OVERLAPPED) );
-		Pipe[i].oOverlap.hEvent = hEvents[i];
-
-		Pipe[i].hPipeInst = CreateNamedPipe(
-			const_cast<LPWSTR>(this->name.c_str()),
-			PIPE_ACCESS_DUPLEX |
-			FILE_FLAG_OVERLAPPED,
-			PIPE_TYPE_MESSAGE |
-			PIPE_READMODE_MESSAGE |
-			PIPE_WAIT, 
-			INSTANCES,
-			BUFSIZE,
-			BUFSIZE,
-			PIPE_TIMEOUT, 
-			NULL);
-
-		if (Pipe[i].hPipeInst == INVALID_HANDLE_VALUE)
-		{
-			return;
-		}
-
-		Pipe[i].fPendingIO = ConnectToNewClient(
-			Pipe[i].hPipeInst,
-			&(Pipe[i].oOverlap));
-
-		Pipe[i].dwState = Pipe[i].fPendingIO ?
-			CONNECTING_STATE : 
-			READING_STATE;
-
-		Pipe[i].chRequest.resize(BUFSIZE);
 	}
+
+	log_info << "Pipes initialization " << (initialization_failed?"failed":"successfull") << std::endl;
+}
+
+bool Socket_WIN::initPipe(int& i)
+{
+	hEvents[i] = CreateEvent(
+		NULL,
+		TRUE,
+		TRUE,
+		NULL);
+
+	if (hEvents[i] == NULL) {
+		DWORD dwErr = GetLastError();
+		log_error << "Failed CreateEvent with code " << dwErr << std::endl;
+		return false;
+	}
+	memset(&Pipe[i].oOverlap, 0x00, sizeof(OVERLAPPED));
+	Pipe[i].oOverlap.hEvent = hEvents[i];
+
+	Pipe[i].hPipeInst = CreateNamedPipe(
+		const_cast<LPWSTR>(this->name.c_str()),
+		PIPE_ACCESS_DUPLEX |
+		FILE_FLAG_OVERLAPPED,
+		PIPE_TYPE_MESSAGE |
+		PIPE_READMODE_MESSAGE |
+		PIPE_WAIT,
+		INSTANCES,
+		BUFSIZE,
+		BUFSIZE,
+		PIPE_TIMEOUT,
+		NULL);
+
+	if (Pipe[i].hPipeInst == INVALID_HANDLE_VALUE) {
+		DWORD dwErr = GetLastError();
+		log_error << "Failed CreateNamedPipe with code " << dwErr << std::endl;
+		CloseHandle(hEvents[i]);
+		return false;
+	}
+
+	Pipe[i].fPendingIO = ConnectToNewClient(
+		Pipe[i].hPipeInst,
+		&(Pipe[i].oOverlap));
+
+	Pipe[i].dwState = Pipe[i].fPendingIO ?
+		CONNECTING_STATE :
+		READING_STATE;
+
+	Pipe[i].chRequest.resize(BUFSIZE);
+
+	return true;
 }
 
 Socket_WIN::~Socket_WIN() {
