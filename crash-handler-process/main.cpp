@@ -32,11 +32,16 @@
 
 int main(int argc, char** argv)
 {
+	std::string pid_path(Util::get_temp_directory());
+	pid_path.append("crash-handler.pid");
+	Util::check_pid_file(pid_path);
+	Util::write_pid_file(pid_path);
+
 	std::wstring path;
 	std::wstring cache_path = L"";
 	std::string version;
 	std::string isDevEnv;
-	
+
 	// Frontend passes as non-unicode
 	if (argc >= 1)
 		path = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(argv[0]);
@@ -44,24 +49,18 @@ int main(int argc, char** argv)
 		version = argv[2];
 	if (argc >= 4)
 		isDevEnv = argv[3];
-	if (argc >= 5)
+	if (argc >= 5) {
 		cache_path = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(argv[4]);
-
-	logging_start(cache_path+log_file_name);
-
-	Util::setAppStatePath(cache_path+appstate_file_name);
-
-#ifdef WIN32
-	std::string pid_path(Util::get_temp_directory());
-	pid_path.append("crash-handler.pid");
-	Util::check_pid_file(pid_path);
-#endif
+		logging_start(cache_path + log_file_name);
+		log_info << "Start CrashHandler" << std::endl;
+		Util::setAppStatePath(cache_path + appstate_file_name);
+	}
 
 	ProcessManager* pm = new ProcessManager();
 	pm->runWatcher();
 
-    if (pm->m_applicationCrashed)
-        pm->handleCrash(path);
+	if (pm->m_applicationCrashed)
+		pm->handleCrash(path);
 
 	delete pm;
 	log_info << "Terminating application" << std::endl;
