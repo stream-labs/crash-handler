@@ -23,53 +23,74 @@
 #include <chrono>
 #include <sstream>
 #include <iomanip>
- #include <filesystem>
+#include <filesystem>
+#include <sys/types.h>
+#include <stdlib.h>
+#if defined(WIN32)
+#include <process.h>
+#else // for __APPLE__ and other 
+#include <unistd.h>
+#endif
 
 bool log_output_disabled = false;
 
 namespace fs = std::filesystem;
 std::ofstream log_output_file;
+static int pid;
 
-const std::string getTimeStamp() 
+const std::string getTimeStamp()
 {
-	time_t t;
-	struct tm * buf;
+	time_t t = time(NULL);
+	struct tm buf;
+#if defined(WIN32)
+	localtime_s(&buf, &t);
+#else  // for __APPLE__ and other 
+	localtime_r(&t, &buf);
+#endif 	
 
-	time (&t);
-	buf = localtime (&t);
-
-	char mbstr[128]={0};
-	std::strftime(mbstr, sizeof(mbstr), "%Y%m%d:%H%M%S.", buf);
+	char mbstr[64] = {0};
+	std::strftime(mbstr, sizeof(mbstr), "%Y%m%d:%H%M%S.", &buf);
 	uint64_t now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
 	std::ostringstream ss;
-	ss << mbstr << std::setw(3) << std::setfill('0') << now%1000;
+	ss << pid << ":" << mbstr << std::setw(3) << std::setfill('0') << now % 1000;
 	return ss.str();
 }
 
 void logging_start(std::wstring log_path)
 {
-     if( log_path.size() == 0 )
-         log_output_disabled = true;
+	if (log_path.size() == 0)
+		log_output_disabled = true;
 
-     if( !log_output_disabled ) 
-     {
-         try {
-             fs::path log_file = log_path;
-             fs::path log_file_old = log_file;
-             log_file_old.replace_extension("log.old");
-            
-             fs::remove_all(log_file_old);
-             fs::rename(log_file, log_file_old); 
-         } catch (...) {
+	if (!log_output_disabled)
+	{
+#if defined(WIN32)
+		pid = _getpid();
+#else  // for __APPLE__ and other 
+		pid = getpid();
+#endif 	
+		try
+		{
+			std::uintmax_t size = std::filesystem::file_size(log_path);
+			if (size > 1 * 1024 * 1024)
+			{
+				fs::path log_file = log_path;
+				fs::path log_file_old = log_file;
+				log_file_old.replace_extension("log.old");
 
-         }   
-         log_output_file.open( log_path, std::ios_base::out | std::ios_base::app);
-     }
+				fs::remove_all(log_file_old);
+				fs::rename(log_file, log_file_old);
+			}
+		}
+		catch (...)
+		{
+		}
+		log_output_file.open(log_path, std::ios_base::out | std::ios_base::app);
+	}
 }
 
 void logging_end()
 {
-     if( !log_output_disabled ) 
-         log_output_file.close();
+	if (!log_output_disabled)
+		log_output_file.close();
 }
