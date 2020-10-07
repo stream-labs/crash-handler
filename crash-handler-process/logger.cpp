@@ -61,6 +61,10 @@ const std::string getTimeStamp()
 
 void logging_start(std::wstring log_path)
 {
+#ifdef __APPLE__
+	log_output_disabled = false;
+	return;
+#endif
 	if (log_path.size() == 0)
 		log_output_disabled = true;
 
