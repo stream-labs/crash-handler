@@ -95,6 +95,8 @@ void logging_start(std::wstring log_path)
 
 void logging_end()
 {
+#ifdef WIN32
 	if (!log_output_disabled)
 		log_output_file.close();
+#endif
 }
