@@ -51,9 +51,11 @@ int main(int argc, char** argv)
 		isDevEnv = argv[3];
 	if (argc >= 5) {
 		cache_path = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(argv[4]);
+#ifdef WIN32
 		logging_start(cache_path + log_file_name);
 		log_info << "Start CrashHandler" << std::endl;
 		Util::setAppStatePath(cache_path + appstate_file_name);
+#endif
 	}
 
 	ProcessManager* pm = new ProcessManager();
