@@ -59,10 +59,8 @@ int main(int argc, char** argv)
 #endif
 	}
 
-#ifdef __APPLE__
 	logging_start(cache_path + log_file_name);
 	Util::setAppStatePath(cache_path + appstate_file_name);
-#endif
 
 	ProcessManager* pm = new ProcessManager();
 	pm->runWatcher();
