@@ -21,7 +21,7 @@
 #include "util.hpp"
 #include <codecvt>
 
-
+ 
 #if defined(WIN32)
 	const std::wstring log_file_name = L"\\crash-handler.log";
 	const std::wstring appstate_file_name = L"\\appState";
