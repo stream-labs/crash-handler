@@ -191,7 +191,6 @@ void Util::check_pid_file(std::string& pid_path) {
 	if (!pid_file)
 		return;
 	pid_file.read(&pid_char[0], 8);
-	pid_file.close();
 	ProcessInfo pi = open_process(pid);
 	if (pi.handle == 0)
 		return;
@@ -200,24 +199,6 @@ void Util::check_pid_file(std::string& pid_path) {
 		kill(pi, -1);
 	}
 	close_process(pi);
-}
-
-void Util::write_pid_file(std::string& pid_path) {
-	std::fstream::openmode mode = std::fstream::out | std::fstream::binary;
-	std::fstream pid_file(open_file(pid_path, mode));
-	union
-	{
-		uint64_t pid;
-		char     pid_char[sizeof(uint64_t)];
-	};
-	if (!pid_file)
-		return;
-
-	pid = GetCurrentProcessId();
-	if (pid == 0)
-		return;
-	pid_file.write(&pid_char[0], 8);
-	pid_file.close();
 }
 
 std::string Util::get_temp_directory() {

@@ -25,7 +25,6 @@ class Util {
 public:
     static void runTerminateWindow(bool &shouldRestart);
     static void check_pid_file(std::string& pid_path);
-	static void write_pid_file(std::string& pid_path);
 	static std::string get_temp_directory();
 	static void restartApp(std::wstring path);
 

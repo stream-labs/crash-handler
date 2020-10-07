@@ -61,13 +61,8 @@ void Util::check_pid_file(std::string& pid_path) {
     //TODO
 }
 
-void Util::write_pid_file(std::string& pid_path) {
-    //TODO
-}
-
 std::string Util::get_temp_directory() {
     //TODO
-    return "";
 }
 
 void Util::restartApp(std::wstring path) {
