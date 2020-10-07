@@ -32,10 +32,12 @@
 
 int main(int argc, char** argv)
 {
+#ifdef WIN32
 	std::string pid_path(Util::get_temp_directory());
 	pid_path.append("crash-handler.pid");
 	Util::check_pid_file(pid_path);
 	Util::write_pid_file(pid_path);
+#endif
 
 	std::wstring path;
 	std::wstring cache_path = L"";
