@@ -32,7 +32,7 @@
 #include <unistd.h>
 #endif
 
-bool log_output_disabled = false;
+bool log_output_working = false;
 
 namespace fs = std::filesystem;
 std::ofstream log_output_file;
@@ -41,15 +41,10 @@ static int pid;
 const std::string getTimeStamp()
 {
 	time_t t = time(NULL);
-	struct tm buf;
-#if defined(WIN32)
-	localtime_s(&buf, &t);
-#else  // for __APPLE__ and other 
-	localtime_r(&t, &buf);
-#endif 	
+	struct tm * buf = localtime(&t);
 
 	char mbstr[64] = {0};
-	std::strftime(mbstr, sizeof(mbstr), "%Y%m%d:%H%M%S.", &buf);
+	std::strftime(mbstr, sizeof(mbstr), "%Y%m%d:%H%M%S.", buf);
 	uint64_t now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
 	std::ostringstream ss;
@@ -59,15 +54,12 @@ const std::string getTimeStamp()
 
 void logging_start(std::wstring log_path)
 {
-	if (log_path.size() == 0)
-		log_output_disabled = true;
-
-	if (!log_output_disabled)
+	if (log_path.size() == 0) 
 	{
 #if defined(WIN32)
 		pid = _getpid();
 #else  // for __APPLE__ and other 
-		pid = getpid();
+        pid = getpid();
 #endif 	
 		try
 		{
@@ -86,11 +78,15 @@ void logging_start(std::wstring log_path)
 		{
 		}
 		log_output_file.open(log_path, std::ios_base::out | std::ios_base::app);
+		if (log_output_file.is_open() )
+			log_output_working = true;
 	}
 }
 
 void logging_end()
 {
-	if (!log_output_disabled)
+	if (!log_output_working) {
+		log_output_working = false;
 		log_output_file.close();
+	}
 }
