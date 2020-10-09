@@ -23,10 +23,10 @@
 #include <chrono>
 #include <sstream>
 #include <iomanip>
+#include <filesystem>
 #include <sys/types.h>
 #include <stdlib.h>
 #if defined(WIN32)
-#include <filesystem>
 #include <process.h>
 #else // for __APPLE__ and other 
 #include <unistd.h>
@@ -34,9 +34,7 @@
 
 bool log_output_disabled = false;
 
-#ifdef WIN32
 namespace fs = std::filesystem;
-#endif
 std::ofstream log_output_file;
 static int pid;
 
@@ -61,10 +59,6 @@ const std::string getTimeStamp()
 
 void logging_start(std::wstring log_path)
 {
-#ifdef __APPLE__
-	log_output_disabled = false;
-	return;
-#endif
 	if (log_path.size() == 0)
 		log_output_disabled = true;
 
@@ -75,7 +69,6 @@ void logging_start(std::wstring log_path)
 #else  // for __APPLE__ and other 
 		pid = getpid();
 #endif 	
-#ifdef WIN32
 		try
 		{
 			std::uintmax_t size = std::filesystem::file_size(log_path);
@@ -93,14 +86,11 @@ void logging_start(std::wstring log_path)
 		{
 		}
 		log_output_file.open(log_path, std::ios_base::out | std::ios_base::app);
-#endif
 	}
 }
 
 void logging_end()
 {
-#ifdef WIN32
 	if (!log_output_disabled)
 		log_output_file.close();
-#endif
 }
