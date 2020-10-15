@@ -40,8 +40,10 @@ static int pid;
 
 const std::string getTimeStamp()
 {
+	// Use of localtime_s localtime_r reverted 
+	// Posible issue with mac os 10.13
 	time_t t = time(NULL);
-	struct tm * buf = localtime(&t);
+	struct tm * buf = localtime(&t); 
 
 	char mbstr[64] = {0};
 	std::strftime(mbstr, sizeof(mbstr), "%Y%m%d:%H%M%S.", buf);
@@ -78,7 +80,7 @@ void logging_start(std::wstring log_path)
 		{
 		}
 		log_output_file.open(log_path, std::ios_base::out | std::ios_base::app);
-		if (log_output_file.is_open() )
+		if (log_output_file.is_open())
 			log_output_working = true;
 	}
 }
