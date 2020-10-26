@@ -35,9 +35,13 @@ void Util::restartApp(std::wstring path) {
 	memset(&info, 0, sizeof(info));
 	memset(&processInfo, 0, sizeof(processInfo));
 
-	std::wstring slobs_path = path.substr(0, path.size() - strlen("app.asar.unpacked"));
-	slobs_path += L"\\Streamlabs OBS.exe";
+	const std::wstring crash_handler_subdir = L"\\resources\\app.asar.unpacked/node_modules/crash-handler/crash-handler-process";
+	if(path.size() <= crash_handler_subdir.size())
+		return;
 
+	std::wstring slobs_path = path.substr(0, path.size() - crash_handler_subdir.size());
+	slobs_path += L"\\Streamlabs OBS.exe";
+	log_info << "Slobs path to restart: " << std::string(slobs_path.begin(), slobs_path.end()) << std::endl;
 	CreateProcess(slobs_path.c_str(),
 		L"",
 		NULL,
