@@ -21,13 +21,27 @@
 #include "util.hpp"
 #include <codecvt>
 
+
+#if defined(WIN32)
+	const std::wstring log_file_name = L"\\crash-handler.log";
+	const std::wstring appstate_file_name = L"\\appState";
+#else // for __APPLE__ and other 
+	const std::wstring log_file_name = L"/crash-handler.log";
+	const std::wstring appstate_file_name = L"/appState";
+#endif
+
 int main(int argc, char** argv)
 {
+	std::string pid_path(Util::get_temp_directory());
+	pid_path.append("crash-handler.pid");
+	Util::check_pid_file(pid_path);
+	Util::write_pid_file(pid_path);
+
 	std::wstring path;
 	std::wstring cache_path = L"";
 	std::string version;
 	std::string isDevEnv;
-	
+
 	// Frontend passes as non-unicode
 	if (argc >= 1)
 		path = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(argv[0]);
@@ -35,27 +49,21 @@ int main(int argc, char** argv)
 		version = argv[2];
 	if (argc >= 4)
 		isDevEnv = argv[3];
-	if (argc >= 5)
+	if (argc >= 5) {
 		cache_path = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(argv[4]);
-
-	logging_start(cache_path+L"\\crash-handler.log");
-
-	Util::setAppStatePath(cache_path+L"\\appState");
-
-#ifdef WIN32
-	std::string pid_path(Util::get_temp_directory());
-	pid_path.append("crash-handler.pid");
-	Util::check_pid_file(pid_path);
-#endif
+		logging_start(cache_path + log_file_name);
+		log_info << "=== Started CrashHandler ===" << std::endl;
+		Util::setAppStatePath(cache_path + appstate_file_name);
+	}
 
 	ProcessManager* pm = new ProcessManager();
 	pm->runWatcher();
 
-    if (pm->m_applicationCrashed)
-        pm->handleCrash(path);
+	if (pm->m_applicationCrashed)
+		pm->handleCrash(path);
 
 	delete pm;
-	log_info << "Terminating application" << std::endl;
+	log_info << "=== Terminating CrashHandler ===" << std::endl;
 	logging_end();
 	return 0;
 }
