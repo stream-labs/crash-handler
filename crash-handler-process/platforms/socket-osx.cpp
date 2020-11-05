@@ -8,6 +8,8 @@ Socket_OSX::Socket_OSX() {
 	if (mkfifo(this->name.c_str(), S_IRUSR | S_IWUSR) < 0) {
 		initialization_failed = true;
 		log_info << "Could not create " << strerror(errno) << std::endl;
+	} else {
+		log_info << "Pipe created " << this->name << std::endl;
 	}
 }
 
@@ -17,7 +19,7 @@ std::unique_ptr<Socket> Socket::create() {
 
 std::vector<char> Socket_OSX::read() {
 	std::vector<char> buffer;
-	buffer.resize(30000);
+	buffer.resize(30000, 0);
 	int file_descriptor = open(this->name.c_str(), O_RDONLY);
 	if (file_descriptor < 0) {
 		log_info << "Could not open " << strerror(errno) << std::endl;

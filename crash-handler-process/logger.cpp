@@ -36,7 +36,7 @@ bool log_output_working = false;
 
 namespace fs = std::filesystem;
 std::ofstream log_output_file;
-static int pid;
+static int pid = 0;
 
 const std::string getTimeStamp()
 {
@@ -54,20 +54,17 @@ const std::string getTimeStamp()
 	return ss.str();
 }
 
-void logging_start(std::wstring log_path)
+void logging_start(std::wstring & log_path)
 {
-	if (log_path.size() == 0) 
-	{
+	if (!log_output_working && log_path.length()) {
 #if defined(WIN32)
 		pid = _getpid();
 #else  // for __APPLE__ and other 
-        pid = getpid();
+       pid = getpid();
 #endif 	
-		try
-		{
+		try {
 			std::uintmax_t size = std::filesystem::file_size(log_path);
-			if (size > 1 * 1024 * 1024)
-			{
+			if (size > 1 * 1024 * 1024) {
 				fs::path log_file = log_path;
 				fs::path log_file_old = log_file;
 				log_file_old.replace_extension("log.old");
@@ -76,12 +73,14 @@ void logging_start(std::wstring log_path)
 				fs::rename(log_file, log_file_old);
 			}
 		}
-		catch (...)
-		{
+		catch (...)	{
 		}
 		log_output_file.open(log_path, std::ios_base::out | std::ios_base::app);
-		if (log_output_file.is_open())
+		if (log_output_file.is_open()) {
 			log_output_working = true;
+		} else {
+			std::cout << "Failed to open log file, error = " << strerror(errno) << std::endl; 
+		}
 	}
 }
 

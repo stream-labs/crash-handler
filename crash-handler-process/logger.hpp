@@ -32,5 +32,5 @@ extern bool log_output_working;
 #define log_debug if (!log_output_working) {} else log_output_file << "DBG:" << getTimeStamp() <<  ": "
 #define log_error if (!log_output_working) {} else log_output_file << "ERR:" << getTimeStamp() <<  ": "
 
-void logging_start(std::wstring log_path);
+void logging_start(std::wstring & log_path);
 void logging_end();
