@@ -23,18 +23,18 @@
 #include <chrono>
 #include <sstream>
 #include <iomanip>
-#include <filesystem>
 #include <sys/types.h>
 #include <stdlib.h>
 #if defined(WIN32)
+#include <filesystem>
 #include <process.h>
 #else // for __APPLE__ and other 
+#include <sys/stat.h>
 #include <unistd.h>
 #endif
 
 bool log_output_working = false;
 
-namespace fs = std::filesystem;
 std::ofstream log_output_file;
 static int pid = 0;
 
@@ -59,22 +59,41 @@ void logging_start(std::wstring & log_path)
 	if (!log_output_working && log_path.length()) {
 #if defined(WIN32)
 		pid = _getpid();
-#else  // for __APPLE__ and other 
-       pid = getpid();
-#endif 	
 		try {
 			std::uintmax_t size = std::filesystem::file_size(log_path);
 			if (size > 1 * 1024 * 1024) {
-				fs::path log_file = log_path;
-				fs::path log_file_old = log_file;
+				std::filesystem::path log_file = log_path;
+				std::filesystem::path log_file_old = log_file;
 				log_file_old.replace_extension("log.old");
 
-				fs::remove_all(log_file_old);
-				fs::rename(log_file, log_file_old);
+				std::filesystem::remove_all(log_file_old);
+				std::filesystem::rename(log_file, log_file_old);
 			}
 		}
 		catch (...)	{
 		}
+#else  // for __APPLE__ and other 
+		pid = getpid();
+		
+		FILE *fp = NULL;
+		long size = 0;
+
+		// ! IMPORTANT ! 
+		// macOS 10.13 and older not support cpp filesystem functionality
+		fp = fopen(log_path.c_str(), "r");
+		if (fp != NULL) {
+			if (fseek(fp, 0, SEEK_END) != -1) {
+				size = ftell(fp);
+    			}
+			fclose(fp);
+		}
+
+		if (size > 1*1024*1024) {
+			std::wstring log_file_old = log_path + L".old";
+			remove(log_file_old.c_str());
+			rename(log_file.c_str(), log_file_old.c_str());
+		}
+#endif 	
 		log_output_file.open(log_path, std::ios_base::out | std::ios_base::app);
 		if (log_output_file.is_open()) {
 			log_output_working = true;
