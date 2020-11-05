@@ -72,6 +72,7 @@ void logging_start(std::wstring & log_path)
 		}
 		catch (...)	{
 		}
+		log_output_file.open(log_path, std::ios_base::out | std::ios_base::app);
 #else  // for __APPLE__ and other 
 		pid = getpid();
 		
@@ -93,8 +94,8 @@ void logging_start(std::wstring & log_path)
 			remove(log_file_old.c_str());
 			rename(log_file.c_str(), log_file_old.c_str());
 		}
+		log_output_file.open(log_file, std::ios_base::out | std::ios_base::app);
 #endif 	
-		log_output_file.open(log_path, std::ios_base::out | std::ios_base::app);
 		if (log_output_file.is_open()) {
 			log_output_working = true;
 		} else {
