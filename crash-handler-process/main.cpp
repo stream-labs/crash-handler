@@ -42,6 +42,8 @@ int main(int argc, char** argv)
 	std::string version;
 	std::string isDevEnv;
 
+	std::cout << "Launched with number of arguments = " << argc << std::endl;
+
 	// Frontend passes as non-unicode
 	if (argc >= 1)
 		path = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(argv[0]);
@@ -51,11 +53,13 @@ int main(int argc, char** argv)
 		isDevEnv = argv[3];
 	if (argc >= 5) {
 		cache_path = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(argv[4]);
-		logging_start(cache_path + log_file_name);
+		std::wstring log_path = cache_path + log_file_name;
+		std::cout << "Path for logging = " << std::string(log_path.begin(), log_path.end()) << std::endl;
+		logging_start(log_path);
 		log_info << "=== Started CrashHandler ===" << std::endl;
 		Util::setAppStatePath(cache_path + appstate_file_name);
 	}
-
+	
 	ProcessManager* pm = new ProcessManager();
 	pm->runWatcher();
 
