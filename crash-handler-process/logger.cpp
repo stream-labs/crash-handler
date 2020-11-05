@@ -89,7 +89,7 @@ void logging_start(std::wstring & log_path)
 		}
 
 		if (size > 1*1024*1024) {
-			std::string log_file_old = log_file + L".old";
+			std::string log_file_old = log_file + ".old";
 			remove(log_file_old.c_str());
 			rename(log_file.c_str(), log_file_old.c_str());
 		}
