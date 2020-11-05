@@ -59,7 +59,7 @@ int main(int argc, char** argv)
 		log_info << "=== Started CrashHandler ===" << std::endl;
 		Util::setAppStatePath(cache_path + appstate_file_name);
 	}
-	
+
 	ProcessManager* pm = new ProcessManager();
 	pm->runWatcher();
 
