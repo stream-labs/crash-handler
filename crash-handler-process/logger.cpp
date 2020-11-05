@@ -80,7 +80,7 @@ void logging_start(std::wstring & log_path)
 		std::string log_file = std::string(log_path.begin(), log_path.end());
 		// ! IMPORTANT ! 
 		// macOS 10.13 and older not support cpp filesystem functionality
-		fp = fopen(log_path.c_str(), "r");
+		fp = fopen(log_file.c_str(), "r");
 		if (fp != NULL) {
 			if (fseek(fp, 0, SEEK_END) != -1) {
 				size = ftell(fp);
