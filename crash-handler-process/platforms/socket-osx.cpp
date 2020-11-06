@@ -26,7 +26,9 @@ std::vector<char> Socket_OSX::read() {
 		log_info << "Could not open " << strerror(errno) << std::endl;
 		return buffer;
 	}
+	log_info << "read from pipe after open" << std::endl;
 	int bytes_read = ::read(file_descriptor, buffer.data(), buffer.size());
+	log_info << "read from pipe after read " << bytes_read << std::endl;
 	buffer.resize(bytes_read < 0 ? 0 : bytes_read);
 	close(file_descriptor);
 	return buffer;

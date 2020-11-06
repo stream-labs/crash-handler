@@ -58,13 +58,15 @@ void ProcessManager::watcher_fnc() {
         Message msg(buffer);
         switch (static_cast<Action>(msg.readUInt8())) {
             case Action::REGISTER: {
+                log_info << "in Action::REGISTER " << std::endl;
                 bool isCritical = msg.readBool();
                 uint32_t pid = msg.readUInt32();
+                log_info << "in Action::REGISTER before registerProcess " << std::endl;
                 size_t size = registerProcess(isCritical, (int32_t)pid);
 
                 if (size == 1)
                     startMonitoring();
-
+                log_info << "in Action::REGISTER before break " << std::endl;
                 break;
             }
             case Action::UNREGISTER: {
@@ -87,11 +89,14 @@ void ProcessManager::monitor_fnc() {
 
     while (!this->monitor->stop) {
         bool detectedUnresponsive = false;
+        log_info << "monitoring before mutex" << std::endl;
         if (this->mtx.try_lock()) {
+            log_info << "monitoring after mutex" << std::endl;
             if (++last_responsive_check % 100 == 0)
                 last_responsive_check = 0;
 
             for (auto & process : this->processes) {
+                log_info << "monitoring for a process" << std::endl;
                 if (!process->isAlive()) {
                     // Log information about the process that just crashed
                     log_info << "process died" << std::endl;
@@ -106,6 +111,7 @@ void ProcessManager::monitor_fnc() {
             }
 
             this->mtx.unlock();
+            log_info << "monitoring after unlock" << std::endl;
             if(unresponsiveMarked && !detectedUnresponsive) 
             {
                 log_info << "Unresponsive window not detected anymore " << std::endl;
