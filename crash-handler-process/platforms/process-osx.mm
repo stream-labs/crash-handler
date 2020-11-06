@@ -29,7 +29,8 @@ bool Process_OSX::isResponsive(void) {
 }
 
 bool Process_OSX::isAlive(void) {
-	log_info << "check if process " << PID << "is alive" << std::endl;
+	log_info << "check if process " << PID << " is alive" << std::endl;
+	/*
     pid_t pids[2048];
     int bytes = proc_listpids(PROC_ALL_PIDS, 0, pids, sizeof(pids));
     int n_proc = bytes / sizeof(pids[0]);
@@ -44,6 +45,8 @@ bool Process_OSX::isAlive(void) {
 			return true;
     }
 	return false;
+	*/
+	return true;
 }
 
 void Process_OSX::terminate(void) {

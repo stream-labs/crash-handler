@@ -89,17 +89,17 @@ void ProcessManager::monitor_fnc() {
 
     while (!this->monitor->stop) {
         bool detectedUnresponsive = false;
-        log_info << "monitoring before mutex" << std::endl;
+        log_info << "monitoring before mutex " << std::endl;
         if (this->mtx.try_lock()) {
-            log_info << "monitoring after mutex" << std::endl;
+            log_info << "monitoring after mutex " << std::endl;
             if (++last_responsive_check % 100 == 0)
                 last_responsive_check = 0;
 
             for (auto const & process : this->processes) {
-                log_info << "monitoring for a process" << std::endl;
-                log_info << "monitoring for a process" << ((void*)process.get())<< std::endl;
+                log_info << "monitoring for a process " << std::endl;
+                log_info << "monitoring for a process " << ((void*)process.get())<< std::endl;
                 
-                log_info << "monitoring for a process" << process->getPID() << std::endl;
+                log_info << "monitoring for a process " << process->getPID() << std::endl;
                 if (!process->isAlive()) {
                     // Log information about the process that just crashed
                     log_info << "process died" << std::endl;
