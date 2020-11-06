@@ -18,6 +18,7 @@ std::unique_ptr<Socket> Socket::create() {
 }
 
 std::vector<char> Socket_OSX::read() {
+	log_info << "read from pipe" << std::endl;
 	std::vector<char> buffer;
 	buffer.resize(30000, 0);
 	int file_descriptor = open(this->name.c_str(), O_RDONLY);
