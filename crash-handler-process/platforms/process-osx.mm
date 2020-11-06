@@ -29,19 +29,14 @@ bool Process_OSX::isResponsive(void) {
 }
 
 bool Process_OSX::isAlive(void) {
-    pid_t pids[2048];
-    int bytes = proc_listpids(PROC_ALL_PIDS, 0, pids, sizeof(pids));
-    int n_proc = bytes / sizeof(pids[0]);
-    for (int i = 0; i < n_proc; i++) {
-         struct proc_bsdinfo proc;
-         int st = proc_pidinfo(pids[i], PROC_PIDTBSDINFO, 0,
-                              &proc, PROC_PIDTBSDINFO_SIZE);
-		if (pids[i] == PID &&
-			(strcmp(proc.pbi_name, "obs64") == 0 ||
-			strncmp(proc.pbi_name, "Electron", strlen("Electron")) == 0 || // DEV env
-			strncmp(proc.pbi_name, "Streamlabs", strlen("Streamlabs")) == 0)) // PRODUCTION env
-			return true;
-    }
+	struct proc_bsdinfo proc;
+	int st = proc_pidinfo(PID, PROC_PIDTBSDINFO, 0,
+				&proc, PROC_PIDTBSDINFO_SIZE);
+	if (st == PROC_PIDTBSDINFO_SIZE && (strcmp(proc.pbi_name, "obs64") == 0 ||
+	strncmp(proc.pbi_name, "Electron", strlen("Electron")) == 0 || // DEV env
+	strncmp(proc.pbi_name, "Streamlabs", strlen("Streamlabs")) == 0)) // PRODUCTION env
+		return true;
+
 	return false;
 }
 
