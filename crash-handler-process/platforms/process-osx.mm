@@ -46,7 +46,19 @@ bool Process_OSX::isAlive(void) {
     }
 	return false;
 	*/
-	return true;
+	struct proc_bsdinfo proc;
+        int st = proc_pidinfo(PID, PROC_PIDTBSDINFO, 0,
+                              &proc, PROC_PIDTBSDINFO_SIZE);
+	
+	if(st == PROC_PIDTBSDINFO_SIZE) {
+		if ( (strcmp(proc.pbi_name, "obs64") == 0 ||
+			strncmp(proc.pbi_name, "Electron", strlen("Electron")) == 0 || // DEV env
+			strncmp(proc.pbi_name, "Streamlabs", strlen("Streamlabs")) == 0)) // PRODUCTION env
+				return true;
+	}
+    	
+	return false;
+
 }
 
 void Process_OSX::terminate(void) {
