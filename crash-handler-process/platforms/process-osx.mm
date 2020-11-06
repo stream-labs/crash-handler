@@ -36,7 +36,6 @@ bool Process_OSX::isAlive(void) {
 	strncmp(proc.pbi_name, "Electron", strlen("Electron")) == 0 || // DEV env
 	strncmp(proc.pbi_name, "Streamlabs", strlen("Streamlabs")) == 0)) // PRODUCTION env
 		return true;
-	}
 
 	return false;
 }
