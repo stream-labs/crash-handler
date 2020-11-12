@@ -26,7 +26,7 @@ function tryConnect(buffer, attempt = 5, waitMs = 100) {
 
 function registerProcess(pid, isCritial = false) {
     console.log('register process');
-    const buffer = new Buffer(6);
+    const buffer = new Buffer.alloc(6);
     let offset = 0;
     buffer.writeUInt8(0, offset++);
     buffer.writeUInt8(isCritial, offset++);
@@ -37,7 +37,7 @@ function registerProcess(pid, isCritial = false) {
 
 function unregisterProcess(pid) {
     console.log('unregister process');
-    const buffer = new Buffer(5);
+    const buffer = new Buffer.alloc(5);
     let offset = 0;
     buffer.writeUInt8(1, offset++);
     buffer.writeUInt32LE(pid, offset++);
@@ -46,7 +46,7 @@ function unregisterProcess(pid) {
 }
 
 async function terminateCrashHandler(pid) {
-    const buffer = new Buffer(5);
+    const buffer = new Buffer.alloc(5);
     let offset = 0;
     buffer.writeUInt8(2, offset++);
     buffer.writeUInt32LE(pid, offset++);
