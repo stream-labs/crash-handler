@@ -213,13 +213,13 @@ void ProcessManager::handleCrash(std::wstring path) {
     if (m_criticalCrash) {
         terminateAll();
     } else {
+        log_info << "Terminate non critical processes" << std::endl;
+        terminateNonCritical();
         // Blocking operation that will return once the user
         // decides to terminate the application
         Util::runTerminateWindow(shouldRestart);
         log_info << "Send exit message" << std::endl;
         this->sendExitMessage(true);
-        log_info << "Terminate non critical processes" << std::endl;
-        terminateNonCritical();
     }
 
     if (shouldRestart)
