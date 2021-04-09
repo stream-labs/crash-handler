@@ -26,8 +26,11 @@
 class Process_WIN : public Process {
 private:
 	std::thread *checker;
-    std::mutex mtx;
+	std::thread *memorydump;
+	std::mutex mtx;
 	HANDLE hdl;
+	HANDLE mds;
+	HANDLE mdf;
 	HWND getTopWindow();
 
 public:
@@ -38,10 +41,12 @@ public:
     virtual int32_t  getPID(void)     override;
     virtual bool     isCritical(void) override;
     virtual bool     isAlive(void)    override;
-	virtual bool     isResponsive(void) override;
+    virtual void     startMemoryDumpMonitoring() override;
+    virtual bool     isResponsive(void) override;
     virtual void     terminate(void)  override;
 
 private:
     void worker();
+    void memorydump_worker();
     DWORD getPIDDWORD();
 };

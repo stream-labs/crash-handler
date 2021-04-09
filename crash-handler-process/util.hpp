@@ -23,14 +23,15 @@
 
 class Util {
 public:
-    static void runTerminateWindow(bool &shouldRestart);
-    static void check_pid_file(std::string& pid_path);
+	static void runTerminateWindow(bool &shouldRestart);
+	static void check_pid_file(std::string& pid_path);
 	static void write_pid_file(std::string& pid_path);
 	static std::string get_temp_directory();
 	static void restartApp(std::wstring path);
+	static bool saveMemoryDump(uint32_t pid);
 
 	static void updateAppState(bool unresponsive_detected);
-	static void setAppStatePath(std::wstring path);
+	static void setCachePath(std::wstring path);
 };
 
 #endif

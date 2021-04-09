@@ -27,6 +27,9 @@ bool Process_OSX::isCritical(void) {
 bool Process_OSX::isResponsive(void) {
 	return true; // check for responsiveness not impemented
 }
+void Process_OSX::startMemoryDumpMonitoring(void) {
+	return;
+}
 
 bool Process_OSX::isAlive(void) {
 	struct proc_bsdinfo proc;

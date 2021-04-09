@@ -74,6 +74,8 @@ void Util::restartApp(std::wstring path) {
     [[NSWorkspace sharedWorkspace] launchApplication:@"/Applications/Streamlabs OBS.app"];
 }
 
-void Util::setAppStatePath(std::wstring path) {}
+void Util::setCachePath(std::wstring path) {}
 
 void Util::updateAppState(bool unresponsive_detected) {}
+
+bool Util::saveMemoryDump(uint32_t pid) { return false;}

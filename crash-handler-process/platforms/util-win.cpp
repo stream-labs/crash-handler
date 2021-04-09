@@ -25,8 +25,13 @@
 #include <codecvt>
 #include <psapi.h>
 #include "nlohmann/json.hpp"
+#include <filesystem>
 
-static std::wstring appStatePath = L"";
+#include "Dbghelp.h"
+#pragma comment(lib, "Dbghelp.lib")
+
+const std::wstring appStateFileName = L"\\appState";
+std::wstring appCachePath = L"";
 
 void Util::restartApp(std::wstring path) {
 	STARTUPINFO info = { sizeof(info) };
@@ -240,9 +245,9 @@ std::string Util::get_temp_directory() {
 	return from_utf16_wide_to_utf8(tmp.data());
 }
 
-void Util::setAppStatePath(std::wstring path)
+void Util::setCachePath(std::wstring path)
 {
-	appStatePath = path;
+	appCachePath = path;
 }
 
 void Util::updateAppState(bool unresponsive_detected)
@@ -250,7 +255,7 @@ void Util::updateAppState(bool unresponsive_detected)
 	const std::string freez_flag = "window_unresponsive";
 	const std::string flag_name = "detected";
 
-	std::ifstream state_file(appStatePath, std::ios::in);
+	std::ifstream state_file(appCachePath + appStateFileName, std::ios::in);
 	if (!state_file.is_open())
 		return;
 
@@ -278,11 +283,76 @@ void Util::updateAppState(bool unresponsive_detected)
 	updated_status = jsonEntry.dump(-1);
 
 	std::ofstream out_state_file;
-	out_state_file.open(appStatePath, std::ios::trunc | std::ios::out );
+	out_state_file.open(appCachePath + appStateFileName, std::ios::trunc | std::ios::out );
 	if (!out_state_file.is_open())
 		return;
 
 	out_state_file << updated_status << "\n";
 	out_state_file.flush();
 	out_state_file.close();
+}
+
+bool Util::saveMemoryDump(uint32_t pid)
+{
+	bool dumpSaved = false;
+
+	EXCEPTION_POINTERS* pep = NULL;
+	std::filesystem::path memoryDumpFolder = appCachePath + L"\\CrashMemoryDump";
+	std::filesystem::path memoryDumpFile = memoryDumpFolder;
+	memoryDumpFile.append( L"crash_memory_dump.dmp");
+
+	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+	if (hProcess==NULL || hProcess == INVALID_HANDLE_VALUE) {
+		log_info << "Failed to open process to get memory dump." << std::endl;
+		return false;
+	}
+
+	bool enoughDiskSpace = false;
+	ULARGE_INTEGER diskBytesAvailable;
+	if (GetDiskFreeSpaceEx(memoryDumpFolder.generic_wstring().c_str(), &diskBytesAvailable, NULL , NULL)) {
+		PROCESS_MEMORY_COUNTERS pmc;
+		if (GetProcessMemoryInfo( hProcess, &pmc, sizeof(pmc))) {
+			log_info << "Disk available space " << diskBytesAvailable.QuadPart << " , process ram size " << pmc.WorkingSetSize << std::endl;
+
+			// There is now way to know a size of memory dump.
+			// On test crashes it was about two times bigger than a ram size used by a process.
+			if (pmc.WorkingSetSize < diskBytesAvailable.QuadPart*2) {
+				enoughDiskSpace = true;
+			}
+		}
+	}
+
+	if (!enoughDiskSpace) {
+		log_info << "Failed to create memory dump. Not enough disk space  available" << std::endl;
+
+		CloseHandle(hProcess);
+		return false;
+	}
+
+	HANDLE hFile = CreateFile(memoryDumpFile.generic_wstring().c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+	if (hFile && hFile != INVALID_HANDLE_VALUE) {
+		MINIDUMP_EXCEPTION_INFORMATION mdei = {0};
+
+		mdei.ThreadId = 0;
+		mdei.ExceptionPointers = pep;
+		mdei.ClientPointers = FALSE;
+
+		const DWORD CD_Flags = MiniDumpWithFullMemory | MiniDumpWithHandleData | MiniDumpWithThreadInfo | MiniDumpWithProcessThreadData | MiniDumpWithFullMemoryInfo | MiniDumpWithUnloadedModules | MiniDumpWithFullAuxiliaryState | MiniDumpIgnoreInaccessibleMemory | MiniDumpWithTokenInformation;
+
+		BOOL ret = MiniDumpWriteDump(hProcess, pid, hFile, (MINIDUMP_TYPE)CD_Flags, (pep != 0) ? &mdei : 0, 0, 0);
+		if (ret) {
+			dumpSaved = true;
+			log_info << "Memory dump saved." << std::endl;
+		} else {
+			log_info << "Failed to save memory dump. err code = " << GetLastError() << std::endl;
+		}
+
+		CloseHandle(hFile);
+	} else {
+		log_info << "Failed to create memory dump file \"" << memoryDumpFile.generic_string() << "\"" << std::endl;
+	}
+	CloseHandle(hProcess);
+
+	return dumpSaved;
 }

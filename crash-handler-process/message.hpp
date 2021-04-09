@@ -23,7 +23,8 @@
 
 enum class Action : uint8_t {
 	REGISTER = 0,
-	UNREGISTER = 1
+	UNREGISTER = 1,
+	MEMORYDUMPING = 2
 };
 
 class Message {
