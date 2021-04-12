@@ -31,6 +31,7 @@ private:
 	HANDLE hdl;
 	HANDLE mds;
 	HANDLE mdf;
+	std::wstring memorydumpPath;
 	HWND getTopWindow();
 
 public:
@@ -41,7 +42,7 @@ public:
     virtual int32_t  getPID(void)     override;
     virtual bool     isCritical(void) override;
     virtual bool     isAlive(void)    override;
-    virtual void     startMemoryDumpMonitoring() override;
+    virtual void     startMemoryDumpMonitoring(const std::wstring& eventName, const std::wstring& eventFinishedName, const std::wstring& dumpPath) override;
     virtual bool     isResponsive(void) override;
     virtual void     terminate(void)  override;
 

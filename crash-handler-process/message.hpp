@@ -20,11 +20,12 @@
 #define MESSAGE_H
 
 #include <vector>
+#include <string>
 
 enum class Action : uint8_t {
 	REGISTER = 0,
 	UNREGISTER = 1,
-	MEMORYDUMPING = 2
+	REGISTERMEMORYDUMP = 2
 };
 
 class Message {
@@ -39,8 +40,9 @@ private:
 public:
 	bool readBool();
 	uint64_t readUInt64();
-  uint32_t readUInt32();
+	uint32_t readUInt32();
 	uint8_t readUInt8();
+	std::wstring readWstring();
 };
 
 #endif

@@ -83,12 +83,12 @@ bool Process_WIN::isCritical(void) {
 	return critical;
 }
 
-void Process_WIN::startMemoryDumpMonitoring(void) {
+void Process_WIN::startMemoryDumpMonitoring(const std::wstring& eventName, const std::wstring& eventFinishedName, const std::wstring& dumpPath) {
 	if (memorydump && memorydump->joinable()) {
 		return;
 	}
 
-	mds = OpenEvent(EVENT_ALL_ACCESS, FALSE, L"Global\\OBSMEMORYDUMPEVENT");
+	mds = OpenEvent(EVENT_ALL_ACCESS, FALSE, eventName.c_str());
 	if (!mds || mds == INVALID_HANDLE_VALUE) {
 		log_info << "Failed to open event for memory dump " << GetLastError()<< std::endl;
 		return;
@@ -102,12 +102,15 @@ void Process_WIN::startMemoryDumpMonitoring(void) {
 			eventSecurityAttr.lpSecurityDescriptor = securityDescriptor;
 			eventSecurityAttr.bInheritHandle = FALSE;
 
-			mdf = CreateEvent( &eventSecurityAttr, TRUE, FALSE, L"Global\\OBSMEMORYDUMPFINISHEDEVENT");
+			mdf = CreateEvent( &eventSecurityAttr, TRUE, FALSE, eventFinishedName.c_str());
+			if (!mdf || mdf == INVALID_HANDLE_VALUE) {
+				log_info << "Failed to create event for memory dump finish " << GetLastError()<< std::endl;
+			}
 		}
 	}
 	LocalFree(securityDescriptor);
-
-	this->memorydump = new std::thread(&Process_WIN::memorydump_worker, this);
+	memorydumpPath = dumpPath;
+	memorydump = new std::thread(&Process_WIN::memorydump_worker, this);
 }
 
 void Process_WIN::memorydump_worker() {
@@ -115,18 +118,19 @@ void Process_WIN::memorydump_worker() {
 	HANDLE handles[] = { hdl, mds };
 	DWORD ret = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
 	if (ret - WAIT_OBJECT_0 == 1) {
-		log_info << "Memory dump event detected" << std::endl;
+		log_info << "Memory dump event recieved" << std::endl;
+		alive = false;
 		bool dump_saved = false;
 
 		int code = MessageBox( NULL, L"An app crash was detected."
-			L"\n\nSystem will attempt to save a memory dump."
-			L"\n\nIt can takes a time depend on a disk speed and a size of process."
+			L"\n\nThe system will attempt to save a memory dump."
+			L"\n\nIt can take a time depending on the disk speed and the size of the process."
 			L"\n\n"
 			L"\n\nPress OK to start a process.",
-			L"Memory dump", MB_OK | MB_APPLMODAL);
+			L"Memory dump", MB_OKCANCEL | MB_APPLMODAL);
 
 		if (code == IDOK) {
-			dump_saved = Util::saveMemoryDump(PID);
+			dump_saved = Util::saveMemoryDump(PID, memorydumpPath);
 		}
 		
 		SetEvent(mdf);
@@ -178,6 +182,19 @@ bool Process_WIN::isResponsive(void) {
 }
 
 void Process_WIN::terminate(void) {
+    if (mds && mds != INVALID_HANDLE_VALUE) {
+        CloseHandle(mds);
+        mds = NULL;
+    }
+
+    if (memorydump != nullptr && memorydump->joinable())
+        memorydump->join();
+
+    if (mdf && mdf != INVALID_HANDLE_VALUE) {
+        CloseHandle(mdf);
+        mdf = NULL;
+    }
+
     if (this->hdl && this->hdl != INVALID_HANDLE_VALUE) {
         TerminateProcess(hdl, 1);
         CloseHandle(hdl);
@@ -185,18 +202,6 @@ void Process_WIN::terminate(void) {
 
     if (this->checker->joinable())
         this->checker->join();
-
-    if (memorydump != nullptr && memorydump->joinable())
-        memorydump->join();
-
-    if (mds && mds != INVALID_HANDLE_VALUE) {
-        CloseHandle(mds);
-        mds = NULL;
-    }
-    if (mdf && mdf != INVALID_HANDLE_VALUE) {
-        CloseHandle(mdf);
-        mdf = NULL;
-    }
 }
 
 DWORD Process_WIN::getPIDDWORD(void) {

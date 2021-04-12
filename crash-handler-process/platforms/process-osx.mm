@@ -27,7 +27,7 @@ bool Process_OSX::isCritical(void) {
 bool Process_OSX::isResponsive(void) {
 	return true; // check for responsiveness not impemented
 }
-void Process_OSX::startMemoryDumpMonitoring(void) {
+void Process_OSX::startMemoryDumpMonitoring(const std::wstring& eventName, const std::wstring& eventFinishedName, const std::wstring& dumpPath) {
 	return;
 }
 

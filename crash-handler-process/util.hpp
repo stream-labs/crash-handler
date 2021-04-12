@@ -28,7 +28,7 @@ public:
 	static void write_pid_file(std::string& pid_path);
 	static std::string get_temp_directory();
 	static void restartApp(std::wstring path);
-	static bool saveMemoryDump(uint32_t pid);
+	static bool saveMemoryDump(uint32_t pid, const std::wstring& dumpPath);
 
 	static void updateAppState(bool unresponsive_detected);
 	static void setCachePath(std::wstring path);

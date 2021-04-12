@@ -48,3 +48,14 @@ uint32_t Message::readUInt32() {
 	index += sizeof(uint32_t);
 	return value;
 }
+
+std::wstring Message::readWstring() {
+	std::wstring value;
+	uint32_t string_size = reinterpret_cast<uint32_t&> (m_buffer[index]);
+	index += sizeof(uint32_t);
+	value.resize(string_size/sizeof(wchar_t));
+	memcpy(&value[0], &m_buffer[index], string_size);
+	index += string_size;
+	value.resize(string_size/sizeof(wchar_t)-1);
+	return value;
+}

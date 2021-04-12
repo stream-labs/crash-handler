@@ -292,12 +292,12 @@ void Util::updateAppState(bool unresponsive_detected)
 	out_state_file.close();
 }
 
-bool Util::saveMemoryDump(uint32_t pid)
+bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath)
 {
 	bool dumpSaved = false;
 
 	EXCEPTION_POINTERS* pep = NULL;
-	std::filesystem::path memoryDumpFolder = appCachePath + L"\\CrashMemoryDump";
+	std::filesystem::path memoryDumpFolder = dumpPath;
 	std::filesystem::path memoryDumpFile = memoryDumpFolder;
 	memoryDumpFile.append( L"crash_memory_dump.dmp");
 

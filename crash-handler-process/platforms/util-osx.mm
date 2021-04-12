@@ -78,4 +78,4 @@ void Util::setCachePath(std::wstring path) {}
 
 void Util::updateAppState(bool unresponsive_detected) {}
 
-bool Util::saveMemoryDump(uint32_t pid) { return false;}
+bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath) { return false;}
