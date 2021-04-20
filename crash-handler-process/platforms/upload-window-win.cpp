@@ -57,12 +57,16 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		EnableWindow(ok_button_hwnd, true);
 		EnableWindow(cancel_button_hwnd, true);
 		SendMessage(progresss_bar_hwnd, PBM_SETBARCOLOR, 0, RGB(49, 195, 162));
+                SendMessage(progresss_bar_hwnd, PBM_SETBKCOLOR,  0, RGB(49, 49, 49));
+                SendMessage(progresss_bar_hwnd, PBM_SETRANGE32, 0, 100);
+                SendMessage(progresss_bar_hwnd, PBM_SETPOS, 0, 0);
                 ShowWindow(progresss_bar_hwnd, SW_SHOW);
 		break;
 	}		
 	case CUSTOM_PROGRESS_MSG:
 	{
-		PostMessage(progresss_bar_hwnd, PBM_SETPOS, bytes_sent/1024/1024, 0);
+                double progress = ((double)bytes_sent) / ((double) total_bytes_to_send / 100.0);
+		PostMessage(progresss_bar_hwnd, PBM_SETPOS, (int)progress, 0);
 		swprintf(upload_progress_message, L"%lld / %lld Kb", bytes_sent/1024, total_bytes_to_send/1024);
 		SetWindowText(upload_label_hwnd, upload_progress_message);
 		break;
@@ -91,7 +95,7 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	}	
 	case CUSTOM_UPLOAD_STARTED:
 	{
-		SendMessage(progresss_bar_hwnd, PBM_SETRANGE32, 0, total_bytes_to_send/1024/1024);
+                SendMessage(progresss_bar_hwnd, PBM_SETRANGE32, 0, 100);
 		SetWindowText(upload_label_hwnd, L"Initializing upload...");
 		EnableWindow(ok_button_hwnd, false);
 		EnableWindow(cancel_button_hwnd, false);
@@ -107,7 +111,7 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	}
 	case CUSTOM_UPLOAD_CANCELED:
 	{
-                swprintf(upload_progress_message, L"Upload cancleled. You may share dump file with our support.");
+                swprintf(upload_progress_message, L"Upload cancleled. You may share the file with our support manually.");
 		SetWindowText(upload_label_hwnd, upload_progress_message);
 		EnableWindow(ok_button_hwnd, true);
 		EnableWindow(cancel_button_hwnd, false);
@@ -115,7 +119,7 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	}        
 	case CUSTOM_UPLOAD_FAILED:
 	{
-		SetWindowText(upload_label_hwnd, L"Uploading failed. You may share dump file with our support.");
+		SetWindowText(upload_label_hwnd, L"Uploading failed. You may share the file with our support manually.");
 		EnableWindow(ok_button_hwnd, true);
 		EnableWindow(cancel_button_hwnd, false);
 		break;
@@ -214,7 +218,7 @@ void UploadWindow::windowThread()
 	upload_window_hwnd = CreateWindowEx(
 	    WS_EX_CLIENTEDGE,
 	    TEXT("uploaderwindow"),
-	    TEXT("Streamlabs OBS Crash Uploader"),
+	    TEXT("Streamlabs OBS Crash Dump Uploader"),
 	    WS_OVERLAPPED | WS_MINIMIZEBOX | WS_SYSMENU,
 	    (screen_width - width) / 2, (screen_height - height) / 2,
 	    width, height,

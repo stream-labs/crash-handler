@@ -386,6 +386,7 @@ void PutObjectAsyncFinished(const Aws::S3::S3Client *s3Client,
 	if (outcome.IsSuccess()) {
 		log_info << "PutObjectAsyncFinished: Finished uploading '" << context->GetUUID() << "'." << std::endl;
 	} else {
+		total_sent_amout = -1;
 		log_error << "PutObjectAsyncFinished failed " << outcome.GetError().GetMessage() << std::endl;
 	}
 
@@ -472,9 +473,13 @@ bool Util::uploadToAWS(const std::wstring& dumpPath, const std::wstring& dumpFil
 			UploadWindow::getInstance()->uploadFailed();
 		} else {
 			upload_variable.wait(lock);
-			log_info << "Upload to ASW File upload attempt completed." << std::endl;
-			UploadWindow::getInstance()->uploadFinished();
-			ret = true;
+			if (total_sent_amout > 0) {
+				log_info << "Upload to ASW File upload attempt completed." << std::endl;
+				UploadWindow::getInstance()->uploadFinished();
+				ret = true;
+			} else {
+				UploadWindow::getInstance()->uploadFailed();
+			}
 		}
 	}
 	Aws::ShutdownAPI(options);
