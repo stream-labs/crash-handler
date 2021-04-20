@@ -292,14 +292,14 @@ void Util::updateAppState(bool unresponsive_detected)
 	out_state_file.close();
 }
 
-bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath)
+bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std::wstring& dumpFileName)
 {
 	bool dumpSaved = false;
 
 	EXCEPTION_POINTERS* pep = NULL;
 	std::filesystem::path memoryDumpFolder = dumpPath;
 	std::filesystem::path memoryDumpFile = memoryDumpFolder;
-	memoryDumpFile.append( L"crash_memory_dump.dmp");
+	memoryDumpFile.append(dumpFileName);
 
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 	if (hProcess==NULL || hProcess == INVALID_HANDLE_VALUE) {
@@ -355,4 +355,128 @@ bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath)
 	CloseHandle(hProcess);
 
 	return dumpSaved;
+}
+
+#include <aws/core/Aws.h>
+#include <aws/s3/S3Client.h>
+#include <aws/s3/model/PutObjectRequest.h>
+#include <aws/s3/model/BucketLocationConstraint.h>
+#include <aws/core/client/ClientConfiguration.h>
+#include <aws/core/auth/AWSCredentialsProviderChain.h>
+#include <aws/core/utils/logging/LogLevel.h>
+
+ #pragma comment(lib, "userenv.lib")
+ #pragma comment(lib, "ws2_32.lib")
+ #pragma comment(lib, "Wininet.lib")
+ #pragma comment(lib, "bcrypt.lib")
+ #pragma comment(lib, "version.lib")
+ #pragma comment(lib, "winhttp.lib")
+ 
+#include "upload-window-win.hpp"
+
+std::mutex upload_mutex;
+std::condition_variable upload_variable;
+long long total_sent_amout = 0;
+
+void PutObjectAsyncFinished(const Aws::S3::S3Client *s3Client,
+			    const Aws::S3::Model::PutObjectRequest &request,
+			    const Aws::S3::Model::PutObjectOutcome &outcome,
+			    const std::shared_ptr<const Aws::Client::AsyncCallerContext> &context)
+{
+	if (outcome.IsSuccess()) {
+		log_info << "PutObjectAsyncFinished: Finished uploading '" << context->GetUUID() << "'." << std::endl;
+	} else {
+		log_error << "PutObjectAsyncFinished failed " << outcome.GetError().GetMessage() << std::endl;
+	}
+
+	upload_variable.notify_one();
+}
+
+bool PutObjectAsync(const Aws::S3::S3Client &s3_client,
+		    const Aws::String &bucket_name,
+		    const std::wstring &file_path,
+		    const std::wstring &file_name)
+{
+	log_info << "PutObjectAsync started  " << std::endl;
+	Aws::S3::Model::PutObjectRequest request;
+	request.SetDataSentEventHandler(
+		[](const Aws::Http::HttpRequest*, long long amount)
+		{
+			total_sent_amout += amount;
+			UploadWindow::getInstance()->setUploadProgress(total_sent_amout);
+		});
+
+	request.SetBucket(bucket_name);
+
+	Aws::String aws_file_name = Aws::String(std::string(file_name.begin(), file_name.end()));
+	request.SetKey(Aws::String("crash_memory_dumps/") + aws_file_name );
+
+	std::shared_ptr<Aws::IOStream> input_data;
+	std::fstream * fs = new std::fstream();
+	std::filesystem::path uploaded_file = file_path;
+	uploaded_file.append(file_name);
+	input_data.reset(fs);
+	int bytes_to_send = 0;
+	try {
+		bytes_to_send = std::filesystem::file_size(uploaded_file);
+		fs->exceptions(std::fstream::failbit | std::fstream::badbit);
+		fs->open(uploaded_file, std::ios_base::in | std::ios_base::binary);
+	} catch (std::fstream::failure f) {
+		log_info << "PutObjectAsync failed open file " << uploaded_file.generic_string() << std::endl;
+		return false;
+	} catch (std::exception e) {
+		log_info << "PutObjectAsync failed open file " << uploaded_file.generic_string() << std::endl;
+		return false;
+	}
+	fs->exceptions(std::fstream::goodbit);
+	UploadWindow::getInstance()->setTotalBytes(bytes_to_send);
+	request.SetBody(input_data);
+
+	log_info << "PutObjectAsync ready to call PutObjectAsync " << std::endl;
+	std::shared_ptr<Aws::Client::AsyncCallerContext> context = Aws::MakeShared<Aws::Client::AsyncCallerContext>("PutObjectAllocationTag");
+	context->SetUUID(request.GetKey());
+	s3_client.PutObjectAsync(request, PutObjectAsyncFinished, context);
+	log_info << "PutObjectAsync finished. Wait for async result." << std::endl;
+
+	return true;
+}
+
+bool Util::uploadToAWS(const std::wstring& dumpPath, const std::wstring& dumpFileName)
+{
+	UploadWindow::getInstance()->uploadStarted();
+	bool ret = false;
+	Aws::SDKOptions options;
+	Aws::InitAPI(options);
+	{
+		const Aws::String bucket_name = "streamlabs-obs-user-cache";
+		const Aws::String region = "us-west-2";
+		const Aws::String accessIDKey = "AKIAIAINC32O7I3KUJGQ";
+		const Aws::String secretKey = AWS_CRASH_UPLOAD_BUCKET_KEY;
+
+		std::unique_lock<std::mutex> lock(upload_mutex);
+
+		Aws::Client::ClientConfiguration config;
+
+		if (!region.empty()) {
+			config.region = region;
+		}
+
+		Aws::Auth::AWSCredentials aws_credentials;
+		aws_credentials.SetAWSAccessKeyId(accessIDKey);
+		aws_credentials.SetAWSSecretKey(secretKey);
+
+		Aws::S3::S3Client s3_client(aws_credentials, config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, false);
+		log_info << "Upload to ASW ready to start upload" << std::endl;
+		if (!PutObjectAsync(s3_client, bucket_name, dumpPath, dumpFileName)) 		{
+			log_info << "Upload to ASW PutObjectAsync failed" << std::endl;
+			UploadWindow::getInstance()->uploadFailed();
+		} else {
+			upload_variable.wait(lock);
+			log_info << "Upload to ASW File upload attempt completed." << std::endl;
+			UploadWindow::getInstance()->uploadFinished();
+			ret = true;
+		}
+	}
+	Aws::ShutdownAPI(options);
+	return ret;
 }

@@ -18,7 +18,9 @@
 
 #include "process-win.hpp"
 #include "../util.hpp"
-
+#include "upload-window-win.hpp"
+#include <iomanip>
+#include <ctime>
 #include "Shlobj.h"
 #pragma comment(lib, "Shell32.lib")
 
@@ -118,42 +120,55 @@ void Process_WIN::memorydump_worker() {
 	HANDLE handles[] = { hdl, mds };
 	DWORD ret = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
 	if (ret - WAIT_OBJECT_0 == 1) {
-		log_info << "Memory dump event recieved" << std::endl;
+		log_info << "Memory dump worker event recieved" << std::endl;
 		alive = false;
-		bool dump_saved = false;
+		if (UploadWindow::getInstance()->createWindow()) {
+			UploadWindow::getInstance()->crashCatched();
+			log_info << "Window created. Waiting for user decision" << std::endl;
+			int code = UploadWindow::getInstance()->waitForUserChoise();
+			log_info << "User selected " << code << std::endl;
+			if (code == IDOK) {
+				log_info << "User selected OK for saving a dump" << std::endl;
+				UploadWindow::getInstance()->savingStarted();
 
-		int code = MessageBox( NULL, L"An app crash was detected."
-			L"\n\nThe system will attempt to save a memory dump."
-			L"\n\nIt can take a time depending on the disk speed and the size of the process."
-			L"\n\n"
-			L"\n\nPress OK to start a process.",
-			L"Memory dump", MB_OKCANCEL | MB_APPLMODAL);
+				std::time_t t = std::time(nullptr);
+				wchar_t wstr[100];
+				std::wstring file_name = L"crash_memory_dump.dmp";
+				if(std::wcsftime(wstr, 100, L"%Y%M%d_%H%M%S.dmp", std::localtime(&t))) {
+					 file_name =  wstr;
+				}
+				UploadWindow::getInstance()->setDumpFileName(file_name);
 
-		if (code == IDOK) {
-			dump_saved = Util::saveMemoryDump(PID, memorydumpPath);
+				bool dump_saved = Util::saveMemoryDump(PID, memorydumpPath, file_name);
+				if (dump_saved) {
+					UploadWindow::getInstance()->savingFinished();
+					code = UploadWindow::getInstance()->waitForUserChoise();
+					if (code == IDOK) {
+						Util::uploadToAWS(memorydumpPath, file_name);
+						code = UploadWindow::getInstance()->waitForUserChoise();
+					} else {
+						UploadWindow::getInstance()->uploadCanceled();
+						code = UploadWindow::getInstance()->waitForUserChoise();
+						log_info << "User selected Cancel for uploading a dump" << std::endl;
+					}
+				} else {
+					UploadWindow::getInstance()->savingFailed();
+					code = UploadWindow::getInstance()->waitForUserChoise();
+				}
+			} else {
+				log_info << "User selected Cancel for saving a dump" << std::endl;
+			}
 		}
-		
 		SetEvent(mdf);
 
 		TerminateProcess(hdl, 1);
 		CloseHandle(hdl);
 		hdl = INVALID_HANDLE_VALUE;
-
-		if (code == IDOK) {
-			if (dump_saved) {
-				MessageBox( NULL, L"A memory dump of a crashed process has been saved."
-					L"\n\nDo not forget to remove a folder to disable saving of memory dumps\n\n",
-					L"Memory dump", MB_OK | MB_APPLMODAL);
-			} else {
-				MessageBox( NULL, L"Failed to save a memory dump."
-					L"\n\n",
-					L"Memory dump failed", MB_OK | MB_APPLMODAL);
-			}
-		}
 	} else {
 		DWORD last_error = GetLastError();
 		log_info << "Memory dump worker exited wait ret = " << ret << ", last error = " << last_error << std::endl;
 	}
+	UploadWindow::shutdownInstance();
 }
 
 void Process_WIN::worker() {

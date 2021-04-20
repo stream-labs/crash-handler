@@ -1,6 +1,7 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.17)
 PROJECT(crash-handler-process VERSION 0.0.1)
 
+set(CMAKE_CXX_STANDARD 17)
 include(FetchContent)
 
 IF(WIN32)
@@ -15,6 +16,21 @@ IF(WIN32)
 	FetchContent_Populate(nlohmannjson)
 	endif()
  
+	include(ExternalProject)
+
+	ExternalProject_Add(libawscpp
+		GIT_REPOSITORY    https://github.com/aws/aws-sdk-cpp.git
+		GIT_TAG           1.8.186
+		LIST_SEPARATOR    "|"
+		CMAKE_ARGS       -DBUILD_SHARED_LIBS=OFF
+				 -DBUILD_ONLY=s3|sts
+				 -DENABLE_TESTING=OFF
+				 -DCUSTOM_MEMORY_MANAGEMENT=OFF
+				 -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}/awsi
+		BUILD_ALWAYS      TRUE
+		TEST_COMMAND      ""
+		PREFIX 		  awss
+	)
 ENDIF()
 
 #############################
@@ -35,6 +51,7 @@ IF(WIN32)
 		"${PROJECT_SOURCE_DIR}/platforms/util-win.cpp"
 		"${PROJECT_SOURCE_DIR}/platforms/socket-win.cpp" "${PROJECT_SOURCE_DIR}/platforms/socket-win.hpp"
 		"${PROJECT_SOURCE_DIR}/platforms/process-win.cpp" "${PROJECT_SOURCE_DIR}/platforms/process-win.hpp"
+		"${PROJECT_SOURCE_DIR}/platforms/upload-window-win.cpp" "${PROJECT_SOURCE_DIR}/platforms/upload-window-win.hpp"
 	)
 ELSE(APPLE)
 	SET(APPLE_SOURCE
@@ -64,9 +81,20 @@ set_property(TARGET crash-handler-process PROPERTY CXX_STANDARD 17)
 set_property(TARGET crash-handler-process PROPERTY CXX_STANDARD_REQUIRED ON)
 
 IF(WIN32)
+	add_definitions( -DAWS_CRASH_UPLOAD_BUCKET_KEY="${AWS_CRASH_UPLOAD_BUCKET_KEY}" )
 	# Include/link crash manager dependencies
 	target_include_directories(crash-handler-process PUBLIC
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/include/"
 		"${nlohmannjson_SOURCE_DIR}/single_include" )
+	set( AWS_LIBS
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-common.lib"
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-event-stream.lib"
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-checksums.lib"
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-cpp-sdk-core.lib"
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-cpp-sdk-sts.lib"
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-cpp-sdk-s3.lib"
+		)
+	target_link_libraries(crash-handler-process "${AWS_LIBS}")
 ELSE()
 	target_link_libraries(crash-handler-process ${COCOA})
 ENDIF()
