@@ -20,18 +20,18 @@
 #define UPLOADWINDOWUTIL_H
 #include <mutex>
 
-class UploadWindow {
-
-public:
-	static UploadWindow *getInstance();
-	static void shutdownInstance();
+class UploadWindow
+{
+	public:
+	static UploadWindow* getInstance();
+	static void          shutdownInstance();
 
 	bool createWindow();
 	int  waitForUserChoise();
 	bool setDumpFileName(const std::wstring& new_file_name);
 	bool setTotalBytes(int);
 	bool setUploadProgress(int);
-	
+
 	void crashCatched();
 	void savingFinished();
 	void savingFailed();
@@ -45,27 +45,28 @@ public:
 	virtual ~UploadWindow();
 
 	LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-private:
-	void windowThread();
-	static UploadWindow * instance;
 
-	HINSTANCE hInstance = NULL;
-	HWND upload_window_hwnd = NULL;
-	HWND progresss_bar_hwnd = NULL;
-	HWND upload_label_hwnd = NULL;	
-	HWND ok_button_hwnd = NULL;
-	HWND cancel_button_hwnd = NULL;
-	int width = 500;
-	int height = 200;
+	private:
+	void                 windowThread();
+	static UploadWindow* instance;
 
-	int button_clicked = 0;
-	long long total_bytes_to_send = 100;
-	long long bytes_sent = 0;
-	std::wstring file_name;
-	std::thread * window_thread = nullptr;
-	std::mutex upload_window_choose_mutex;
+	HINSTANCE hInstance          = NULL;
+	HWND      upload_window_hwnd = NULL;
+	HWND      progresss_bar_hwnd = NULL;
+	HWND      upload_label_hwnd  = NULL;
+	HWND      ok_button_hwnd     = NULL;
+	HWND      cancel_button_hwnd = NULL;
+	int       width              = 500;
+	int       height             = 200;
+
+	int                     button_clicked      = 0;
+	long long               total_bytes_to_send = 100;
+	long long               bytes_sent          = 0;
+	std::wstring            file_name;
+	std::thread*            window_thread = nullptr;
+	std::mutex              upload_window_choose_mutex;
 	std::condition_variable upload_window_choose_variable;
-	TCHAR upload_progress_message[128];	
+	TCHAR                   upload_progress_message[128];
 };
 
 #endif

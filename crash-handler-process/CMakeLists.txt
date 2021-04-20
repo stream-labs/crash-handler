@@ -81,7 +81,7 @@ set_property(TARGET crash-handler-process PROPERTY CXX_STANDARD 17)
 set_property(TARGET crash-handler-process PROPERTY CXX_STANDARD_REQUIRED ON)
 
 IF(WIN32)
-	add_definitions( -DAWS_CRASH_UPLOAD_BUCKET_KEY="${AWS_CRASH_UPLOAD_BUCKET_KEY}" )
+	add_definitions( -DAWS_CRASH_UPLOAD_BUCKET_KEY="${AWS_CRASH_UPLOAD_BUCKET_KEY}"  )
 	# Include/link crash manager dependencies
 	target_include_directories(crash-handler-process PUBLIC
 		"${CMAKE_CURRENT_BINARY_DIR}/awsi/include/"

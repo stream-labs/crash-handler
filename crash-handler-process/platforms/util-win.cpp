@@ -253,26 +253,27 @@ void Util::setCachePath(std::wstring path)
 void Util::updateAppState(bool unresponsive_detected)
 {
 	const std::string freez_flag = "window_unresponsive";
-	const std::string flag_name = "detected";
+	const std::string flag_name  = "detected";
 
 	std::ifstream state_file(appCachePath + appStateFileName, std::ios::in);
 	if (!state_file.is_open())
 		return;
 
-	std::ostringstream buffer; 
-	buffer << state_file.rdbuf(); 
+	std::ostringstream buffer;
+	buffer << state_file.rdbuf();
 	state_file.close();
 
 	std::string current_status = buffer.str();
-	if (current_status.size() == 0) 
+	if (current_status.size() == 0)
 		return;
 
-	std::string updated_status = "";
-	std::string existing_flag_value = "";
-	nlohmann::json jsonEntry = nlohmann::json::parse(current_status);
+	std::string    updated_status      = "";
+	std::string    existing_flag_value = "";
+	nlohmann::json jsonEntry           = nlohmann::json::parse(current_status);
 	try {
 		existing_flag_value = jsonEntry.at(flag_name);
-	} catch (...) {}
+	} catch (...) {
+	}
 	if (unresponsive_detected) {
 		if (existing_flag_value.empty())
 			jsonEntry[flag_name] = freez_flag;
@@ -283,7 +284,7 @@ void Util::updateAppState(bool unresponsive_detected)
 	updated_status = jsonEntry.dump(-1);
 
 	std::ofstream out_state_file;
-	out_state_file.open(appCachePath + appStateFileName, std::ios::trunc | std::ios::out );
+	out_state_file.open(appCachePath + appStateFileName, std::ios::trunc | std::ios::out);
 	if (!out_state_file.is_open())
 		return;
 
@@ -296,27 +297,28 @@ bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std:
 {
 	bool dumpSaved = false;
 
-	EXCEPTION_POINTERS* pep = NULL;
+	EXCEPTION_POINTERS*   pep              = NULL;
 	std::filesystem::path memoryDumpFolder = dumpPath;
-	std::filesystem::path memoryDumpFile = memoryDumpFolder;
+	std::filesystem::path memoryDumpFile   = memoryDumpFolder;
 	memoryDumpFile.append(dumpFileName);
 
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-	if (hProcess==NULL || hProcess == INVALID_HANDLE_VALUE) {
+	if (hProcess == NULL || hProcess == INVALID_HANDLE_VALUE) {
 		log_info << "Failed to open process to get memory dump." << std::endl;
 		return false;
 	}
 
-	bool enoughDiskSpace = false;
+	bool           enoughDiskSpace = false;
 	ULARGE_INTEGER diskBytesAvailable;
-	if (GetDiskFreeSpaceEx(memoryDumpFolder.generic_wstring().c_str(), &diskBytesAvailable, NULL , NULL)) {
+	if (GetDiskFreeSpaceEx(memoryDumpFolder.generic_wstring().c_str(), &diskBytesAvailable, NULL, NULL)) {
 		PROCESS_MEMORY_COUNTERS pmc;
-		if (GetProcessMemoryInfo( hProcess, &pmc, sizeof(pmc))) {
-			log_info << "Disk available space " << diskBytesAvailable.QuadPart << " , process ram size " << pmc.WorkingSetSize << std::endl;
+		if (GetProcessMemoryInfo(hProcess, &pmc, sizeof(pmc))) {
+			log_info << "Disk available space " << diskBytesAvailable.QuadPart << " , process ram size "
+			         << pmc.WorkingSetSize << std::endl;
 
 			// There is now way to know a size of memory dump.
 			// On test crashes it was about two times bigger than a ram size used by a process.
-			if (pmc.WorkingSetSize < diskBytesAvailable.QuadPart*2) {
+			if (pmc.WorkingSetSize < diskBytesAvailable.QuadPart * 2) {
 				enoughDiskSpace = true;
 			}
 		}
@@ -329,16 +331,26 @@ bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std:
 		return false;
 	}
 
-	HANDLE hFile = CreateFile(memoryDumpFile.generic_wstring().c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	HANDLE hFile = CreateFile(
+	    memoryDumpFile.generic_wstring().c_str(),
+	    GENERIC_READ | GENERIC_WRITE,
+	    0,
+	    NULL,
+	    CREATE_ALWAYS,
+	    FILE_ATTRIBUTE_NORMAL,
+	    NULL);
 
 	if (hFile && hFile != INVALID_HANDLE_VALUE) {
 		MINIDUMP_EXCEPTION_INFORMATION mdei = {0};
 
-		mdei.ThreadId = 0;
+		mdei.ThreadId          = 0;
 		mdei.ExceptionPointers = pep;
-		mdei.ClientPointers = FALSE;
+		mdei.ClientPointers    = FALSE;
 
-		const DWORD CD_Flags = MiniDumpWithFullMemory | MiniDumpWithHandleData | MiniDumpWithThreadInfo | MiniDumpWithProcessThreadData | MiniDumpWithFullMemoryInfo | MiniDumpWithUnloadedModules | MiniDumpWithFullAuxiliaryState | MiniDumpIgnoreInaccessibleMemory | MiniDumpWithTokenInformation;
+		const DWORD CD_Flags = MiniDumpWithFullMemory | MiniDumpWithHandleData | MiniDumpWithThreadInfo
+		                       | MiniDumpWithProcessThreadData | MiniDumpWithFullMemoryInfo
+		                       | MiniDumpWithUnloadedModules | MiniDumpWithFullAuxiliaryState
+		                       | MiniDumpIgnoreInaccessibleMemory | MiniDumpWithTokenInformation;
 
 		BOOL ret = MiniDumpWriteDump(hProcess, pid, hFile, (MINIDUMP_TYPE)CD_Flags, (pep != 0) ? &mdei : 0, 0, 0);
 		if (ret) {
@@ -358,30 +370,31 @@ bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std:
 }
 
 #include <aws/core/Aws.h>
-#include <aws/s3/S3Client.h>
-#include <aws/s3/model/PutObjectRequest.h>
-#include <aws/s3/model/BucketLocationConstraint.h>
-#include <aws/core/client/ClientConfiguration.h>
 #include <aws/core/auth/AWSCredentialsProviderChain.h>
+#include <aws/core/client/ClientConfiguration.h>
 #include <aws/core/utils/logging/LogLevel.h>
+#include <aws/s3/S3Client.h>
+#include <aws/s3/model/BucketLocationConstraint.h>
+#include <aws/s3/model/PutObjectRequest.h>
 
- #pragma comment(lib, "userenv.lib")
- #pragma comment(lib, "ws2_32.lib")
- #pragma comment(lib, "Wininet.lib")
- #pragma comment(lib, "bcrypt.lib")
- #pragma comment(lib, "version.lib")
- #pragma comment(lib, "winhttp.lib")
- 
+#pragma comment(lib, "userenv.lib")
+#pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "Wininet.lib")
+#pragma comment(lib, "bcrypt.lib")
+#pragma comment(lib, "version.lib")
+#pragma comment(lib, "winhttp.lib")
+
 #include "upload-window-win.hpp"
 
-std::mutex upload_mutex;
+std::mutex              upload_mutex;
 std::condition_variable upload_variable;
-long long total_sent_amout = 0;
+long long               total_sent_amout = 0;
 
-void PutObjectAsyncFinished(const Aws::S3::S3Client *s3Client,
-			    const Aws::S3::Model::PutObjectRequest &request,
-			    const Aws::S3::Model::PutObjectOutcome &outcome,
-			    const std::shared_ptr<const Aws::Client::AsyncCallerContext> &context)
+void PutObjectAsyncFinished(
+    const Aws::S3::S3Client*                                      s3Client,
+    const Aws::S3::Model::PutObjectRequest&                       request,
+    const Aws::S3::Model::PutObjectOutcome&                       outcome,
+    const std::shared_ptr<const Aws::Client::AsyncCallerContext>& context)
 {
 	if (outcome.IsSuccess()) {
 		log_info << "PutObjectAsyncFinished: Finished uploading '" << context->GetUUID() << "'." << std::endl;
@@ -393,28 +406,27 @@ void PutObjectAsyncFinished(const Aws::S3::S3Client *s3Client,
 	upload_variable.notify_one();
 }
 
-bool PutObjectAsync(const Aws::S3::S3Client &s3_client,
-		    const Aws::String &bucket_name,
-		    const std::wstring &file_path,
-		    const std::wstring &file_name)
+bool PutObjectAsync(
+    const Aws::S3::S3Client& s3_client,
+    const Aws::String&       bucket_name,
+    const std::wstring&      file_path,
+    const std::wstring&      file_name)
 {
 	log_info << "PutObjectAsync started  " << std::endl;
 	Aws::S3::Model::PutObjectRequest request;
-	request.SetDataSentEventHandler(
-		[](const Aws::Http::HttpRequest*, long long amount)
-		{
-			total_sent_amout += amount;
-			UploadWindow::getInstance()->setUploadProgress(total_sent_amout);
-		});
+	request.SetDataSentEventHandler([](const Aws::Http::HttpRequest*, long long amount) {
+		total_sent_amout += amount;
+		UploadWindow::getInstance()->setUploadProgress(total_sent_amout);
+	});
 
 	request.SetBucket(bucket_name);
 
 	Aws::String aws_file_name = Aws::String(std::string(file_name.begin(), file_name.end()));
-	request.SetKey(Aws::String("crash_memory_dumps/") + aws_file_name );
+	request.SetKey(Aws::String("crash_memory_dumps/") + aws_file_name);
 
 	std::shared_ptr<Aws::IOStream> input_data;
-	std::fstream * fs = new std::fstream();
-	std::filesystem::path uploaded_file = file_path;
+	std::fstream*                  fs            = new std::fstream();
+	std::filesystem::path          uploaded_file = file_path;
 	uploaded_file.append(file_name);
 	input_data.reset(fs);
 	int bytes_to_send = 0;
@@ -434,7 +446,8 @@ bool PutObjectAsync(const Aws::S3::S3Client &s3_client,
 	request.SetBody(input_data);
 
 	log_info << "PutObjectAsync ready to call PutObjectAsync " << std::endl;
-	std::shared_ptr<Aws::Client::AsyncCallerContext> context = Aws::MakeShared<Aws::Client::AsyncCallerContext>("PutObjectAllocationTag");
+	std::shared_ptr<Aws::Client::AsyncCallerContext> context =
+	    Aws::MakeShared<Aws::Client::AsyncCallerContext>("PutObjectAllocationTag");
 	context->SetUUID(request.GetKey());
 	s3_client.PutObjectAsync(request, PutObjectAsyncFinished, context);
 	log_info << "PutObjectAsync finished. Wait for async result." << std::endl;
@@ -445,14 +458,14 @@ bool PutObjectAsync(const Aws::S3::S3Client &s3_client,
 bool Util::uploadToAWS(const std::wstring& dumpPath, const std::wstring& dumpFileName)
 {
 	UploadWindow::getInstance()->uploadStarted();
-	bool ret = false;
+	bool            ret = false;
 	Aws::SDKOptions options;
 	Aws::InitAPI(options);
 	{
 		const Aws::String bucket_name = "streamlabs-obs-user-cache";
-		const Aws::String region = "us-west-2";
+		const Aws::String region      = "us-west-2";
 		const Aws::String accessIDKey = "AKIAIAINC32O7I3KUJGQ";
-		const Aws::String secretKey = AWS_CRASH_UPLOAD_BUCKET_KEY;
+		const Aws::String secretKey   = AWS_CRASH_UPLOAD_BUCKET_KEY;
 
 		std::unique_lock<std::mutex> lock(upload_mutex);
 
@@ -466,9 +479,10 @@ bool Util::uploadToAWS(const std::wstring& dumpPath, const std::wstring& dumpFil
 		aws_credentials.SetAWSAccessKeyId(accessIDKey);
 		aws_credentials.SetAWSSecretKey(secretKey);
 
-		Aws::S3::S3Client s3_client(aws_credentials, config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, false);
+		Aws::S3::S3Client s3_client(
+		    aws_credentials, config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, false);
 		log_info << "Upload to ASW ready to start upload" << std::endl;
-		if (!PutObjectAsync(s3_client, bucket_name, dumpPath, dumpFileName)) 		{
+		if (!PutObjectAsync(s3_client, bucket_name, dumpPath, dumpFileName)) {
 			log_info << "Upload to ASW PutObjectAsync failed" << std::endl;
 			UploadWindow::getInstance()->uploadFailed();
 		} else {
