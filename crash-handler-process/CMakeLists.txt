@@ -72,6 +72,7 @@ IF(WIN32)
 ENDIF()
 
 IF(WIN32)
+
 	ADD_EXECUTABLE(crash-handler-process ${PROJECT_SOURCE} ${WINDOWS_SOURCE})
 ELSE(APPLE)
 	ADD_EXECUTABLE(crash-handler-process ${PROJECT_SOURCE} ${APPLE_SOURCE})
@@ -81,11 +82,12 @@ set_property(TARGET crash-handler-process PROPERTY CXX_STANDARD 17)
 set_property(TARGET crash-handler-process PROPERTY CXX_STANDARD_REQUIRED ON)
 
 IF(WIN32)
-	add_definitions( -DAWS_CRASH_UPLOAD_BUCKET_KEY="${AWS_CRASH_UPLOAD_BUCKET_KEY}"  )
 	# Include/link crash manager dependencies
 	target_include_directories(crash-handler-process PUBLIC
 		"${CMAKE_CURRENT_BINARY_DIR}/awsi/include/"
 		"${nlohmannjson_SOURCE_DIR}/single_include" )
+	add_compile_definitions(AWS_CRASH_UPLOAD_BUCKET_KEY=\"$ENV{AWS_CRASH_UPLOAD_BUCKET_KEY}\")
+
 	set( AWS_LIBS
 		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-common.lib"
 		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-event-stream.lib"

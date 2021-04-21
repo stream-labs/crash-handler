@@ -27,8 +27,31 @@
 #include "nlohmann/json.hpp"
 #include <filesystem>
 
+#include "upload-window-win.hpp"
+
+#include <aws/core/Aws.h>
+#include <aws/core/auth/AWSCredentialsProviderChain.h>
+#include <aws/core/client/ClientConfiguration.h>
+#include <aws/core/utils/logging/LogLevel.h>
+#include <aws/s3/S3Client.h>
+#include <aws/s3/model/BucketLocationConstraint.h>
+#include <aws/s3/model/PutObjectRequest.h>
+
+#pragma comment(lib, "userenv.lib")
+#pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "Wininet.lib")
+#pragma comment(lib, "bcrypt.lib")
+#pragma comment(lib, "version.lib")
+#pragma comment(lib, "winhttp.lib")
+
 #include "Dbghelp.h"
 #pragma comment(lib, "Dbghelp.lib")
+
+#ifndef AWS_CRASH_UPLOAD_BUCKET_KEY
+#define AWS_CRASH_UPLOAD_BUCKET_KEY "KEY"
+#endif
+
+#define GET_KEY []() { return AWS_CRASH_UPLOAD_BUCKET_KEY; }()
 
 const std::wstring appStateFileName = L"\\appState";
 std::wstring appCachePath = L"";
@@ -369,22 +392,6 @@ bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std:
 	return dumpSaved;
 }
 
-#include <aws/core/Aws.h>
-#include <aws/core/auth/AWSCredentialsProviderChain.h>
-#include <aws/core/client/ClientConfiguration.h>
-#include <aws/core/utils/logging/LogLevel.h>
-#include <aws/s3/S3Client.h>
-#include <aws/s3/model/BucketLocationConstraint.h>
-#include <aws/s3/model/PutObjectRequest.h>
-
-#pragma comment(lib, "userenv.lib")
-#pragma comment(lib, "ws2_32.lib")
-#pragma comment(lib, "Wininet.lib")
-#pragma comment(lib, "bcrypt.lib")
-#pragma comment(lib, "version.lib")
-#pragma comment(lib, "winhttp.lib")
-
-#include "upload-window-win.hpp"
 
 std::mutex              upload_mutex;
 std::condition_variable upload_variable;
@@ -465,7 +472,7 @@ bool Util::uploadToAWS(const std::wstring& dumpPath, const std::wstring& dumpFil
 		const Aws::String bucket_name = "streamlabs-obs-user-cache";
 		const Aws::String region      = "us-west-2";
 		const Aws::String accessIDKey = "AKIAIAINC32O7I3KUJGQ";
-		const Aws::String secretKey   = AWS_CRASH_UPLOAD_BUCKET_KEY;
+		const Aws::String Key   = GET_KEY;
 
 		std::unique_lock<std::mutex> lock(upload_mutex);
 
@@ -474,10 +481,12 @@ bool Util::uploadToAWS(const std::wstring& dumpPath, const std::wstring& dumpFil
 		if (!region.empty()) {
 			config.region = region;
 		}
-
+		config.scheme = Aws::Http::Scheme::HTTPS;
+		config.verifySSL = false;
+		config.followRedirects = Aws::Client::FollowRedirectsPolicy::NEVER;
 		Aws::Auth::AWSCredentials aws_credentials;
 		aws_credentials.SetAWSAccessKeyId(accessIDKey);
-		aws_credentials.SetAWSSecretKey(secretKey);
+		aws_credentials.SetAWSSecretKey(Key);
 
 		Aws::S3::S3Client s3_client(
 		    aws_credentials, config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, false);

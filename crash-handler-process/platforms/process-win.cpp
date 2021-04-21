@@ -126,7 +126,6 @@ void Process_WIN::memorydump_worker() {
 			UploadWindow::getInstance()->crashCatched();
 			log_info << "Window created. Waiting for user decision" << std::endl;
 			int code = UploadWindow::getInstance()->waitForUserChoise();
-			log_info << "User selected " << code << std::endl;
 			if (code == IDOK) {
 				log_info << "User selected OK for saving a dump" << std::endl;
 				UploadWindow::getInstance()->savingStarted();
