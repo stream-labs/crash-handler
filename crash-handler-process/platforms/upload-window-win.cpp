@@ -55,6 +55,13 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
+void UploadWindow::enableButtons(bool ok_enabled, bool yes_enabled, bool cancel_enabled)
+{
+	EnableWindow(ok_button_hwnd, ok_enabled);
+	EnableWindow(yes_button_hwnd, yes_enabled);
+	EnableWindow(cancel_button_hwnd, cancel_enabled);
+}
+
 LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg) {
@@ -65,9 +72,9 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		DestroyWindow(hwnd);
 		break;
 	case CUSTOM_CATCHED_CRASH: {
-		SetWindowText(upload_label_hwnd, L"Crash catched. Start saving a memory dump to a file?");
-		EnableWindow(ok_button_hwnd, true);
-		EnableWindow(cancel_button_hwnd, true);
+		SetWindowText(upload_label_hwnd, L"The application just crashed.");
+		SetWindowText(upload_text_hwnd, L"Would you like to share additional information to the developers?");
+		enableButtons(false, true, false);
 		SendMessage(progresss_bar_hwnd, PBM_SETBARCOLOR, 0, RGB(49, 195, 162));
 		SendMessage(progresss_bar_hwnd, PBM_SETBKCOLOR, 0, RGB(49, 49, 49));
 		SendMessage(progresss_bar_hwnd, PBM_SETRANGE32, 0, 100);
@@ -80,67 +87,75 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		PostMessage(progresss_bar_hwnd, PBM_SETPOS, (int)progress, 0);
 		swprintf(upload_progress_message, L"%lld / %lld Kb", bytes_sent / 1024, total_bytes_to_send / 1024);
 		SetWindowText(upload_label_hwnd, upload_progress_message);
+		SetWindowText(upload_text_hwnd, L"");
 		break;
 	}
 	case CUSTOM_SAVED_DUMP: {
-		SetWindowText(upload_label_hwnd, L"Memory dump saved successfully. Continue with upload?");
-		EnableWindow(ok_button_hwnd, true);
-		EnableWindow(cancel_button_hwnd, true);
+		SetWindowText(upload_label_hwnd, L"Memory dump saved successfully.");
+		SetWindowText(upload_text_hwnd, L"Continue with upload?");
+		enableButtons(false, true, true);
 		break;
 	}
 	case CUSTOM_SAVE_STARTED: {
 		swprintf(upload_progress_message, L"Saving... to \"%s\"", file_name.c_str());
+		SetWindowText(upload_text_hwnd, L"");
 		SetWindowText(upload_label_hwnd, upload_progress_message);
-		EnableWindow(ok_button_hwnd, false);
-		EnableWindow(cancel_button_hwnd, false);
+		enableButtons(false, false, false);
 		break;
 	}
 	case CUSTOM_SAVING_DUMP_FAILED: {
-		SetWindowText(upload_label_hwnd, L"Memory dump saving failed.");
-		EnableWindow(ok_button_hwnd, true);
-		EnableWindow(cancel_button_hwnd, false);
+		SetWindowText(upload_label_hwnd, L"Fail to save the local debug information.");
+		SetWindowText(upload_text_hwnd, L"");
+		enableButtons(true, false, false);
 		break;
 	}
 	case CUSTOM_UPLOAD_STARTED: {
 		SendMessage(progresss_bar_hwnd, PBM_SETRANGE32, 0, 100);
 		SetWindowText(upload_label_hwnd, L"Initializing upload...");
-		EnableWindow(ok_button_hwnd, false);
-		EnableWindow(cancel_button_hwnd, false);
+		SetWindowText(upload_text_hwnd, L"");
+		enableButtons(false, false, false);
 		break;
 	}
 	case CUSTOM_UPLOAD_FINISHED: {
-		swprintf(upload_progress_message, L"Finished. File: \"%s\".", file_name.c_str());
-		SetWindowText(upload_label_hwnd, upload_progress_message);
-		EnableWindow(ok_button_hwnd, true);
-		EnableWindow(cancel_button_hwnd, false);
+		swprintf(upload_progress_message, L"Please provide this file name to the support: \"%s\".", file_name.c_str());
+		SetWindowText(upload_label_hwnd, L"Successfully uploaded the additional debug information.");
+		SetWindowText(upload_text_hwnd, upload_progress_message);
+		enableButtons(true, false, false);
 		break;
 	}
 	case CUSTOM_UPLOAD_CANCELED: {
-		swprintf(upload_progress_message, L"Upload cancleled. You may share the file with our support manually.");
-		SetWindowText(upload_label_hwnd, upload_progress_message);
-		EnableWindow(ok_button_hwnd, true);
-		EnableWindow(cancel_button_hwnd, false);
+		SetWindowText(upload_label_hwnd, L"Upload cancleled.");
+		SetWindowText(upload_text_hwnd, L"You may share the file with our support manually or remove file.");
+		enableButtons(true, false, false);
 		break;
 	}
 	case CUSTOM_UPLOAD_FAILED: {
-		SetWindowText(upload_label_hwnd, L"Uploading failed. You may share the file with our support manually.");
-		EnableWindow(ok_button_hwnd, true);
-		EnableWindow(cancel_button_hwnd, false);
+		SetWindowText(upload_label_hwnd, L"Upload failed.");
+		SetWindowText(upload_text_hwnd, L"You may share the file with our support manually or remove file.");
+		enableButtons(true, false, false);
 		break;
 	}
 	case WM_COMMAND: {
 		if ((HWND)lParam == ok_button_hwnd) {
-			EnableWindow(ok_button_hwnd, false);
-			EnableWindow(cancel_button_hwnd, false);
+			enableButtons(false, false, false);
 			SetWindowText(upload_label_hwnd, L"");
+			SetWindowText(upload_text_hwnd, L"");
 			button_clicked = IDOK;
 			upload_window_choose_variable.notify_one();
 			break;
 		}
-		if ((HWND)lParam == cancel_button_hwnd) {
-			EnableWindow(ok_button_hwnd, false);
-			EnableWindow(cancel_button_hwnd, false);
+		if ((HWND)lParam == yes_button_hwnd) {
+			enableButtons(false, false, false);
 			SetWindowText(upload_label_hwnd, L"");
+			SetWindowText(upload_text_hwnd, L"");
+			button_clicked = IDYES;
+			upload_window_choose_variable.notify_one();
+			break;
+		}
+		if ((HWND)lParam == cancel_button_hwnd) {
+			enableButtons(false, false, false);
+			SetWindowText(upload_label_hwnd, L"");
+			SetWindowText(upload_text_hwnd, L"");
 			button_clicked = IDCANCEL;
 			upload_window_choose_variable.notify_one();
 			break;
@@ -199,7 +214,7 @@ void UploadWindow::windowThread()
 	wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
 	wc.hbrBackground = CreateSolidBrush(RGB(23, 36, 45));
 	wc.lpszMenuName  = NULL;
-	wc.lpszClassName = TEXT("uploaderwindow");
+	wc.lpszClassName = TEXT("uploaderwindowclass");
 
 	if (!RegisterClassEx(&wc)) {
 		log_error << "Failed to create a class for uploader window " << GetLastError() << std::endl;
@@ -213,8 +228,8 @@ void UploadWindow::windowThread()
 
 	upload_window_hwnd = CreateWindowEx(
 	    WS_EX_CLIENTEDGE,
-	    TEXT("uploaderwindow"),
-	    TEXT("Streamlabs OBS Crash Dump Uploader"),
+	    TEXT("uploaderwindowclass"),
+	    TEXT("Send additional debug information to the developers."),
 	    WS_OVERLAPPED | WS_MINIMIZEBOX | WS_SYSMENU,
 	    (screen_width - width) / 2,
 	    (screen_height - height) / 2,
@@ -233,7 +248,7 @@ void UploadWindow::windowThread()
 	int  x_pos  = 10;
 	int  y_pos  = 10;
 	int  x_size = 470;
-	int  y_size = 150;
+	int  y_size = 250;
 	RECT client_rect;
 	if (GetClientRect(upload_window_hwnd, &client_rect)) {
 		x_size = client_rect.right - client_rect.left;
@@ -266,9 +281,35 @@ void UploadWindow::windowThread()
 	    NULL,
 	    NULL);
 
+	upload_text_hwnd = CreateWindow(
+	    WC_EDIT,
+	    TEXT("test text"),
+	    WS_CHILD | WS_VISIBLE | WS_DISABLED,
+	    x_pos,
+	    y_pos + 50 + 50,
+	    x_size - 20,
+	    90,
+	    upload_window_hwnd,
+	    NULL,
+	    NULL,
+	    NULL);
+
 	ok_button_hwnd = CreateWindow(
 	    WC_BUTTON,
 	    L"OK",
+	    WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
+	    x_size - 220,
+	    y_size - 50,
+	    100,
+	    40,
+	    upload_window_hwnd,
+	    NULL,
+	    NULL,
+	    NULL);
+
+	yes_button_hwnd = CreateWindow(
+	    WC_BUTTON,
+	    L"Yes",
 	    WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
 	    x_size - 220,
 	    y_size - 50,
@@ -295,6 +336,7 @@ void UploadWindow::windowThread()
 	ShowWindow(upload_window_hwnd, SW_SHOWNORMAL);
 	UpdateWindow(upload_window_hwnd);
 	EnableWindow(ok_button_hwnd, false);
+	EnableWindow(yes_button_hwnd, false);
 	EnableWindow(cancel_button_hwnd, false);
 
 	upload_window_choose_variable.notify_one();

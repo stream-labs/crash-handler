@@ -45,19 +45,22 @@ class UploadWindow
 	virtual ~UploadWindow();
 
 	LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
+	
 	private:
-	void                 windowThread();
+	void enableButtons(bool ok_enabled, bool yes_enabled, bool cancel_enabled);
+	void windowThread();
 	static UploadWindow* instance;
 
 	HINSTANCE hInstance          = NULL;
 	HWND      upload_window_hwnd = NULL;
 	HWND      progresss_bar_hwnd = NULL;
 	HWND      upload_label_hwnd  = NULL;
+	HWND      upload_text_hwnd   = NULL;
 	HWND      ok_button_hwnd     = NULL;
+	HWND      yes_button_hwnd    = NULL;
 	HWND      cancel_button_hwnd = NULL;
 	int       width              = 500;
-	int       height             = 200;
+	int       height             = 300;
 
 	int                     button_clicked      = 0;
 	long long               total_bytes_to_send = 100;

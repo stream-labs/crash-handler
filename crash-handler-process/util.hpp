@@ -31,7 +31,7 @@ public:
 
 	static bool saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std::wstring& dumpFileName);
 	static bool uploadToAWS(const std::wstring& dumpPath, const std::wstring& dumpFileName);
-
+	static bool removeMemoryDump(const std::wstring& dumpPath, const std::wstring& dumpFileName);
 	static void updateAppState(bool unresponsive_detected);
 	static void setCachePath(std::wstring path);
 };

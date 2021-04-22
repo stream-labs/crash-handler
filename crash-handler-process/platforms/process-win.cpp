@@ -125,8 +125,7 @@ void Process_WIN::memorydump_worker() {
 		if (UploadWindow::getInstance()->createWindow()) {
 			UploadWindow::getInstance()->crashCatched();
 			log_info << "Window created. Waiting for user decision" << std::endl;
-			int code = UploadWindow::getInstance()->waitForUserChoise();
-			if (code == IDOK) {
+			if (UploadWindow::getInstance()->waitForUserChoise() == IDYES) {
 				log_info << "User selected OK for saving a dump" << std::endl;
 				UploadWindow::getInstance()->savingStarted();
 
@@ -141,18 +140,18 @@ void Process_WIN::memorydump_worker() {
 				bool dump_saved = Util::saveMemoryDump(PID, memorydumpPath, file_name);
 				if (dump_saved) {
 					UploadWindow::getInstance()->savingFinished();
-					code = UploadWindow::getInstance()->waitForUserChoise();
-					if (code == IDOK) {
+					if (UploadWindow::getInstance()->waitForUserChoise() == IDYES) {
 						Util::uploadToAWS(memorydumpPath, file_name);
-						code = UploadWindow::getInstance()->waitForUserChoise();
+						UploadWindow::getInstance()->waitForUserChoise();
+						Util::removeMemoryDump(memorydumpPath, file_name);
 					} else {
 						UploadWindow::getInstance()->uploadCanceled();
-						code = UploadWindow::getInstance()->waitForUserChoise();
+						UploadWindow::getInstance()->waitForUserChoise();
 						log_info << "User selected Cancel for uploading a dump" << std::endl;
 					}
 				} else {
 					UploadWindow::getInstance()->savingFailed();
-					code = UploadWindow::getInstance()->waitForUserChoise();
+					UploadWindow::getInstance()->waitForUserChoise();
 				}
 			} else {
 				log_info << "User selected Cancel for saving a dump" << std::endl;

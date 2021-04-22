@@ -316,6 +316,19 @@ void Util::updateAppState(bool unresponsive_detected)
 	out_state_file.close();
 }
 
+bool Util::removeMemoryDump(const std::wstring& dumpPath, const std::wstring& dumpFileName)
+{
+	bool ret = false;
+	std::filesystem::path memoryDumpFolder = dumpPath;
+	std::filesystem::path memoryDumpFile   = memoryDumpFolder;
+	memoryDumpFile.append(dumpFileName);
+	try {
+		std::filesystem::remove(memoryDumpFile);
+		ret = true;
+	} catch (...) {}
+	return ret;
+}
+
 bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std::wstring& dumpFileName)
 {
 	bool dumpSaved = false;
