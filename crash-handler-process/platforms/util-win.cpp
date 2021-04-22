@@ -391,7 +391,9 @@ bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std:
 		BOOL ret = MiniDumpWriteDump(hProcess, pid, hFile, (MINIDUMP_TYPE)CD_Flags, (pep != 0) ? &mdei : 0, 0, 0);
 		if (ret) {
 			dumpSaved = true;
-			log_info << "Memory dump saved." << std::endl;
+			long long bytes_to_send = std::filesystem::file_size(memoryDumpFile);
+			UploadWindow::getInstance()->setTotalBytes(bytes_to_send);
+			log_info << "Memory dump saved. " << std::endl;
 		} else {
 			log_info << "Failed to save memory dump. err code = " << GetLastError() << std::endl;
 		}
@@ -449,9 +451,7 @@ bool PutObjectAsync(
 	std::filesystem::path          uploaded_file = file_path;
 	uploaded_file.append(file_name);
 	input_data.reset(fs);
-	int bytes_to_send = 0;
 	try {
-		bytes_to_send = std::filesystem::file_size(uploaded_file);
 		fs->exceptions(std::fstream::failbit | std::fstream::badbit);
 		fs->open(uploaded_file, std::ios_base::in | std::ios_base::binary);
 	} catch (std::fstream::failure f) {
@@ -462,7 +462,7 @@ bool PutObjectAsync(
 		return false;
 	}
 	fs->exceptions(std::fstream::goodbit);
-	UploadWindow::getInstance()->setTotalBytes(bytes_to_send);
+
 	request.SetBody(input_data);
 
 	log_info << "PutObjectAsync ready to call PutObjectAsync " << std::endl;

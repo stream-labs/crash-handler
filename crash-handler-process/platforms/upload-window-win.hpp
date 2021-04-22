@@ -28,9 +28,9 @@ class UploadWindow
 
 	bool createWindow();
 	int  waitForUserChoise();
-	bool setDumpFileName(const std::wstring& new_file_name);
-	bool setTotalBytes(int);
-	bool setUploadProgress(int);
+	void setDumpFileName(const std::wstring& new_file_name);
+	void setTotalBytes(long long);
+	void setUploadProgress(long long);
 
 	void crashCatched();
 	void savingFinished();
@@ -55,15 +55,14 @@ class UploadWindow
 	HWND      upload_window_hwnd = NULL;
 	HWND      progresss_bar_hwnd = NULL;
 	HWND      upload_label_hwnd  = NULL;
-	HWND      upload_text_hwnd   = NULL;
 	HWND      ok_button_hwnd     = NULL;
 	HWND      yes_button_hwnd    = NULL;
 	HWND      cancel_button_hwnd = NULL;
 	int       width              = 500;
-	int       height             = 300;
+	int       height             = 250;
 
 	int                     button_clicked      = 0;
-	long long               total_bytes_to_send = 100;
+	long long               total_bytes_to_send = 0;
 	long long               bytes_sent          = 0;
 	std::wstring            file_name;
 	std::thread*            window_thread = nullptr;

@@ -72,9 +72,9 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		DestroyWindow(hwnd);
 		break;
 	case CUSTOM_CATCHED_CRASH: {
-		SetWindowText(upload_label_hwnd, L"The application just crashed.");
-		SetWindowText(upload_text_hwnd, L"Would you like to share additional information to the developers?");
-		enableButtons(false, true, false);
+		SetWindowText(upload_label_hwnd, L"The application just crashed.\n\n"
+		"Would you like to share additional information to the developers?");
+		enableButtons(false, true, true);
 		SendMessage(progresss_bar_hwnd, PBM_SETBARCOLOR, 0, RGB(49, 195, 162));
 		SendMessage(progresss_bar_hwnd, PBM_SETBKCOLOR, 0, RGB(49, 49, 49));
 		SendMessage(progresss_bar_hwnd, PBM_SETRANGE32, 0, 100);
@@ -87,51 +87,55 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		PostMessage(progresss_bar_hwnd, PBM_SETPOS, (int)progress, 0);
 		swprintf(upload_progress_message, L"%lld / %lld Kb", bytes_sent / 1024, total_bytes_to_send / 1024);
 		SetWindowText(upload_label_hwnd, upload_progress_message);
-		SetWindowText(upload_text_hwnd, L"");
 		break;
 	}
 	case CUSTOM_SAVED_DUMP: {
-		SetWindowText(upload_label_hwnd, L"Memory dump saved successfully.");
-		SetWindowText(upload_text_hwnd, L"Continue with upload?");
+		swprintf(upload_progress_message, L"Memory dump saved successfully.\n\n"
+		"Continue with upload?\n\n"
+		"File size: %.1fMb", (float)total_bytes_to_send/1024/1024);
+		SetWindowText(upload_label_hwnd, upload_progress_message);
 		enableButtons(false, true, true);
 		break;
 	}
 	case CUSTOM_SAVE_STARTED: {
 		swprintf(upload_progress_message, L"Saving... to \"%s\"", file_name.c_str());
-		SetWindowText(upload_text_hwnd, L"");
 		SetWindowText(upload_label_hwnd, upload_progress_message);
 		enableButtons(false, false, false);
 		break;
 	}
 	case CUSTOM_SAVING_DUMP_FAILED: {
 		SetWindowText(upload_label_hwnd, L"Fail to save the local debug information.");
-		SetWindowText(upload_text_hwnd, L"");
 		enableButtons(true, false, false);
 		break;
 	}
 	case CUSTOM_UPLOAD_STARTED: {
 		SendMessage(progresss_bar_hwnd, PBM_SETRANGE32, 0, 100);
 		SetWindowText(upload_label_hwnd, L"Initializing upload...");
-		SetWindowText(upload_text_hwnd, L"");
 		enableButtons(false, false, false);
 		break;
 	}
 	case CUSTOM_UPLOAD_FINISHED: {
-		swprintf(upload_progress_message, L"Please provide this file name to the support: \"%s\".", file_name.c_str());
-		SetWindowText(upload_label_hwnd, L"Successfully uploaded the additional debug information.");
-		SetWindowText(upload_text_hwnd, upload_progress_message);
+		swprintf(upload_progress_message, L"Successfully uploaded the additional debug information.\n\n"
+		"Please provide this file name to the support: \"%s\".", file_name.c_str());
+		SetWindowText(upload_label_hwnd, upload_progress_message);
 		enableButtons(true, false, false);
 		break;
 	}
 	case CUSTOM_UPLOAD_CANCELED: {
-		SetWindowText(upload_label_hwnd, L"Upload cancleled.");
-		SetWindowText(upload_text_hwnd, L"You may share the file with our support manually or remove file.");
+		swprintf(upload_progress_message, L"Upload cancleled.\n\n"
+		"You may share the file with our support manually or remove file.\n"
+		"Located: \"%%appdata%\\CrashMemoryDump\\\".\n"
+		"File: \"%s\".", file_name.c_str());
+		SetWindowText(upload_label_hwnd, upload_progress_message);
 		enableButtons(true, false, false);
 		break;
 	}
 	case CUSTOM_UPLOAD_FAILED: {
-		SetWindowText(upload_label_hwnd, L"Upload failed.");
-		SetWindowText(upload_text_hwnd, L"You may share the file with our support manually or remove file.");
+		swprintf(upload_progress_message, L"Upload failed.\n\n"
+		"You may share the file with our support manually or remove file.\n"
+		"Located: \"%%appdata%\\CrashMemoryDump\\\".\n"
+		"File: \"%s\".", file_name.c_str());
+		SetWindowText(upload_label_hwnd, upload_progress_message);
 		enableButtons(true, false, false);
 		break;
 	}
@@ -139,7 +143,6 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		if ((HWND)lParam == ok_button_hwnd) {
 			enableButtons(false, false, false);
 			SetWindowText(upload_label_hwnd, L"");
-			SetWindowText(upload_text_hwnd, L"");
 			button_clicked = IDOK;
 			upload_window_choose_variable.notify_one();
 			break;
@@ -147,7 +150,6 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		if ((HWND)lParam == yes_button_hwnd) {
 			enableButtons(false, false, false);
 			SetWindowText(upload_label_hwnd, L"");
-			SetWindowText(upload_text_hwnd, L"");
 			button_clicked = IDYES;
 			upload_window_choose_variable.notify_one();
 			break;
@@ -155,7 +157,6 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		if ((HWND)lParam == cancel_button_hwnd) {
 			enableButtons(false, false, false);
 			SetWindowText(upload_label_hwnd, L"");
-			SetWindowText(upload_text_hwnd, L"");
 			button_clicked = IDCANCEL;
 			upload_window_choose_variable.notify_one();
 			break;
@@ -271,22 +272,9 @@ void UploadWindow::windowThread()
 	upload_label_hwnd = CreateWindow(
 	    WC_STATIC,
 	    TEXT(""),
-	    WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE,
+	    WS_CHILD | WS_VISIBLE,
 	    x_pos,
 	    y_pos + 50,
-	    x_size - 20,
-	    40,
-	    upload_window_hwnd,
-	    NULL,
-	    NULL,
-	    NULL);
-
-	upload_text_hwnd = CreateWindow(
-	    WC_EDIT,
-	    TEXT("test text"),
-	    WS_CHILD | WS_VISIBLE | WS_DISABLED,
-	    x_pos,
-	    y_pos + 50 + 50,
 	    x_size - 20,
 	    90,
 	    upload_window_hwnd,
@@ -370,56 +358,48 @@ void UploadWindow::uploadFinished()
 {
 	button_clicked = 0;
 	PostMessage(upload_window_hwnd, CUSTOM_UPLOAD_FINISHED, NULL, NULL);
-	return;
 }
 
 void UploadWindow::uploadStarted()
 {
 	button_clicked = 0;
 	PostMessage(upload_window_hwnd, CUSTOM_UPLOAD_STARTED, NULL, NULL);
-	return;
 }
 
 void UploadWindow::uploadFailed()
 {
 	button_clicked = 0;
 	PostMessage(upload_window_hwnd, CUSTOM_UPLOAD_FAILED, NULL, NULL);
-	return;
 }
 
 void UploadWindow::uploadCanceled()
 {
 	button_clicked = 0;
 	PostMessage(upload_window_hwnd, CUSTOM_UPLOAD_CANCELED, NULL, NULL);
-	return;
 }
 
 void UploadWindow::savingFinished()
 {
 	button_clicked = 0;
 	PostMessage(upload_window_hwnd, CUSTOM_SAVED_DUMP, NULL, NULL);
-	return;
 }
 
 void UploadWindow::savingStarted()
 {
 	button_clicked = 0;
 	PostMessage(upload_window_hwnd, CUSTOM_SAVE_STARTED, NULL, NULL);
-	return;
 }
 
 void UploadWindow::savingFailed()
 {
 	button_clicked = 0;
 	PostMessage(upload_window_hwnd, CUSTOM_SAVING_DUMP_FAILED, NULL, NULL);
-	return;
 }
 
 void UploadWindow::crashCatched()
 {
 	button_clicked = 0;
 	PostMessage(upload_window_hwnd, CUSTOM_CATCHED_CRASH, NULL, NULL);
-	return;
 }
 
 int UploadWindow::waitForUserChoise()
@@ -435,21 +415,18 @@ int UploadWindow::waitForUserChoise()
 	return button_clicked;
 }
 
-bool UploadWindow::setDumpFileName(const std::wstring& new_file_name)
+void UploadWindow::setDumpFileName(const std::wstring& new_file_name)
 {
 	file_name = new_file_name;
-	return true;
 }
 
-bool UploadWindow::setTotalBytes(int new_total)
+void UploadWindow::setTotalBytes(long long new_total)
 {
 	total_bytes_to_send = new_total;
-	return true;
 }
 
-bool UploadWindow::setUploadProgress(int sent_amount)
+void UploadWindow::setUploadProgress(long long sent_amount)
 {
 	bytes_sent = sent_amount;
 	PostMessage(upload_window_hwnd, CUSTOM_PROGRESS_MSG, NULL, NULL);
-	return true;
 }
