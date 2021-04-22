@@ -158,10 +158,6 @@ void Process_WIN::memorydump_worker() {
 			}
 		}
 		SetEvent(mdf);
-
-		TerminateProcess(hdl, 1);
-		CloseHandle(hdl);
-		hdl = INVALID_HANDLE_VALUE;
 	} else {
 		DWORD last_error = GetLastError();
 		log_info << "Memory dump worker exited wait ret = " << ret << ", last error = " << last_error << std::endl;

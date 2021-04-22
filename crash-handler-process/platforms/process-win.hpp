@@ -29,8 +29,10 @@ private:
 	std::thread *memorydump;
 	std::mutex mtx;
 	HANDLE hdl;
-	HANDLE mds;
-	HANDLE mdf;
+	
+	HANDLE mds;  // Event set by crashed process to initiate memory dump
+	HANDLE mdf;  // Event to inform crashed process what memory dump finished
+
 	std::wstring memorydumpPath;
 	HWND getTopWindow();
 
