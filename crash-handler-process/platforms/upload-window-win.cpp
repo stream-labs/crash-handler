@@ -90,7 +90,7 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 	case CUSTOM_SAVED_DUMP: {
-		swprintf(upload_progress_message, L"Memory dump saved successfully.\n\n"
+		swprintf(upload_progress_message, L"Additional debug information saved successfully.\n\n"
 		"Continue with upload?\n\n"
 		"File size: %.1fMb", (float)total_bytes_to_send/1024/1024);
 		SetWindowText(upload_label_hwnd, upload_progress_message);
