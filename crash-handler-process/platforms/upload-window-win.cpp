@@ -55,11 +55,12 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
-void UploadWindow::enableButtons(bool ok_enabled, bool yes_enabled, bool cancel_enabled)
+void UploadWindow::showButtons(bool ok_enabled, bool yes_enabled, bool cancel_enabled, bool no_enabled)
 {
-	EnableWindow(ok_button_hwnd, ok_enabled);
-	EnableWindow(yes_button_hwnd, yes_enabled);
-	EnableWindow(cancel_button_hwnd, cancel_enabled);
+	ShowWindow(ok_button_hwnd, ok_enabled ? SW_SHOW:SW_HIDE);
+	ShowWindow(yes_button_hwnd, yes_enabled ? SW_SHOW:SW_HIDE);
+	ShowWindow(cancel_button_hwnd, cancel_enabled ? SW_SHOW:SW_HIDE);
+	ShowWindow(no_button_hwnd, no_enabled ? SW_SHOW:SW_HIDE);
 }
 
 LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -69,12 +70,13 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		PostQuitMessage(0);
 		break;
 	case CUSTOM_CLOSE_MSG:
+		log_info << "UploadWindow close message recieved" << std::endl;
 		DestroyWindow(hwnd);
 		break;
 	case CUSTOM_CAUGHT_CRASH: {
 		SetWindowText(upload_label_hwnd, L"The application just crashed.\n\n"
 		"Would you like to share additional information to the developers?");
-		enableButtons(false, true, true);
+		showButtons(false, true, true, false);
 		SendMessage(progresss_bar_hwnd, PBM_SETBARCOLOR, 0, RGB(49, 195, 162));
 		SendMessage(progresss_bar_hwnd, PBM_SETBKCOLOR, 0, RGB(49, 49, 49));
 		SendMessage(progresss_bar_hwnd, PBM_SETRANGE32, 0, 100);
@@ -94,70 +96,76 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		"Continue with upload?\n\n"
 		"File size: %.1fMb", (float)total_bytes_to_send/1024/1024);
 		SetWindowText(upload_label_hwnd, upload_progress_message);
-		enableButtons(false, true, true);
+		showButtons(false, true, true, false);
 		break;
 	}
 	case CUSTOM_SAVE_STARTED: {
 		swprintf(upload_progress_message, L"Saving... to \"%s\"", file_name.c_str());
 		SetWindowText(upload_label_hwnd, upload_progress_message);
-		enableButtons(false, false, false);
+		showButtons(false, false, false, false);
 		break;
 	}
 	case CUSTOM_SAVING_DUMP_FAILED: {
 		SetWindowText(upload_label_hwnd, L"Failed to save the local debug information.");
-		enableButtons(true, false, false);
+		showButtons(true, false, false, false);
 		break;
 	}
 	case CUSTOM_UPLOAD_STARTED: {
 		SendMessage(progresss_bar_hwnd, PBM_SETRANGE32, 0, 100);
 		SetWindowText(upload_label_hwnd, L"Initializing upload...");
-		enableButtons(false, false, false);
+		showButtons(false, false, false, false);
 		break;
 	}
 	case CUSTOM_UPLOAD_FINISHED: {
 		swprintf(upload_progress_message, L"Successfully uploaded the additional debug information.\n\n"
-		"Please provide this file name to the support: \"%s\".", file_name.c_str());
+		"Please provide this file name to the support."
+		"File: \"%s\".", file_name.c_str());
 		SetWindowText(upload_label_hwnd, upload_progress_message);
-		enableButtons(true, false, false);
+		showButtons(true, false, false, false);
 		break;
 	}
 	case CUSTOM_UPLOAD_CANCELED: {
-		swprintf(upload_progress_message, L"Upload cancleled.\n\n"
-		"You may share the file with our support manually or remove file.\n"
-		"Located: \"%%appdata%\\CrashMemoryDump\\\".\n"
-		"File: \"%s\".", file_name.c_str());
+		swprintf(upload_progress_message, L"Upload cancleled. You may share the file with our support manually.\n\n"
+		"Located: \"%%APPDATA%%\\CrashMemoryDump\\%s\".\n\n"
+		"Press Yes to keep file or No for file to be removed.", file_name.c_str());
 		SetWindowText(upload_label_hwnd, upload_progress_message);
-		enableButtons(true, false, false);
+		showButtons(false, true, false, true);
 		break;
 	}
 	case CUSTOM_UPLOAD_FAILED: {
-		swprintf(upload_progress_message, L"Upload failed.\n\n"
-		"You may share the file with our support manually or remove file.\n"
-		"Located: \"%%appdata%\\CrashMemoryDump\\\".\n"
-		"File: \"%s\".", file_name.c_str());
+		swprintf(upload_progress_message, L"Upload failed. You may share the file with our support manually.\n\n"
+		"Located: \"%%APPDATA%%\\CrashMemoryDump\\%s\".\n\n"
+		"Press Yes to keep file or No for file to be removed.", file_name.c_str());
 		SetWindowText(upload_label_hwnd, upload_progress_message);
-		enableButtons(true, false, false);
+		showButtons(false, true, false, true);
 		break;
 	}
 	case WM_COMMAND: {
 		if ((HWND)lParam == ok_button_hwnd) {
-			enableButtons(false, false, false);
+			showButtons(false, false, false, false);
 			SetWindowText(upload_label_hwnd, L"");
 			button_clicked = IDOK;
 			upload_window_choose_variable.notify_one();
 			break;
 		}
 		if ((HWND)lParam == yes_button_hwnd) {
-			enableButtons(false, false, false);
+			showButtons(false, false, false, false);
 			SetWindowText(upload_label_hwnd, L"");
 			button_clicked = IDYES;
 			upload_window_choose_variable.notify_one();
 			break;
 		}
 		if ((HWND)lParam == cancel_button_hwnd) {
-			enableButtons(false, false, false);
+			showButtons(false, false, false, false);
 			SetWindowText(upload_label_hwnd, L"");
 			button_clicked = IDCANCEL;
+			upload_window_choose_variable.notify_one();
+			break;
+		}
+		if ((HWND)lParam == no_button_hwnd) {
+			showButtons(false, false, false, false);
+			SetWindowText(upload_label_hwnd, L"");
+			button_clicked = IDNO;
 			upload_window_choose_variable.notify_one();
 			break;
 		}
@@ -167,6 +175,10 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		if (!upload_window_hwnd) {
 			button_clicked = IDOK;
 			upload_window_choose_variable.notify_one();
+		} else {
+			if (button_clicked != 0) {
+				upload_window_choose_variable.notify_one();
+			}
 		}
 		break;
 	}
@@ -181,8 +193,10 @@ UploadWindow::~UploadWindow()
 {
 	if (window_thread) {
 		PostMessage(upload_window_hwnd, CUSTOM_CLOSE_MSG, 0, 0);
-		if (window_thread->joinable())
+		if (window_thread->joinable()) {
 			window_thread->join();
+			window_thread = nullptr;
+		}
 	}
 };
 
@@ -321,11 +335,22 @@ void UploadWindow::windowThread()
 	    NULL,
 	    NULL);
 
+	no_button_hwnd = CreateWindow(
+	    WC_BUTTON,
+	    L"No",
+	    WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
+	    x_size - 110,
+	    y_size - 50,
+	    100,
+	    40,
+	    upload_window_hwnd,
+	    NULL,
+	    NULL,
+	    NULL);
+
 	ShowWindow(upload_window_hwnd, SW_SHOWNORMAL);
 	UpdateWindow(upload_window_hwnd);
-	EnableWindow(ok_button_hwnd, false);
-	EnableWindow(yes_button_hwnd, false);
-	EnableWindow(cancel_button_hwnd, false);
+	showButtons(false, false, false, false);
 
 	upload_window_choose_variable.notify_one();
 	MSG msg;

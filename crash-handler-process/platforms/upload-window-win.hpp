@@ -47,7 +47,7 @@ class UploadWindow
 	LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	
 	private:
-	void enableButtons(bool ok_enabled, bool yes_enabled, bool cancel_enabled);
+	void showButtons(bool ok_enabled, bool yes_enabled, bool cancel_enabled, bool no_enabled);
 	void windowThread();
 	static UploadWindow* instance;
 
@@ -58,6 +58,7 @@ class UploadWindow
 	HWND      ok_button_hwnd     = NULL;
 	HWND      yes_button_hwnd    = NULL;
 	HWND      cancel_button_hwnd = NULL;
+	HWND      no_button_hwnd     = NULL;
 	int       width              = 500;
 	int       height             = 250;
 

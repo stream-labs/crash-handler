@@ -132,33 +132,43 @@ void Process_WIN::memorydump_worker() {
 	HANDLE handles[] = { hdl, mds };
 	DWORD ret = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
 	if (ret - WAIT_OBJECT_0 == 1) {
+		alive = false;
 		log_info << "Memory dump worker event recieved" << std::endl;
+		bool remove_dump_file = false;
 		if (std::filesystem::exists(memorydumpPath) && UploadWindow::getInstance()->createWindow()) {
-			alive = false;
 			UploadWindow::getInstance()->crashCaught();
 			log_info << "Window created. Waiting for user decision" << std::endl;
 			if (UploadWindow::getInstance()->waitForUserChoise() == IDYES) {
 				log_info << "User selected OK for saving a dump" << std::endl;
-				UploadWindow::getInstance()->savingStarted();
 
 				const std::wstring file_name = generateCrashDumpFileName();
+				log_info << "File name for upload generated : " << std::string(file_name.begin(), file_name.end()) << std::endl;
 				UploadWindow::getInstance()->setDumpFileName(file_name);
+				UploadWindow::getInstance()->savingStarted();
 
 				bool dump_saved = Util::saveMemoryDump(PID, memorydumpPath, file_name);
 				if (dump_saved) {
 					UploadWindow::getInstance()->savingFinished();
 					if (UploadWindow::getInstance()->waitForUserChoise() == IDYES) {
 						Util::uploadToAWS(memorydumpPath, file_name);
-						UploadWindow::getInstance()->waitForUserChoise();
-						Util::removeMemoryDump(memorydumpPath, file_name);
 					} else {
-						UploadWindow::getInstance()->uploadCanceled();
-						UploadWindow::getInstance()->waitForUserChoise();
 						log_info << "User selected Cancel for uploading a dump" << std::endl;
+						UploadWindow::getInstance()->uploadCanceled();
+					}
+
+					if (UploadWindow::getInstance()->waitForUserChoise() != IDYES) {
+						log_info << "User not selected Yes to keep file" << std::endl;
+						remove_dump_file = true;
 					}
 				} else {
 					UploadWindow::getInstance()->savingFailed();
 					UploadWindow::getInstance()->waitForUserChoise();
+				}
+
+				if (dump_saved && remove_dump_file) {
+					if (!Util::removeMemoryDump(memorydumpPath, file_name)) {
+						log_error << "Failed to auto remove dump file after upload " << std::endl;
+					}
 				}
 			} else {
 				log_info << "User selected Cancel for saving a dump" << std::endl;
@@ -168,7 +178,7 @@ void Process_WIN::memorydump_worker() {
 		UploadWindow::shutdownInstance();
 	} else {
 		DWORD last_error = GetLastError();
-		log_info << "Memory dump worker exited wait ret = " << ret << ", last error = " << last_error << std::endl;
+		log_error << "Memory dump worker exited wait ret = " << ret << ", last error = " << last_error << std::endl;
 	}
 }
 
