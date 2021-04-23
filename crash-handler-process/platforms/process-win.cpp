@@ -21,6 +21,7 @@
 #include "upload-window-win.hpp"
 #include <iomanip>
 #include <ctime>
+#include <filesystem>
 #include "Shlobj.h"
 #pragma comment(lib, "Shell32.lib")
 
@@ -115,26 +116,32 @@ void Process_WIN::startMemoryDumpMonitoring(const std::wstring& eventName, const
 	memorydump = new std::thread(&Process_WIN::memorydump_worker, this);
 }
 
+const std::wstring generateCrashDumpFileName()
+{
+	std::time_t t = std::time(nullptr);
+	wchar_t wstr[100];
+	std::wstring file_name = L"crash_memory_dump.dmp";
+	if (std::wcsftime(wstr, 100, L"%Y%M%d_%H%M%S.dmp", std::localtime(&t))) {
+		file_name = wstr;
+	}
+	return file_name;
+}
+
 void Process_WIN::memorydump_worker() {
 	log_info << "Memory dump worker started" << std::endl;
 	HANDLE handles[] = { hdl, mds };
 	DWORD ret = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
 	if (ret - WAIT_OBJECT_0 == 1) {
 		log_info << "Memory dump worker event recieved" << std::endl;
-		alive = false;
-		if (UploadWindow::getInstance()->createWindow()) {
+		if (std::filesystem::exists(memorydumpPath) && UploadWindow::getInstance()->createWindow()) {
+			alive = false;
 			UploadWindow::getInstance()->crashCatched();
 			log_info << "Window created. Waiting for user decision" << std::endl;
 			if (UploadWindow::getInstance()->waitForUserChoise() == IDYES) {
 				log_info << "User selected OK for saving a dump" << std::endl;
 				UploadWindow::getInstance()->savingStarted();
 
-				std::time_t t = std::time(nullptr);
-				wchar_t wstr[100];
-				std::wstring file_name = L"crash_memory_dump.dmp";
-				if(std::wcsftime(wstr, 100, L"%Y%M%d_%H%M%S.dmp", std::localtime(&t))) {
-					 file_name =  wstr;
-				}
+				const std::wstring file_name = generateCrashDumpFileName();
 				UploadWindow::getInstance()->setDumpFileName(file_name);
 
 				bool dump_saved = Util::saveMemoryDump(PID, memorydumpPath, file_name);
@@ -158,11 +165,11 @@ void Process_WIN::memorydump_worker() {
 			}
 		}
 		SetEvent(mdf);
+		UploadWindow::shutdownInstance();
 	} else {
 		DWORD last_error = GetLastError();
 		log_info << "Memory dump worker exited wait ret = " << ret << ", last error = " << last_error << std::endl;
 	}
-	UploadWindow::shutdownInstance();
 }
 
 void Process_WIN::worker() {
