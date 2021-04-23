@@ -28,7 +28,7 @@ UploadWindow* UploadWindow::instance = NULL;
 #define CUSTOM_CLOSE_MSG (WM_USER + 1)
 #define CUSTOM_PROGRESS_MSG (WM_USER + 2)
 
-#define CUSTOM_CATCHED_CRASH (WM_USER + 3)
+#define CUSTOM_CAUGHT_CRASH (WM_USER + 3)
 #define CUSTOM_SAVE_STARTED (WM_USER + 4)
 #define CUSTOM_SAVED_DUMP (WM_USER + 5)
 #define CUSTOM_SAVING_DUMP_FAILED (WM_USER + 6)
@@ -71,7 +71,7 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case CUSTOM_CLOSE_MSG:
 		DestroyWindow(hwnd);
 		break;
-	case CUSTOM_CATCHED_CRASH: {
+	case CUSTOM_CAUGHT_CRASH: {
 		SetWindowText(upload_label_hwnd, L"The application just crashed.\n\n"
 		"Would you like to share additional information to the developers?");
 		enableButtons(false, true, true);
@@ -104,7 +104,7 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 	case CUSTOM_SAVING_DUMP_FAILED: {
-		SetWindowText(upload_label_hwnd, L"Fail to save the local debug information.");
+		SetWindowText(upload_label_hwnd, L"Failed to save the local debug information.");
 		enableButtons(true, false, false);
 		break;
 	}
@@ -396,10 +396,10 @@ void UploadWindow::savingFailed()
 	PostMessage(upload_window_hwnd, CUSTOM_SAVING_DUMP_FAILED, NULL, NULL);
 }
 
-void UploadWindow::crashCatched()
+void UploadWindow::crashCaught()
 {
 	button_clicked = 0;
-	PostMessage(upload_window_hwnd, CUSTOM_CATCHED_CRASH, NULL, NULL);
+	PostMessage(upload_window_hwnd, CUSTOM_CAUGHT_CRASH, NULL, NULL);
 }
 
 int UploadWindow::waitForUserChoise()

@@ -135,7 +135,7 @@ void Process_WIN::memorydump_worker() {
 		log_info << "Memory dump worker event recieved" << std::endl;
 		if (std::filesystem::exists(memorydumpPath) && UploadWindow::getInstance()->createWindow()) {
 			alive = false;
-			UploadWindow::getInstance()->crashCatched();
+			UploadWindow::getInstance()->crashCaught();
 			log_info << "Window created. Waiting for user decision" << std::endl;
 			if (UploadWindow::getInstance()->waitForUserChoise() == IDYES) {
 				log_info << "User selected OK for saving a dump" << std::endl;

@@ -32,7 +32,7 @@ class UploadWindow
 	void setTotalBytes(long long);
 	void setUploadProgress(long long);
 
-	void crashCatched();
+	void crashCaught();
 	void savingFinished();
 	void savingFailed();
 	void savingStarted();
