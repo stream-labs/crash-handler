@@ -17,6 +17,13 @@
 ******************************************************************************/
 
 #include "process-win.hpp"
+#include "../util.hpp"
+#include "upload-window-win.hpp"
+#include <iomanip>
+#include <ctime>
+#include <filesystem>
+#include "Shlobj.h"
+#pragma comment(lib, "Shell32.lib")
 
 struct handle_data {
     unsigned long process_id;
@@ -46,6 +53,10 @@ Process_WIN::Process_WIN(int32_t pid, bool isCritical) {
 	this->hdl = OpenProcess(PROCESS_ALL_ACCESS, FALSE, getPIDDWORD());
 
 	this->checker = new std::thread(&Process_WIN::worker, this);
+
+	this->memorydump = nullptr;
+	this->mds = INVALID_HANDLE_VALUE;
+	this->mdf = INVALID_HANDLE_VALUE;
 }
 
 Process_WIN::~Process_WIN() {
@@ -54,6 +65,17 @@ Process_WIN::~Process_WIN() {
 
 	if (this->checker->joinable())
 		this->checker->join();
+
+	if (memorydump != nullptr && memorydump->joinable())
+		memorydump->join();
+	if (mds && mds != INVALID_HANDLE_VALUE) {
+		CloseHandle(mds);
+		mds = NULL;
+	}
+	if (mdf && mdf != INVALID_HANDLE_VALUE) {
+		CloseHandle(mdf);
+		mdf = NULL;
+	}
 }
 
 int32_t Process_WIN::getPID(void) {
@@ -64,6 +86,101 @@ bool Process_WIN::isCritical(void) {
 	return critical;
 }
 
+void Process_WIN::startMemoryDumpMonitoring(const std::wstring& eventName, const std::wstring& eventFinishedName, const std::wstring& dumpPath) {
+	if (memorydump && memorydump->joinable()) {
+		return;
+	}
+
+	mds = OpenEvent(EVENT_ALL_ACCESS, FALSE, eventName.c_str());
+	if (!mds || mds == INVALID_HANDLE_VALUE) {
+		log_info << "Failed to open event for memory dump " << GetLastError()<< std::endl;
+		return;
+	}
+
+	PSECURITY_DESCRIPTOR securityDescriptor = (PSECURITY_DESCRIPTOR) LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
+	if (InitializeSecurityDescriptor(securityDescriptor, SECURITY_DESCRIPTOR_REVISION)) {
+		if (SetSecurityDescriptorDacl( securityDescriptor, TRUE, NULL, FALSE)) {
+			SECURITY_ATTRIBUTES eventSecurityAttr = {0};
+			eventSecurityAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+			eventSecurityAttr.lpSecurityDescriptor = securityDescriptor;
+			eventSecurityAttr.bInheritHandle = FALSE;
+
+			mdf = CreateEvent( &eventSecurityAttr, TRUE, FALSE, eventFinishedName.c_str());
+			if (!mdf || mdf == INVALID_HANDLE_VALUE) {
+				log_info << "Failed to create event for memory dump finish " << GetLastError()<< std::endl;
+			}
+		}
+	}
+	LocalFree(securityDescriptor);
+	memorydumpPath = dumpPath;
+	memorydump = new std::thread(&Process_WIN::memorydump_worker, this);
+}
+
+const std::wstring generateCrashDumpFileName()
+{
+	std::time_t t = std::time(nullptr);
+	wchar_t wstr[100];
+	std::wstring file_name = L"crash_memory_dump.dmp";
+	if (std::wcsftime(wstr, 100, L"%Y%M%d_%H%M%S.dmp", std::localtime(&t))) {
+		file_name = wstr;
+	}
+	return file_name;
+}
+
+void Process_WIN::memorydump_worker() {
+	log_info << "Memory dump worker started" << std::endl;
+	HANDLE handles[] = { hdl, mds };
+	DWORD ret = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
+	if (ret - WAIT_OBJECT_0 == 1) {
+		alive = false;
+		log_info << "Memory dump worker event recieved" << std::endl;
+		bool remove_dump_file = false;
+		if (std::filesystem::exists(memorydumpPath) && UploadWindow::getInstance()->createWindow()) {
+			UploadWindow::getInstance()->crashCaught();
+			log_info << "Window created. Waiting for user decision" << std::endl;
+			if (UploadWindow::getInstance()->waitForUserChoise() == IDYES) {
+				log_info << "User selected OK for saving a dump" << std::endl;
+
+				const std::wstring file_name = generateCrashDumpFileName();
+				log_info << "File name for upload generated : " << std::string(file_name.begin(), file_name.end()) << std::endl;
+				UploadWindow::getInstance()->setDumpFileName(file_name);
+				UploadWindow::getInstance()->savingStarted();
+
+				bool dump_saved = Util::saveMemoryDump(PID, memorydumpPath, file_name);
+				if (dump_saved) {
+					UploadWindow::getInstance()->savingFinished();
+					if (UploadWindow::getInstance()->waitForUserChoise() == IDYES) {
+						Util::uploadToAWS(memorydumpPath, file_name);
+					} else {
+						log_info << "User selected Cancel for uploading a dump" << std::endl;
+						UploadWindow::getInstance()->uploadCanceled();
+					}
+
+					if (UploadWindow::getInstance()->waitForUserChoise() != IDYES) {
+						remove_dump_file = true;
+					}
+				} else {
+					UploadWindow::getInstance()->savingFailed();
+					UploadWindow::getInstance()->waitForUserChoise();
+				}
+
+				if (dump_saved && remove_dump_file) {
+					if (!Util::removeMemoryDump(memorydumpPath, file_name)) {
+						log_error << "Failed to auto remove dump file after upload " << std::endl;
+					}
+				}
+			} else {
+				log_info << "User selected Cancel for saving a dump" << std::endl;
+			}
+		}
+		SetEvent(mdf);
+		UploadWindow::shutdownInstance();
+	} else {
+		DWORD last_error = GetLastError();
+		log_error << "Memory dump worker exited wait ret = " << ret << ", last error = " << last_error << std::endl;
+	}
+}
+
 void Process_WIN::worker() {
     if (!this->hdl)
         return;
@@ -71,7 +188,7 @@ void Process_WIN::worker() {
     if (!WaitForSingleObject(this->hdl, INFINITE)) {
         std::unique_lock<std::mutex> ul(this->mtx);
         this->alive = false;
-		this->hdl = NULL;
+        this->hdl = NULL;
     }
 }
 
@@ -90,6 +207,19 @@ bool Process_WIN::isResponsive(void) {
 }
 
 void Process_WIN::terminate(void) {
+    if (mds && mds != INVALID_HANDLE_VALUE) {
+        CloseHandle(mds);
+        mds = NULL;
+    }
+
+    if (memorydump != nullptr && memorydump->joinable())
+        memorydump->join();
+
+    if (mdf && mdf != INVALID_HANDLE_VALUE) {
+        CloseHandle(mdf);
+        mdf = NULL;
+    }
+
     if (this->hdl && this->hdl != INVALID_HANDLE_VALUE) {
         TerminateProcess(hdl, 1);
         CloseHandle(hdl);

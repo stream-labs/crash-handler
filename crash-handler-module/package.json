@@ -15,6 +15,6 @@
   "main": "main.js",
   "devDependencies": {},
   "dependencies": {
-    "node-addon-api": "^3.0.2"
+    "node-addon-api": "^3.1.0"
   }
 }

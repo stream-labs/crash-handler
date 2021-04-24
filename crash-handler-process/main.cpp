@@ -24,10 +24,9 @@
 
 #if defined(WIN32)
 	const std::wstring log_file_name = L"\\crash-handler.log";
-	const std::wstring appstate_file_name = L"\\appState";
+
 #else // for __APPLE__ and other 
 	const std::wstring log_file_name = L"/crash-handler.log";
-	const std::wstring appstate_file_name = L"/appState";
 #endif
 
 int main(int argc, char** argv)
@@ -57,7 +56,7 @@ int main(int argc, char** argv)
 		std::cout << "Path for logging = " << std::string(log_path.begin(), log_path.end()) << std::endl;
 		logging_start(log_path);
 		log_info << "=== Started CrashHandler ===" << std::endl;
-		Util::setAppStatePath(cache_path + appstate_file_name);
+		Util::setCachePath(cache_path);
 	}
 
 	ProcessManager* pm = new ProcessManager();

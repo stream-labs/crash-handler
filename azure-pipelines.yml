@@ -13,7 +13,7 @@ variables:
   FullDistributePath: $(SLBuildDirectory)/$(SLDistributeDirectory)
   RuntimeURL: https://atom.io/download/atom-shell
   RuntimeName: iojs
-  RuntimeVersion: v9.3.3
+  RuntimeVersion: v10.4.2
 
 
 jobs:
@@ -43,6 +43,8 @@ jobs:
 
   - script: 'cmake -H. -B"%SLBuildDirectory%" -G"%SLGenerator%" -A x64 -DCMAKE_INSTALL_PREFIX="%FullDistributePath%\crash-handler" -DNODEJS_NAME=%RuntimeName% -DNODEJS_URL=%RuntimeURL% -DNODEJS_VERSION=%RuntimeVersion%'
     displayName: 'Configure crash-handler'
+    env:
+      AWS_CRASH_UPLOAD_BUCKET_KEY: $(aws_crash_upload_bucket_key)
 
   - script: 'node ci/bump-version.js'
     displayName: 'Bump version number'

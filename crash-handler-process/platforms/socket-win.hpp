@@ -26,7 +26,7 @@
 #define WRITING_STATE 2 
 #define INSTANCES 8
 #define PIPE_TIMEOUT 5000
-#define BUFSIZE 128
+#define BUFSIZE 512
 
 typedef struct
 {

@@ -61,6 +61,7 @@ private:
 
     size_t registerProcess(bool isCritical, uint32_t PID);
     void unregisterProcess(uint32_t PID);
+    void registerProcessMemoryDump(uint32_t PID, const std::wstring& eventName, const std::wstring& eventFinishedName, const std::wstring& dumpPath);
 
     void terminateAll(void);
     void terminateNonCritical(void);

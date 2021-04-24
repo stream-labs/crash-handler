@@ -72,6 +72,15 @@ void ProcessManager::watcher_fnc() {
                 unregisterProcess(pid);
                 break;
             }
+            case Action::REGISTERMEMORYDUMP: {
+                uint32_t pid = msg.readUInt32();
+                std::wstring eventName = msg.readWstring();
+                std::wstring eventFinishedName = msg.readWstring();
+                std::wstring dumpPath = msg.readWstring();
+
+                registerProcessMemoryDump((int32_t)pid, eventName, eventFinishedName, dumpPath);
+                break;
+            }
             default:
                 break;
         }
@@ -192,6 +201,24 @@ void ProcessManager::unregisterProcess(uint32_t PID) {
     }
 
     this->processes.erase(it);
+}
+
+void ProcessManager::registerProcessMemoryDump(uint32_t PID, const std::wstring& eventName, const std::wstring& eventFinishedName, const std::wstring& dumpPath) {
+    const std::lock_guard<std::mutex> lock(this->mtx);
+
+    log_info << "requested memory dump on crash for pid = " << PID << std::endl;
+    auto it =
+        std::find_if(this->processes.begin(),
+                    this->processes.end(),
+                    [&PID](std::unique_ptr<Process>& p) {
+            return p->getPID() == PID;
+    });
+
+    if (it == this->processes.end())
+        return;
+
+    log_info << "register for memory dump" << std::endl;
+    (*it)->startMemoryDumpMonitoring(eventName, eventFinishedName, dumpPath);
 }
 
 void ProcessManager::handleCrash(std::wstring path) {
