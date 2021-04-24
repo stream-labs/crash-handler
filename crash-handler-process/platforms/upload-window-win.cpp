@@ -125,17 +125,19 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 	case CUSTOM_UPLOAD_CANCELED: {
-		swprintf(upload_progress_message, L"Upload cancleled. You may share the file with our support manually.\n\n"
-		"Located: \"%%APPDATA%%\\CrashMemoryDump\\%s\".\n\n"
-		"Press Yes to keep file or No for file to be removed.", file_name.c_str());
+		swprintf(upload_progress_message, L"Upload cancleled.\n"
+		"Would you like to remove the file from your system( Press No) ?\n"
+		"Or keep it to share with our support team (Press Yes)?\n"
+		"Located: \"%%APPDATA%%\\CrashMemoryDump\\%s\".", file_name.c_str());
 		SetWindowText(upload_label_hwnd, upload_progress_message);
 		showButtons(false, true, false, true);
 		break;
 	}
 	case CUSTOM_UPLOAD_FAILED: {
-		swprintf(upload_progress_message, L"Upload failed. You may share the file with our support manually.\n\n"
-		"Located: \"%%APPDATA%%\\CrashMemoryDump\\%s\".\n\n"
-		"Press Yes to keep file or No for file to be removed.", file_name.c_str());
+		swprintf(upload_progress_message, L"Upload failed.\n"
+		"Would you like to remove the file from your system( Press No) ?\n"
+		"Or keep it to share with our support team (Press Yes)?\n"
+		"Located: \"%%APPDATA%%\\CrashMemoryDump\\%s\".", file_name.c_str());
 		SetWindowText(upload_label_hwnd, upload_progress_message);
 		showButtons(false, true, false, true);
 		break;

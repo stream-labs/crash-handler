@@ -157,7 +157,6 @@ void Process_WIN::memorydump_worker() {
 					}
 
 					if (UploadWindow::getInstance()->waitForUserChoise() != IDYES) {
-						log_info << "User not selected Yes to keep file" << std::endl;
 						remove_dump_file = true;
 					}
 				} else {
