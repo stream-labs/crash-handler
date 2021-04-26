@@ -6,7 +6,7 @@ ColumnLimit: 120
 
 # Language
 Language: Cpp
-Standard: Auto
+Standard: c++17
 
 # Indentation
 AccessModifierOffset: 0
