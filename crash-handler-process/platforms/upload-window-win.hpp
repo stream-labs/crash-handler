@@ -20,6 +20,8 @@
 #define UPLOADWINDOWUTIL_H
 #include <mutex>
 
+const size_t upload_message_len = 512;
+
 class UploadWindow
 {
 	public:
@@ -69,7 +71,7 @@ class UploadWindow
 	std::thread*            window_thread = nullptr;
 	std::mutex              upload_window_choose_mutex;
 	std::condition_variable upload_window_choose_variable;
-	TCHAR                   upload_progress_message[512] = {0};
+	TCHAR                   upload_progress_message[upload_message_len] = {0};
 };
 
 #endif

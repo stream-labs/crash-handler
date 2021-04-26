@@ -93,12 +93,12 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case CUSTOM_PROGRESS_MSG: {
 		double progress = ((double)bytes_sent) / ((double)total_bytes_to_send / 100.0);
 		PostMessage(progresss_bar_hwnd, PBM_SETPOS, (int)progress, 0);
-		swprintf(upload_progress_message, 512, L"%lld / %lld Kb", bytes_sent / 1024, total_bytes_to_send / 1024);
+		swprintf(upload_progress_message, upload_message_len, L"%lld / %lld Kb", bytes_sent / 1024, total_bytes_to_send / 1024);
 		SetWindowText(upload_label_hwnd, upload_progress_message);
 		break;
 	}
 	case CUSTOM_SAVED_DUMP: {
-		swprintf(upload_progress_message, 512, L"Additional debug information saved successfully.\n\n"
+		swprintf(upload_progress_message, upload_message_len, L"Additional debug information saved successfully.\n\n"
 		"Continue with upload?\n\n"
 		"File size: %.1fMb", (float)total_bytes_to_send/1024/1024);
 		SetWindowText(upload_label_hwnd, upload_progress_message);
@@ -106,7 +106,7 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 	case CUSTOM_SAVE_STARTED: {
-		swprintf(upload_progress_message, 512, L"Saving... to \"%s\"", file_name.c_str());
+		swprintf(upload_progress_message, upload_message_len, L"Saving... to \"%s\"", file_name.c_str());
 		SetWindowText(upload_label_hwnd, upload_progress_message);
 		showButtons(false, false, false, false);
 		break;
@@ -123,7 +123,7 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 	case CUSTOM_UPLOAD_FINISHED: {
-		swprintf(upload_progress_message, 512, L"Successfully uploaded the additional debug information.\n\n"
+		swprintf(upload_progress_message, upload_message_len, L"Successfully uploaded the additional debug information.\n\n"
 		"Please provide this file name to the support."
 		"File: \"%s\".", file_name.c_str());
 		SetWindowText(upload_label_hwnd, upload_progress_message);
@@ -131,7 +131,7 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 	case CUSTOM_UPLOAD_CANCELED: {
-		swprintf(upload_progress_message, 512, L"Upload cancleled.\n"
+		swprintf(upload_progress_message, upload_message_len, L"Upload cancleled.\n"
 		"Would you like to remove the file from your system( Press No) ?\n"
 		"Or keep it to share with our support team (Press Yes)?\n"
 		"Located: \"%%APPDATA%%\\CrashMemoryDump\\%s\".", file_name.c_str());
@@ -140,7 +140,7 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 	case CUSTOM_UPLOAD_FAILED: {
-		swprintf(upload_progress_message, 512, L"Upload failed.\n"
+		swprintf(upload_progress_message, upload_message_len, L"Upload failed.\n"
 		"Would you like to remove the file from your system( Press No) ?\n"
 		"Or keep it to share with our support team (Press Yes)?\n"
 		"Located: \"%%APPDATA%%\\CrashMemoryDump\\%s\".", file_name.c_str());
