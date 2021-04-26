@@ -69,7 +69,7 @@ class UploadWindow
 	std::thread*            window_thread = nullptr;
 	std::mutex              upload_window_choose_mutex;
 	std::condition_variable upload_window_choose_variable;
-	TCHAR                   upload_progress_message[128];
+	TCHAR                   upload_progress_message[512] = {0};
 };
 
 #endif
