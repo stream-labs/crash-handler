@@ -99,7 +99,7 @@ void Process_WIN::startMemoryDumpMonitoring(const std::wstring& eventName, const
 
 	PSECURITY_DESCRIPTOR securityDescriptor = (PSECURITY_DESCRIPTOR) LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
 	if (InitializeSecurityDescriptor(securityDescriptor, SECURITY_DESCRIPTOR_REVISION)) {
-		if (SetSecurityDescriptorDacl( securityDescriptor, TRUE, NULL, FALSE)) {
+		if (SetSecurityDescriptorDacl(securityDescriptor, TRUE, NULL, FALSE)) {
 			SECURITY_ATTRIBUTES eventSecurityAttr = {0};
 			eventSecurityAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
 			eventSecurityAttr.lpSecurityDescriptor = securityDescriptor;

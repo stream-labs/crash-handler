@@ -28,10 +28,10 @@
 using stopper = std::atomic<bool>;
 
 struct ThreadData {
-    bool         isRunnning;
+    bool         isRunnning = false;
     stopper      stop = { false };
-    std::mutex*  mtx;
-    std::thread* worker;
+    std::mutex*  mtx = nullptr;
+    std::thread* worker = nullptr;
 };
 
 class ProcessManager {
@@ -47,8 +47,8 @@ public:
     void sendExitMessage(bool appCrashed);
 
 private:
-    ThreadData* watcher;
-    ThreadData* monitor;
+    ThreadData* watcher = nullptr;
+    ThreadData* monitor = nullptr;
     std::vector<std::unique_ptr<Process>> processes;
     std::mutex mtx;
     std::unique_ptr<Socket> socket;

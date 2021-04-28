@@ -34,9 +34,9 @@ public:
 	virtual ~Process() {};
 
 protected:
-	int32_t  PID;
-	bool     critical;
-	bool     alive;
+	int32_t  PID = 0;
+	bool     critical = false;
+	bool     alive = false;
 
 public:
 	virtual int32_t  getPID(void)     = 0;
