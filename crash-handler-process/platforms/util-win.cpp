@@ -20,6 +20,7 @@
 #include "../logger.hpp"
 #include <windows.h>
 #include <string>
+#include <chrono>
 #include <fstream>
 #include <sstream>
 #include <codecvt>
@@ -333,12 +334,11 @@ bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std:
 {
 	bool dumpSaved = false;
 
-	EXCEPTION_POINTERS*   pep              = NULL;
 	std::filesystem::path memoryDumpFolder = dumpPath;
 	std::filesystem::path memoryDumpFile   = memoryDumpFolder;
 	memoryDumpFile.append(dumpFileName);
 
-	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS | PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, FALSE, pid);
 	if (hProcess == NULL || hProcess == INVALID_HANDLE_VALUE) {
 		log_info << "Failed to open process to get memory dump." << std::endl;
 		return false;
@@ -377,18 +377,11 @@ bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std:
 	    NULL);
 
 	if (hFile && hFile != INVALID_HANDLE_VALUE) {
-		MINIDUMP_EXCEPTION_INFORMATION mdei = {0};
-
-		mdei.ThreadId          = 0;
-		mdei.ExceptionPointers = pep;
-		mdei.ClientPointers    = FALSE;
-
 		const DWORD CD_Flags = MiniDumpWithFullMemory | MiniDumpWithHandleData | MiniDumpWithThreadInfo
 		                       | MiniDumpWithProcessThreadData | MiniDumpWithFullMemoryInfo
-		                       | MiniDumpWithUnloadedModules | MiniDumpWithFullAuxiliaryState
-		                       | MiniDumpIgnoreInaccessibleMemory | MiniDumpWithTokenInformation;
+		                       | MiniDumpWithUnloadedModules | MiniDumpIgnoreInaccessibleMemory ;
 
-		BOOL ret = MiniDumpWriteDump(hProcess, pid, hFile, (MINIDUMP_TYPE)CD_Flags, (pep != 0) ? &mdei : 0, 0, 0);
+		BOOL ret = MiniDumpWriteDump(hProcess, pid, hFile, (MINIDUMP_TYPE)CD_Flags, 0, 0, 0);
 		if (ret) {
 			dumpSaved = true;
 			long long bytes_to_send = std::filesystem::file_size(memoryDumpFile);
@@ -411,6 +404,7 @@ bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std:
 std::mutex              upload_mutex;
 std::condition_variable upload_variable;
 long long               total_sent_amout = 0;
+std::chrono::steady_clock::time_point last_progress_update;
 
 void PutObjectAsyncFinished(
     const Aws::S3::S3Client*                                      s3Client,
@@ -438,7 +432,12 @@ bool PutObjectAsync(
 	Aws::S3::Model::PutObjectRequest request;
 	request.SetDataSentEventHandler([](const Aws::Http::HttpRequest*, long long amount) {
 		total_sent_amout += amount;
-		UploadWindow::getInstance()->setUploadProgress(total_sent_amout);
+
+		std::chrono::steady_clock::time_point now_time = std::chrono::steady_clock::now();
+		if (std::chrono::duration_cast<std::chrono::milliseconds>(now_time - last_progress_update).count() > 500) {
+			last_progress_update = now_time;
+			UploadWindow::getInstance()->setUploadProgress(total_sent_amout);
+		}
 	});
 
 	request.SetBucket(bucket_name);

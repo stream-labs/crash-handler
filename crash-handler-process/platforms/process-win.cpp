@@ -227,6 +227,7 @@ void Process_WIN::terminate(void) {
 
     if (this->checker->joinable())
         this->checker->join();
+    log_debug << "Terminated pid : " << PID << std::endl;
 }
 
 DWORD Process_WIN::getPIDDWORD(void) {
