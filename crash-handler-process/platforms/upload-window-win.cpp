@@ -94,7 +94,6 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		showButtons(false, true, true, false);
 		enableButtons(false, true, true, false);
 		SendMessage(progresss_bar_hwnd, PBM_SETBARCOLOR, 0, RGB(49, 195, 162));
-		//SendMessage(progresss_bar_hwnd, PBM_SETBKCOLOR, 0, RGB(49, 49, 49));
 		SendMessage(progresss_bar_hwnd, PBM_SETRANGE32, 0, 100);
 		SendMessage(progresss_bar_hwnd, PBM_SETPOS, 0, 0);
 		ShowWindow(progresss_bar_hwnd, SW_SHOW);
