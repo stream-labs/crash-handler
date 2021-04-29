@@ -72,7 +72,7 @@ void Util::restartApp(std::wstring path) {
 	slobs_path += L"\\Streamlabs OBS.exe";
 	log_info << "Slobs path to restart: " << std::string(slobs_path.begin(), slobs_path.end()) << std::endl;
 	CreateProcess(slobs_path.c_str(),
-		L"",
+		NULL,
 		NULL,
 		NULL,
 		FALSE,

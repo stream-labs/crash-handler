@@ -47,8 +47,8 @@ private:
 	std::wstring name;
 	std::wstring name_exit;
 
-    BOOL Socket_WIN::ConnectToNewClient(HANDLE hPipe, LPOVERLAPPED lpo);
-    void Socket_WIN::DisconnectAndReconnect(DWORD i);
+    BOOL ConnectToNewClient(HANDLE hPipe, LPOVERLAPPED lpo);
+    void DisconnectAndReconnect(DWORD i);
     bool initPipe(int& i);
 
 public:
