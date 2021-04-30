@@ -40,6 +40,7 @@ int main(int argc, char** argv)
 	std::wstring cache_path = L"";
 	std::string version;
 	std::string isDevEnv;
+	std::wstring ipc_path;
 
 	std::cout << "Launched with number of arguments = " << argc << std::endl;
 
@@ -57,6 +58,11 @@ int main(int argc, char** argv)
 		logging_start(log_path);
 		log_info << "=== Started CrashHandler ===" << std::endl;
 		Util::setCachePath(cache_path);
+	}
+	if (argc >= 6) {
+		ipc_path = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(argv[5]);
+		log_info << "ipc path option recieve : " << std::string(ipc_path.begin(), ipc_path.end()) << std::endl;
+		Socket::set_ipc_path(ipc_path);
 	}
 
 	ProcessManager* pm = new ProcessManager();

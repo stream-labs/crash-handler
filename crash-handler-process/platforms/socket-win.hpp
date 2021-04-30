@@ -46,6 +46,7 @@ private:
     HANDLE hEvents[INSTANCES];
 	std::wstring name;
 	std::wstring name_exit;
+	static std::wstring ipc_path;
 
     BOOL ConnectToNewClient(HANDLE hPipe, LPOVERLAPPED lpo);
     void DisconnectAndReconnect(DWORD i);
@@ -59,4 +60,5 @@ public:
     virtual std::vector<char> read() override;
 	virtual int write(bool exit, std::vector<char> buffer) override;
 	virtual void disconnect() override;
+	friend void Socket::set_ipc_path(const std::wstring& new_ipc_path);
 };
