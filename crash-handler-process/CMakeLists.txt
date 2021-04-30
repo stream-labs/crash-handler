@@ -1,10 +1,15 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.17)
 PROJECT(crash-handler-process VERSION 0.0.1)
 
-set(CMAKE_CXX_STANDARD 17)
-include(FetchContent)
+set(CXX_STANDARD_REQUIRED ON)
+IF(WIN32)
+	set(CMAKE_CXX_STANDARD 20)
+ELSE(APPLE)
+	set(CMAKE_CXX_STANDARD 17)
+ENDIF()
 
 IF(WIN32)
+	include(FetchContent)
 	# Nlohmann JSON (modern JSON for C++)
 	FetchContent_Declare(
 	nlohmannjson
@@ -77,9 +82,6 @@ IF(WIN32)
 ELSE(APPLE)
 	ADD_EXECUTABLE(crash-handler-process ${PROJECT_SOURCE} ${APPLE_SOURCE})
 ENDIF()
-
-set_property(TARGET crash-handler-process PROPERTY CXX_STANDARD 17)
-set_property(TARGET crash-handler-process PROPERTY CXX_STANDARD_REQUIRED ON)
 
 IF(WIN32)
 	# Include/link crash manager dependencies

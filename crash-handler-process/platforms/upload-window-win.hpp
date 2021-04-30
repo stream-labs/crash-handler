@@ -22,6 +22,15 @@
 
 const size_t upload_message_len = 512;
 
+class DialogButtonsState
+{
+	public:
+	bool ok;
+	bool cancel;
+	bool yes;
+	bool no;
+};
+
 class UploadWindow
 {
 	public:
@@ -49,7 +58,8 @@ class UploadWindow
 	LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	
 	private:
-	void showButtons(bool ok_enabled, bool yes_enabled, bool cancel_enabled, bool no_enabled);
+	void showButtons(const DialogButtonsState&);
+	void enableButtons(const DialogButtonsState&);
 	void windowThread();
 	static UploadWindow* instance;
 
