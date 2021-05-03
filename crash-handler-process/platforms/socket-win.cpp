@@ -23,6 +23,12 @@
 #include <vector>
 #include "../logger.hpp"
 
+std::wstring Socket_WIN::ipc_path;
+
+void Socket::set_ipc_path(const std::wstring& new_ipc_path) {
+	Socket_WIN::ipc_path = new_ipc_path;
+}
+
 BOOL Socket_WIN::ConnectToNewClient(HANDLE hPipe, LPOVERLAPPED lpo)
 {
 	BOOL fConnected, fPendingIO = FALSE;
@@ -68,7 +74,7 @@ void Socket_WIN::DisconnectAndReconnect(DWORD i)
 }
 
 Socket_WIN::Socket_WIN() {
-	this->name = L"\\\\.\\pipe\\slobs-crash-handler";
+	this->name = ipc_path;
 	this->name_exit = L"\\\\.\\pipe\\exit-slobs-crash-handler";
 	int retries = 5;
 

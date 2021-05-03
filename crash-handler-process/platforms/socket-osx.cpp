@@ -1,7 +1,13 @@
 #include "socket-osx.hpp"
 
+std::wstring Socket_OSX::ipc_path;
+
+void Socket::set_ipc_path(const std::wstring& new_ipc_path) {
+	Socket_OSX::ipc_path = new_ipc_path;
+}
+
 Socket_OSX::Socket_OSX() {
-	this->name = "/tmp/slobs-crash-handler";
+	this->name = std::string(ipc_path.begin(), ipc_path.end());
 	this->name_exit = "/tmp/exit-slobs-crash-handler";
 
 	remove(this->name.c_str());

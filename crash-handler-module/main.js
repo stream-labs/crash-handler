@@ -4,9 +4,7 @@ const crash_handler = require('./crash-handler.node');
 const net = require('net');
 const fs = require('fs');
 
-const socket_name = process.platform === "win32" ?
-'\\\\.\\pipe\\slobs-crash-handler' :
-'/tmp/slobs-crash-handler';
+let socket_name = '';
 
 function tryConnect(buffer, attempt = 5, waitMs = 100) {
     try {
@@ -25,7 +23,7 @@ function tryConnect(buffer, attempt = 5, waitMs = 100) {
 }
 
 function registerProcess(pid, isCritial = false) {
-    console.log('register process');
+    console.log('[crash-handler] Register process ' + pid);
     const buffer = new Buffer.alloc(6);
     let offset = 0;
     buffer.writeUInt8(0, offset++);
@@ -36,7 +34,7 @@ function registerProcess(pid, isCritial = false) {
 }
 
 function unregisterProcess(pid) {
-    console.log('unregister process');
+    console.log('[crash-handler] Unregister process' + pid);
     const buffer = new Buffer.alloc(5);
     let offset = 0;
     buffer.writeUInt8(1, offset++);
@@ -53,8 +51,19 @@ async function terminateCrashHandler(pid) {
     tryConnect(buffer);
 }
 
-function startCrashHandler(workingDirectory, version, isDevEnv, cachePath = "") {
+function startCrashHandler(workingDirectory, version, isDevEnv, cachePath = "", socket_prefix = "") {
+    console.log('[crash-handler] Spawn crash handler');
     const { spawn } = require('child_process');
+
+    if (socket_prefix.length > 0 ) {
+      socket_name = process.platform === "win32" ?
+      '\\\\.\\pipe\\'+socket_prefix+'-crash-handler' :
+      '/tmp/'+socket_prefix+'-crash-handler'
+    } else {
+      socket_name = process.platform === "win32" ?
+      '\\\\.\\pipe\\slobs-crash-handler' :
+      '/tmp/slobs-crash-handler'
+    }
 
     try {
       fs.unlinkSync(socket_name);
@@ -67,6 +76,8 @@ function startCrashHandler(workingDirectory, version, isDevEnv, cachePath = "") 
 
     if ( cachePath.length > 0 ) 
       spawnArguments.push( cachePath );
+
+    spawnArguments.push( socket_name );
 
     const subprocess = spawn(processPath +
       '/crash-handler-process', spawnArguments, {
