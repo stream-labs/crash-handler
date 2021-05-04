@@ -31,16 +31,24 @@ void Process_OSX::startMemoryDumpMonitoring(const std::wstring& eventName, const
 	return;
 }
 
-bool Process_OSX::isAlive(void) {
+int Process_OSX::isAlive(void) {
 	struct proc_bsdinfo proc;
 	int st = proc_pidinfo(PID, PROC_PIDTBSDINFO, 0,
 				&proc, PROC_PIDTBSDINFO_SIZE);
 	if (st == PROC_PIDTBSDINFO_SIZE && (strcmp(proc.pbi_name, "obs64") == 0 ||
 	strncmp(proc.pbi_name, "Electron", strlen("Electron")) == 0 || // DEV env
 	strncmp(proc.pbi_name, "Streamlabs", strlen("Streamlabs")) == 0)) // PRODUCTION env
-		return true;
+	{
+		log_info << "Process_OSX::isAlive true [" << proc.pbi_name << "]" << " status " << proc.pbi_status << " xstatus: " << proc.pbi_xstatus << std::endl;
+		return 1;
+	}
+	if (proc.pbi_status == 1 || proc.pbi_xstatus == 2)	{
+		log_info << "Process_OSX::isAlive FALSE [" << proc.pbi_name << "]" << " status " << proc.pbi_status << " xstatus: " << proc.pbi_xstatus << std::endl;
+		return 0;
+	}
+	log_info << "Process_OSX::isAlive process [" << PID << "]" << " EXIT OK " << std::endl;
 
-	return false;
+	return 2;
 }
 
 void Process_OSX::terminate(void) {

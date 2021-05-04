@@ -192,9 +192,9 @@ void Process_WIN::worker() {
     }
 }
 
-bool Process_WIN::isAlive(void) {
+int Process_WIN::isAlive(void) {
     std::unique_lock<std::mutex> ul(this->mtx);
-    return this->alive;
+    return this->alive ? 1 : 0;
 }
 
 bool Process_WIN::isResponsive(void) {
