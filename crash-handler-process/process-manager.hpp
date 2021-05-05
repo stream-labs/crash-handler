@@ -66,3 +66,4 @@ private:
     void terminateAll(bool isNice=false);
     void terminateNonCritical(void);
 };
+

@@ -58,7 +58,7 @@ void ProcessManager::watcher_fnc() {
         Message msg(buffer);
         switch (static_cast<Action>(msg.readUInt8())) {
             case Action::REGISTER: {
-				log_info << "watcher_fnc received REGISTER" << std::endl;
+                log_info << "watcher_fnc received REGISTER" << std::endl;
                 bool isCritical = msg.readBool();
                 uint32_t pid = msg.readUInt32();
                 size_t size = registerProcess(isCritical, (int32_t)pid);
@@ -69,31 +69,29 @@ void ProcessManager::watcher_fnc() {
                 break;
             }
             case Action::UNREGISTER: {
-				log_info << "watcher_fnc received UNREGISTER" << std::endl;
+            log_info << "watcher_fnc received UNREGISTER" << std::endl;
 		        uint32_t pid = msg.readUInt32();
                 unregisterProcess(pid);
                 break;
             }
             case Action::REGISTERMEMORYDUMP: {
-				log_info << "watcher_fnc received REGISTERMEMORYDUMP" << std::endl;
-
+                log_info << "watcher_fnc received REGISTERMEMORYDUMP" << std::endl;
                 uint32_t pid = msg.readUInt32();
                 std::wstring eventName = msg.readWstring();
                 std::wstring eventFinishedName = msg.readWstring();
                 std::wstring dumpPath = msg.readWstring();
-
                 registerProcessMemoryDump((int32_t)pid, eventName, eventFinishedName, dumpPath);
                 break;
             }
-			case Action::TERMINATE: {
-				uint32_t pid = msg.readUInt32();
-				log_info << "watcher_fnc received TERMINATE" << std::endl;
-				this->stopMonitoring();
-        		this->watcher->stop = true;
-				this->terminateAll(true);
-        		this->sendExitMessage(false);
-				break;
-			}
+           case Action::TERMINATE: {
+               uint32_t pid = msg.readUInt32();
+               log_info << "watcher_fnc received TERMINATE" << std::endl;
+               this->stopMonitoring();
+               this->watcher->stop = true;
+               this->terminateAll(true);
+               this->sendExitMessage(false);
+               break;
+            }
             default:
                 break;
         }
@@ -275,13 +273,13 @@ void ProcessManager::sendExitMessage(bool appCrashed) {
 }
 
 void ProcessManager::terminateAll(bool isNice) {
-	log_info << "ProcessManager::terminateAll, isNice: " << isNice << std::endl;
-    for (auto & process : this->processes) {
-		if (!isNice)
-	    	process->terminate();
-		else
-			process->terminateNicely();
-	}
+   log_info << "ProcessManager::terminateAll, isNice: " << isNice << std::endl;
+   for (auto & process : this->processes) {
+    if (!isNice)
+     process->terminate();
+    else
+     process->terminateNicely();
+   }
 }
 
 void ProcessManager::terminateNonCritical(void) {

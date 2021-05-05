@@ -44,7 +44,7 @@ function unregisterProcess(pid) {
 }
 
 async function terminateCrashHandler(pid) {
-	console.log('[crash-handler] terminateCrashHandler');
+    console.log('[crash-handler] terminateCrashHandler');
     const buffer = new Buffer.alloc(5);
     let offset = 0;
     buffer.writeUInt8(3, offset++);
