@@ -42,13 +42,8 @@ int Process_OSX::isAlive(void) {
 		log_info << "Process_OSX::isAlive true [" << proc.pbi_name << "]" << " status " << proc.pbi_status << " xstatus: " << proc.pbi_xstatus << std::endl;
 		return 1;
 	}
-	if (proc.pbi_status == 1 || proc.pbi_xstatus == 2)	{
-		log_info << "Process_OSX::isAlive FALSE [" << proc.pbi_name << "]" << " status " << proc.pbi_status << " xstatus: " << proc.pbi_xstatus << std::endl;
-		return 0;
-	}
-	log_info << "Process_OSX::isAlive process [" << PID << "]" << " EXIT OK " << std::endl;
-
-	return 2;
+	log_info << "Process_OSX::isAlive FALSE [" << proc.pbi_name << "]" << " status " << proc.pbi_status << " xstatus: " << proc.pbi_xstatus << std::endl;
+	return 0;
 }
 
 void Process_OSX::terminate(void) {
