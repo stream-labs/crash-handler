@@ -63,6 +63,6 @@ private:
     void unregisterProcess(uint32_t PID);
     void registerProcessMemoryDump(uint32_t PID, const std::wstring& eventName, const std::wstring& eventFinishedName, const std::wstring& dumpPath);
 
-    void terminateAll(void);
+    void terminateAll(bool isNice=false);
     void terminateNonCritical(void);
 };

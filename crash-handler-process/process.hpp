@@ -45,4 +45,5 @@ public:
 	virtual int     isAlive(void)    = 0;
     virtual bool     isResponsive(void) = 0;
     virtual void     terminate(void)  = 0;
+	virtual void	 terminateNicely(void) = 0;
 };
