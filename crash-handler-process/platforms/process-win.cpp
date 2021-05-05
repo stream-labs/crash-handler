@@ -192,9 +192,9 @@ void Process_WIN::worker() {
     }
 }
 
-bool Process_WIN::isAlive(void) {
+int Process_WIN::isAlive(void) {
     std::unique_lock<std::mutex> ul(this->mtx);
-    return this->alive;
+    return this->alive ? 1 : 0;
 }
 
 bool Process_WIN::isResponsive(void) {
@@ -228,6 +228,10 @@ void Process_WIN::terminate(void) {
     if (this->checker->joinable())
         this->checker->join();
     log_debug << "Terminated pid : " << PID << std::endl;
+}
+
+void Process_WIN::terminateNicely(void) {
+	this->terminate();
 }
 
 DWORD Process_WIN::getPIDDWORD(void) {
