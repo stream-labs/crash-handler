@@ -230,10 +230,6 @@ void Process_WIN::terminate(void) {
     log_debug << "Terminated pid : " << PID << std::endl;
 }
 
-void Process_WIN::terminateNicely(void) {
-	this->terminate();
-}
-
 DWORD Process_WIN::getPIDDWORD(void) {
 	return static_cast<DWORD>(PID);
 }
