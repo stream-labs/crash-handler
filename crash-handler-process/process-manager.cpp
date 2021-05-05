@@ -273,13 +273,13 @@ void ProcessManager::sendExitMessage(bool appCrashed) {
 }
 
 void ProcessManager::terminateAll(bool isNice) {
-   log_info << "ProcessManager::terminateAll, isNice: " << isNice << std::endl;
-   for (auto & process : this->processes) {
-    if (!isNice)
-     process->terminate();
-    else
-     process->terminateNicely();
-   }
+    log_info << "ProcessManager::terminateAll, isNice: " << isNice << std::endl;
+    for (auto & process : this->processes) {
+     if (!isNice)
+       process->terminate();
+     else
+       process->terminateNicely();
+    }
 }
 
 void ProcessManager::terminateNonCritical(void) {
