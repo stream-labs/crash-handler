@@ -7,19 +7,28 @@ const fs = require('fs');
 let socket_name = '';
 
 function tryConnect(buffer, attempt = 5, waitMs = 100) {
-    try {
-      const fd = fs.openSync(socket_name,
-        fs.constants.O_WRONLY | fs.constants.O_DSYNC);
-
-        const socket = new net.Socket({ fd });
-        socket.write(buffer);
-    } catch (error) {
+  try {
+    const socket = net.createConnection({ 
+      path: socket_name, 
+      readable: false, 
+      writable: true });
+    socket.on('connect', function () {
+      socket.write(buffer);
+    });
+    socket.on('error', function () {
       if (attempt > 0) {
         setTimeout(() => {
           tryConnect(buffer, attempt - 1, waitMs * 2);
         }, waitMs);
       }
+    });
+  } catch (error) {
+    if (attempt > 0) {
+      setTimeout(() => {
+        tryConnect(buffer, attempt - 1, waitMs * 2);
+      }, waitMs);
     }
+  }
 }
 
 function registerProcess(pid, isCritial = false) {

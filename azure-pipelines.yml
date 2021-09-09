@@ -13,7 +13,7 @@ variables:
   FullDistributePath: $(SLBuildDirectory)/$(SLDistributeDirectory)
   RuntimeURL: https://atom.io/download/atom-shell
   RuntimeName: iojs
-  RuntimeVersion: v10.4.2
+  RuntimeVersion: v12.1.0
 
 
 jobs:
