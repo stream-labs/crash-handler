@@ -23,8 +23,7 @@
 
 
 #if defined(WIN32)
-	const std::wstring log_file_name = L"\\crash-handler.log";
-
+	const std::string log_file_name = "\\crash-handler.log";
 #else // for __APPLE__ and other 
 	const std::wstring log_file_name = L"/crash-handler.log";
 #endif
@@ -37,22 +36,51 @@ int main(int argc, char** argv)
 	Util::write_pid_file(pid_path);
 
 	std::wstring path;
-	std::wstring cache_path = L"";
-	std::string version;
-	std::string isDevEnv;
+	std::wstring version;
+	std::wstring isDevEnv;
 	std::wstring ipc_path;
 
 	std::cout << "Launched with number of arguments = " << argc << std::endl;
+#if defined(WIN32)
+	LPWSTR *szArglist;
+	int nArgs;
+
+	szArglist = CommandLineToArgvW(GetCommandLineW(), &nArgs);
+	std::cout << "Launched with number of arguments = " << nArgs << std::endl;
+	static thread_local std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 
 	// Frontend passes as non-unicode
+	if (nArgs >= 1)
+		path = szArglist[0];
+	if (nArgs >= 3)
+		version = szArglist[2];
+	if (nArgs >= 4)
+		isDevEnv = szArglist[3];
+	if (nArgs >= 5) {
+		std::string cache_path = converter.to_bytes(szArglist[4]);
+		std::string log_path = cache_path + log_file_name;
+		std::wstring w_log_path = converter.from_bytes(log_path.c_str());
+		std::wstring w_cache_path = converter.from_bytes(cache_path.c_str());
+		logging_start(w_log_path);
+		log_info << "=== Started CrashHandler ===" << std::endl;
+		Util::setCachePath(w_cache_path);
+	}
+	if (nArgs >= 6) {
+		ipc_path = szArglist[5];
+		log_info << "ipc path option recieve : " << std::string(ipc_path.begin(), ipc_path.end()) << std::endl;
+		Socket::set_ipc_path(ipc_path);
+	}
+#else // for __APPLE__ and other
+	static thread_local std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+	// Frontend passes as non-unicode
 	if (argc >= 1)
-		path = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(argv[0]);
+		path = converter.from_bytes(argv[0]);
 	if (argc >= 3)
-		version = argv[2];
+		version = converter.from_bytes(argv[2]);
 	if (argc >= 4)
-		isDevEnv = argv[3];
+		isDevEnv = converter.from_bytes(argv[3]);
 	if (argc >= 5) {
-		cache_path = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(argv[4]);
+		std::wstring cache_path = converter.from_bytes(argv[4]);
 		std::wstring log_path = cache_path + log_file_name;
 		std::cout << "Path for logging = " << std::string(log_path.begin(), log_path.end()) << std::endl;
 		logging_start(log_path);
@@ -60,11 +88,12 @@ int main(int argc, char** argv)
 		Util::setCachePath(cache_path);
 	}
 	if (argc >= 6) {
-		ipc_path = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(argv[5]);
+		ipc_path = converter.from_bytes(argv[5]);
 		log_info << "ipc path option recieve : " << std::string(ipc_path.begin(), ipc_path.end()) << std::endl;
 		Socket::set_ipc_path(ipc_path);
 	}
 
+#endif
 	ProcessManager* pm = new ProcessManager();
 	pm->runWatcher();
 
