@@ -8,20 +8,24 @@ let socket_name = '';
 
 function tryConnect(buffer, attempt = 5, waitMs = 100) {
   try {
-    const socket = net.createConnection({ 
-      path: socket_name, 
-      readable: false, 
-      writable: true });
-    socket.on('connect', function () {
-      socket.write(buffer);
-    });
-    socket.on('error', function () {
-      if (attempt > 0) {
-        setTimeout(() => {
-          tryConnect(buffer, attempt - 1, waitMs * 2);
-        }, waitMs);
-      }
-    });
+    if (process.platform === "win32") {
+      const socket = net.createConnection({
+        path: socket_name,
+        readable: false,
+        writable: true });
+      socket.on('connect', function () {
+        socket.write(buffer);
+      });
+      socket.on('error', function () {
+        if (attempt > 0) {
+          setTimeout(() => {
+            tryConnect(buffer, attempt - 1, waitMs * 2);
+          }, waitMs);
+        }
+      });
+    } else {
+      fs.writeFileSync(socket_name, buffer);
+    }
   } catch (error) {
     if (attempt > 0) {
       setTimeout(() => {
