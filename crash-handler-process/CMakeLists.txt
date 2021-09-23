@@ -56,7 +56,10 @@ IF(WIN32)
 		"${PROJECT_SOURCE_DIR}/platforms/util-win.cpp"
 		"${PROJECT_SOURCE_DIR}/platforms/socket-win.cpp" "${PROJECT_SOURCE_DIR}/platforms/socket-win.hpp"
 		"${PROJECT_SOURCE_DIR}/platforms/process-win.cpp" "${PROJECT_SOURCE_DIR}/platforms/process-win.hpp"
-		"${PROJECT_SOURCE_DIR}/platforms/upload-window-win.cpp" "${PROJECT_SOURCE_DIR}/platforms/upload-window-win.hpp"
+		"${PROJECT_SOURCE_DIR}/platforms/upload-window-win.cpp" "${PROJECT_SOURCE_DIR}/platforms/upload-window-win.hpp"		
+		"${PROJECT_SOURCE_DIR}/minizip/zip.c" "${PROJECT_SOURCE_DIR}/minizip/zip.h"
+		"${PROJECT_SOURCE_DIR}/minizip/ioapi.c" "${PROJECT_SOURCE_DIR}/minizip/ioapi.h"
+		"${PROJECT_SOURCE_DIR}/minizip/iowin32.c" "${PROJECT_SOURCE_DIR}/minizip/iowin32.h"
 	)
 ELSE(APPLE)
 	SET(APPLE_SOURCE
@@ -73,7 +76,7 @@ find_library(COCOA Cocoa)
 # Building
 #############################
 IF(WIN32)
-	ADD_DEFINITIONS(-DUNICODE)
+	ADD_DEFINITIONS(-DUNICODE -DNOCRYPT)
 ENDIF()
 
 IF(WIN32)
@@ -84,10 +87,29 @@ ELSE(APPLE)
 ENDIF()
 
 IF(WIN32)
+	find_package(ZLIB)
+	
+	IF(ZLIB_FOUND)
+		message(STATUS "Found binary: " ${ZLIB_LIBRARIES})
+		message(STATUS "Found include directory: " ${ZLIB_INCLUDE_DIRS})	
+
+		include(FindZLIB_Bin)
+
+		add_custom_command(
+				TARGET crash-handler-process POST_BUILD
+				COMMAND ${CMAKE_COMMAND} -E copy
+						${ZLIB_BIN_FILES}
+						${CMAKE_CURRENT_BINARY_DIR}/$<CONFIGURATION>)
+				
+	ELSE()
+		message(FATAL_ERROR "ZLIB not found, refer to DepsPath for OBS")	
+	ENDIF()
+
 	# Include/link crash manager dependencies
 	target_include_directories(crash-handler-process PUBLIC
 		"${CMAKE_CURRENT_BINARY_DIR}/awsi/include/"
-		"${nlohmannjson_SOURCE_DIR}/single_include" )
+		"${nlohmannjson_SOURCE_DIR}/single_include" 
+		"${ZLIB_INCLUDE_DIRS}")
 	add_compile_definitions(AWS_CRASH_UPLOAD_BUCKET_KEY=\"$ENV{AWS_CRASH_UPLOAD_BUCKET_KEY}\")
 
 	set( AWS_LIBS
@@ -99,10 +121,11 @@ IF(WIN32)
 		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-cpp-sdk-s3.lib"
 		)
 	target_link_libraries(crash-handler-process "${AWS_LIBS}")
+	target_link_libraries(crash-handler-process ${ZLIB_LIBRARIES})
 ELSE()
 	target_link_libraries(crash-handler-process ${COCOA})
 ENDIF()
-
+				
 #############################
 # Distribute
 #############################

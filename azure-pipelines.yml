@@ -40,6 +40,9 @@ jobs:
 
   - script: 'yarn install'
     displayName: 'Install dependencies'
+    
+  - script: ./ci/install-zlib.cmd
+    displayName: 'Install zlib'
 
   - script: 'cmake -H. -B"%SLBuildDirectory%" -G"%SLGenerator%" -A x64 -DCMAKE_INSTALL_PREFIX="%FullDistributePath%\crash-handler" -DNODEJS_NAME=%RuntimeName% -DNODEJS_URL=%RuntimeURL% -DNODEJS_VERSION=%RuntimeVersion%'
     displayName: 'Configure crash-handler'
