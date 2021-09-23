@@ -120,8 +120,8 @@ const std::wstring generateCrashDumpFileName()
 {
 	std::time_t t = std::time(nullptr);
 	wchar_t wstr[100];
-	std::wstring file_name = L"crash_memory_dump.dmp";
-	if (std::wcsftime(wstr, 100, L"%Y%M%d_%H%M%S.dmp", std::localtime(&t))) {
+	std::wstring file_name = L"MiniDumpWriteDump.dmp";
+	if (std::wcsftime(wstr, 100, L"%Y-%m-%d__%H-%M-%S.dmp", std::localtime(&t))) {
 		file_name = wstr;
 	}
 	return file_name;
@@ -140,34 +140,50 @@ void Process_WIN::memorydump_worker() {
 			log_info << "Window created. Waiting for user decision" << std::endl;
 			if (UploadWindow::getInstance()->waitForUserChoise() == IDYES) {
 				log_info << "User selected OK for saving a dump" << std::endl;
+				UploadWindow::getInstance()->setDumpPath(memorydumpPath);
 
 				const std::wstring file_name = generateCrashDumpFileName();
 				log_info << "File name for upload generated : " << std::string(file_name.begin(), file_name.end()) << std::endl;
 				UploadWindow::getInstance()->setDumpFileName(file_name);
 				UploadWindow::getInstance()->savingStarted();
 
+				const std::wstring archiveName = file_name + L".zip";
+				const std::wstring fullArchivePath = memorydumpPath + L"/" + archiveName;
 				bool dump_saved = Util::saveMemoryDump(PID, memorydumpPath, file_name);
+
 				if (dump_saved) {
+					const std::wstring fullDumpPath = memorydumpPath + L"/" + file_name;
+					UploadWindow::getInstance()->setDumpFileName(archiveName);
+					UploadWindow::getInstance()->zippingStarted();
+					dump_saved = Util::archiveFile(fullDumpPath, fullArchivePath, "MiniDumpWriteDump.dmp");
+					try { std::filesystem::remove(fullDumpPath); } catch (...) { log_error << "Failed to auto remove dump file " << std::endl; }
+				}
+
+				bool keep_archived = false;
+
+				if (dump_saved) {
+					UploadWindow::getInstance()->setTotalBytes(std::filesystem::file_size(fullArchivePath));
 					UploadWindow::getInstance()->savingFinished();
 					if (UploadWindow::getInstance()->waitForUserChoise() == IDYES) {
-						Util::uploadToAWS(memorydumpPath, file_name);
+						UploadWindow::getInstance()->setUploadProgress(0);
+						if (!Util::uploadToAWS(memorydumpPath, archiveName)) {
+							if (UploadWindow::getInstance()->waitForUserChoise() == IDYES)
+								keep_archived = true;
+						}
 					} else {
 						log_info << "User selected Cancel for uploading a dump" << std::endl;
 						UploadWindow::getInstance()->uploadCanceled();
 					}
-
-					if (UploadWindow::getInstance()->waitForUserChoise() != IDYES) {
-						remove_dump_file = true;
+					
+					if (!keep_archived) {
+						try { std::filesystem::remove(fullArchivePath); } catch (...) { log_error << "Failed to remove archive file " << std::endl; }
 					}
+
+					UploadWindow::getInstance()->waitForUserChoise();
+
 				} else {
 					UploadWindow::getInstance()->savingFailed();
 					UploadWindow::getInstance()->waitForUserChoise();
-				}
-
-				if (dump_saved && remove_dump_file) {
-					if (!Util::removeMemoryDump(memorydumpPath, file_name)) {
-						log_error << "Failed to auto remove dump file after upload " << std::endl;
-					}
 				}
 			} else {
 				log_info << "User selected Cancel for saving a dump" << std::endl;
