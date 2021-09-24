@@ -1,4 +1,4 @@
-/******************************************************************************
+﻿/******************************************************************************
 	Copyright (C) 2016-2020 by Streamlabs (General Workings Inc)
 
 	This program is free software: you can redistribute it and/or modify
@@ -47,6 +47,9 @@
 
 #include "Dbghelp.h"
 #pragma comment(lib, "Dbghelp.lib")
+
+#include "..\minizip\zip.h"
+#include "..\minizip\iowin32.h"
 
 #ifndef AWS_CRASH_UPLOAD_BUCKET_KEY
 #define AWS_CRASH_UPLOAD_BUCKET_KEY "KEY"
@@ -317,17 +320,50 @@ void Util::updateAppState(bool unresponsive_detected)
 	out_state_file.close();
 }
 
-bool Util::removeMemoryDump(const std::wstring& dumpPath, const std::wstring& dumpFileName)
+bool Util::archiveFile(const std::wstring& fileFullPath, const std::wstring& archiveFullPath, const std::string& nameInsideArchive)
 {
-	bool ret = false;
-	std::filesystem::path memoryDumpFolder = dumpPath;
-	std::filesystem::path memoryDumpFile   = memoryDumpFolder;
-	memoryDumpFile.append(dumpFileName);
-	try {
-		std::filesystem::remove(memoryDumpFile);
-		ret = true;
-	} catch (...) {}
-	return ret;
+	zlib_filefunc64_def ffunc;
+	fill_win32_filefunc64W(&ffunc);
+
+	int options = APPEND_STATUS_ADDINZIP;
+
+	if (!std::filesystem::exists(archiveFullPath))
+		options = APPEND_STATUS_CREATE;
+
+	zipFile zf = zipOpen2_64(archiveFullPath.c_str(), options, nullptr, &ffunc);
+
+	if (zf == NULL)
+		return false;
+
+	bool result = false;
+
+	std::fstream file(fileFullPath, std::ios::binary | std::ios::in);
+
+	if (file.is_open())	{
+		file.seekg(0, std::ios::end);
+		long size = file.tellg();
+		file.seekg(0, std::ios::beg);
+
+		std::vector<char> buffer(size);
+		if (size == 0 || file.read(&buffer[0], size)) {
+			zip_fileinfo zfi = {0};
+			
+			if (zipOpenNewFileInZip(zf, nameInsideArchive.c_str(), &zfi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_BEST_SPEED) == S_OK) {
+				if (zipWriteInFileInZip(zf, size == 0 ? "" : &buffer[0], size) == S_OK)	{
+					if (zipCloseFileInZip(zf) == S_OK)
+						result = true;
+				}
+			}
+		}
+
+		file.close();
+	}
+
+	// If we can't close the archive for some reason... does that mean we failed to archive the file??
+	// Probably it's archived successfully?? and then the archive is read/write stuck or something?? imo still return true
+	zipClose(zf, NULL);
+
+	return result;
 }
 
 bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std::wstring& dumpFileName)
@@ -382,16 +418,15 @@ bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std:
 		                       | MiniDumpWithUnloadedModules | MiniDumpIgnoreInaccessibleMemory ;
 
 		BOOL ret = MiniDumpWriteDump(hProcess, pid, hFile, (MINIDUMP_TYPE)CD_Flags, 0, 0, 0);
+		CloseHandle(hFile);
+
 		if (ret) {
 			dumpSaved = true;
-			long long bytes_to_send = std::filesystem::file_size(memoryDumpFile);
-			UploadWindow::getInstance()->setTotalBytes(bytes_to_send);
 			log_info << "Memory dump saved. " << std::endl;
 		} else {
 			log_info << "Failed to save memory dump. err code = " << GetLastError() << std::endl;
 		}
 
-		CloseHandle(hFile);
 	} else {
 		log_info << "Failed to create memory dump file \"" << memoryDumpFile.generic_string() << "\"" << std::endl;
 	}
@@ -474,7 +509,7 @@ bool PutObjectAsync(
 	return true;
 }
 
-bool Util::uploadToAWS(const std::wstring& dumpPath, const std::wstring& dumpFileName)
+bool Util::uploadToAWS(const std::wstring& wspath, const std::wstring& fileName)
 {
 	UploadWindow::getInstance()->uploadStarted();
 	bool            ret = false;
@@ -503,7 +538,7 @@ bool Util::uploadToAWS(const std::wstring& dumpPath, const std::wstring& dumpFil
 		Aws::S3::S3Client s3_client(
 		    aws_credentials, config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, false);
 		log_info << "Upload to ASW ready to start upload" << std::endl;
-		if (!PutObjectAsync(s3_client, bucket_name, dumpPath, dumpFileName)) {
+		if (!PutObjectAsync(s3_client, bucket_name, wspath, fileName)) {
 			log_info << "Upload to ASW PutObjectAsync failed" << std::endl;
 			UploadWindow::getInstance()->uploadFailed();
 		} else {

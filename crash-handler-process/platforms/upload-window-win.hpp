@@ -40,6 +40,7 @@ class UploadWindow
 	bool createWindow();
 	int  waitForUserChoise();
 	void setDumpFileName(const std::wstring& new_file_name);
+	void setDumpPath(const std::wstring& new_path);
 	void setTotalBytes(long long);
 	void setUploadProgress(long long);
 
@@ -47,6 +48,7 @@ class UploadWindow
 	void savingFinished();
 	void savingFailed();
 	void savingStarted();
+	void zippingStarted();
 	void uploadFinished();
 	void uploadFailed();
 	void uploadCanceled();
@@ -78,6 +80,7 @@ class UploadWindow
 	long long               total_bytes_to_send = 0;
 	long long               bytes_sent          = 0;
 	std::wstring            file_name;
+	std::wstring            dump_path;
 	std::thread*            window_thread = nullptr;
 	std::mutex              upload_window_choose_mutex;
 	std::condition_variable upload_window_choose_variable;

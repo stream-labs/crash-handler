@@ -29,9 +29,9 @@ public:
 	static std::string get_temp_directory();
 	static void restartApp(std::wstring path);
 
+	static bool archiveFile(const std::wstring& fileFullPath, const std::wstring& archiveFullPath, const std::string& nameInsideArchive);
 	static bool saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std::wstring& dumpFileName);
-	static bool uploadToAWS(const std::wstring& dumpPath, const std::wstring& dumpFileName);
-	static bool removeMemoryDump(const std::wstring& dumpPath, const std::wstring& dumpFileName);
+	static bool uploadToAWS(const std::wstring& wspath, const std::wstring& fileName);
 	static void updateAppState(bool unresponsive_detected);
 	static void setCachePath(std::wstring path);
 };
