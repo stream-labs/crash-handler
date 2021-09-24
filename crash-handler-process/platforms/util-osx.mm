@@ -80,4 +80,4 @@ void Util::updateAppState(bool unresponsive_detected) {}
 
 bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std::wstring& dumpFileName) { return false;}
 bool Util::archiveFile(const std::wstring& srcFullPath, const std::wstring& dstFullPath, const std::string& nameInsideArchive) { return false;}
-bool Util::abortUploadAWS() { }
+void Util::abortUploadAWS() { }
