@@ -149,17 +149,21 @@ void Process_WIN::memorydump_worker() {
 
 				const std::wstring archiveName = file_name + L".zip";
 				const std::wstring fullArchivePath = memorydumpPath + L"/" + archiveName;
+				const std::wstring fullDumpPath = memorydumpPath + L"/" + file_name;
+				
+				// Before any writing is done, register these paths to make sure that whatever happens below, they get removed
+				UploadWindow::getInstance()->registerRemoveFile(fullArchivePath);
+				UploadWindow::getInstance()->registerRemoveFile(fullDumpPath);
+
 				bool dump_saved = Util::saveMemoryDump(PID, memorydumpPath, file_name);
 
 				if (dump_saved) {
-					const std::wstring fullDumpPath = memorydumpPath + L"/" + file_name;
 					UploadWindow::getInstance()->setDumpFileName(archiveName);
 					UploadWindow::getInstance()->zippingStarted();
 					dump_saved = Util::archiveFile(fullDumpPath, fullArchivePath, "MiniDumpWriteDump.dmp");
-					try { std::filesystem::remove(fullDumpPath); } catch (...) { log_error << "Failed to auto remove dump file " << std::endl; }
 				}
-
-				bool keep_archived = false;
+				
+				UploadWindow::getInstance()->popRemoveFile(fullDumpPath);
 
 				if (dump_saved) {
 					UploadWindow::getInstance()->setTotalBytes(std::filesystem::file_size(fullArchivePath));
@@ -168,23 +172,23 @@ void Process_WIN::memorydump_worker() {
 						UploadWindow::getInstance()->setUploadProgress(0);
 						if (!Util::uploadToAWS(memorydumpPath, archiveName)) {
 							if (UploadWindow::getInstance()->waitForUserChoise() == IDYES)
-								keep_archived = true;
+								UploadWindow::getInstance()->unregisterRemoveFile(fullArchivePath);
 						}
 					} else {
 						log_info << "User selected Cancel for uploading a dump" << std::endl;
 						UploadWindow::getInstance()->uploadCanceled();
 					}
-					
-					if (!keep_archived) {
-						try { std::filesystem::remove(fullArchivePath); } catch (...) { log_error << "Failed to remove archive file " << std::endl; }
-					}
 
+					UploadWindow::getInstance()->popRemoveFiles();
 					UploadWindow::getInstance()->waitForUserChoise();
 
 				} else {
+					UploadWindow::getInstance()->popRemoveFiles();
 					UploadWindow::getInstance()->savingFailed();
 					UploadWindow::getInstance()->waitForUserChoise();
 				}
+					
+
 			} else {
 				log_info << "User selected Cancel for saving a dump" << std::endl;
 			}

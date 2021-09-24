@@ -19,6 +19,7 @@
 #ifndef UPLOADWINDOWUTIL_H
 #define UPLOADWINDOWUTIL_H
 #include <mutex>
+#include <set>
 
 const size_t upload_message_len = 512;
 
@@ -38,12 +39,17 @@ class UploadWindow
 	static void          shutdownInstance();
 
 	bool createWindow();
+	bool hasRemoveFilesQueued();
 	int  waitForUserChoise();
 	void setDumpFileName(const std::wstring& new_file_name);
 	void setDumpPath(const std::wstring& new_path);
 	void setTotalBytes(long long);
 	void setUploadProgress(long long);
-
+	void registerRemoveFile(const std::wstring& fullPath);
+	void unregisterRemoveFile(const std::wstring& fullPath);
+	void popRemoveFiles();
+	void popRemoveFile(const std::wstring& fullPath);
+	
 	void crashCaught();
 	void savingFinished();
 	void savingFailed();
@@ -63,7 +69,6 @@ class UploadWindow
 	void showButtons(const DialogButtonsState&);
 	void enableButtons(const DialogButtonsState&);
 	void windowThread();
-	static UploadWindow* instance;
 
 	HINSTANCE hInstance          = NULL;
 	HWND      upload_window_hwnd = NULL;
@@ -81,10 +86,14 @@ class UploadWindow
 	long long               bytes_sent          = 0;
 	std::wstring            file_name;
 	std::wstring            dump_path;
+	std::set<std::wstring>  filesForRemoval;
 	std::thread*            window_thread = nullptr;
 	std::mutex              upload_window_choose_mutex;
+	std::mutex              upload_remove_file_mutex;
 	std::condition_variable upload_window_choose_variable;
 	TCHAR                   upload_progress_message[upload_message_len] = {0};
+
+	static std::unique_ptr<UploadWindow> instance;
 };
 
 #endif

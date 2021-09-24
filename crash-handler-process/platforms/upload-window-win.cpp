@@ -19,11 +19,13 @@
 #include <windows.h>
 #include <CommCtrl.h>
 #include <thread>
+#include <filesystem>
 
+#include "../util.hpp"
 #include "../logger.hpp"
 #include "upload-window-win.hpp"
 
-UploadWindow* UploadWindow::instance = NULL;
+std::unique_ptr<UploadWindow> UploadWindow::instance = nullptr;
 
 #define CUSTOM_CLOSE_MSG (WM_USER + 1)
 #define CUSTOM_PROGRESS_MSG (WM_USER + 2)
@@ -43,9 +45,16 @@ UploadWindow* UploadWindow::instance = NULL;
 LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg) {
-	case WM_CLOSE:
+	case WM_CLOSE: {
+		Util::abortUploadAWS();
+		while (UploadWindow::getInstance()->hasRemoveFilesQueued()) {
+			using namespace std::chrono_literals;
+			UploadWindow::getInstance()->popRemoveFiles();
+			std::this_thread::sleep_for(50ms);
+		}
 		exit(1);
 		return 0;
+	}
 	case WM_NCCREATE:
 	case WM_CREATE: {
 		break;
@@ -159,7 +168,7 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		swprintf(upload_progress_message, upload_message_len, L"Upload cancleled.\r\n%s removed.", file_name.c_str());
 		SetWindowText(upload_label_hwnd, upload_progress_message);
 		showButtons({.ok = true, .cancel = true, .yes = false, .no = false});
-		enableButtons({.ok = false, .cancel = true, .yes = false, .no = false});
+		enableButtons({.ok = true, .cancel = false, .yes = false, .no = false});
 		break;
 	}
 	case CUSTOM_UPLOAD_FAILED: {
@@ -224,10 +233,18 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
-UploadWindow::UploadWindow() {}
+UploadWindow::UploadWindow() 
+{
+
+}
 
 UploadWindow::~UploadWindow()
 {
+	popRemoveFiles();
+
+	if (hasRemoveFilesQueued())
+		log_error << "UploadWindow failed to auto remove all queued files " << std::endl;
+
 	if (window_thread) {
 		PostMessage(upload_window_hwnd, CUSTOM_CLOSE_MSG, 0, 0);
 		if (window_thread->joinable()) {
@@ -239,16 +256,87 @@ UploadWindow::~UploadWindow()
 
 UploadWindow* UploadWindow::getInstance()
 {
-	if (instance)
-		return instance;
-	instance = new UploadWindow();
-	return instance;
+	static std::unique_ptr<UploadWindow> instance = std::make_unique<UploadWindow>();
+	return instance.get();
 }
 
 void UploadWindow::shutdownInstance()
 {
-	delete instance;
-	instance = nullptr;
+	instance.reset();
+}
+
+void UploadWindow::registerRemoveFile(const std::wstring& fullPath)
+{
+	std::lock_guard<std::mutex> grd(upload_remove_file_mutex);
+	filesForRemoval.insert(fullPath);
+}
+
+void UploadWindow::unregisterRemoveFile(const std::wstring& fullPath)
+{
+	std::lock_guard<std::mutex> grd(upload_remove_file_mutex);
+	filesForRemoval.erase(fullPath);
+}
+
+bool UploadWindow::hasRemoveFilesQueued() 
+{
+	std::lock_guard<std::mutex> grd(upload_remove_file_mutex);
+
+	for (auto& itr : filesForRemoval) {
+		if (std::filesystem::exists(itr))
+			return true;
+	}
+
+	return false;
+}
+
+void UploadWindow::popRemoveFile(const std::wstring& fullPath)
+{
+	std::lock_guard<std::mutex> grd(upload_remove_file_mutex);
+
+	auto itr = filesForRemoval.find(fullPath);
+
+	if (itr == filesForRemoval.end())
+		return;
+	
+	if (std::filesystem::exists(*itr)) 
+	{
+		try 
+		{
+			std::filesystem::remove(*itr);
+			filesForRemoval.erase(itr);
+		}
+		catch (...) 
+		{ 
+			log_error << "UploadWindow failed to auto remove file " << std::endl; 
+		}
+	}
+}
+
+void UploadWindow::popRemoveFiles()
+{
+	std::lock_guard<std::mutex> grd(upload_remove_file_mutex);
+
+	auto itr = filesForRemoval.begin();
+	
+	while (itr != filesForRemoval.end())
+	{	
+		if (std::filesystem::exists(*itr)) 
+		{
+			try 
+			{
+				std::filesystem::remove(*itr); 
+				itr = filesForRemoval.erase(itr);
+			} 
+			catch (...)
+			{ 
+				++itr;
+			} 
+		}
+		else
+		{
+			itr = filesForRemoval.erase(itr);
+		}
+	}
 }
 
 void UploadWindow::windowThread()
@@ -281,8 +369,8 @@ void UploadWindow::windowThread()
 	upload_window_hwnd = CreateWindowEx(
 	    WS_EX_CLIENTEDGE,
 	    L"uploaderwindowclass",
-	    L"This application has encountered a critical error",
-	    WS_OVERLAPPED | WS_MINIMIZEBOX | WS_SYSMENU,
+	    L"Streamlabs OBS has encountered a critical error",
+	    WS_OVERLAPPED | WS_MINIMIZEBOX | WS_SYSMENU | WS_EX_TOPMOST,
 	    (screen_width - width) / 2,
 	    (screen_height - height) / 2,
 	    width,

@@ -32,6 +32,7 @@ public:
 	static bool archiveFile(const std::wstring& fileFullPath, const std::wstring& archiveFullPath, const std::string& nameInsideArchive);
 	static bool saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std::wstring& dumpFileName);
 	static bool uploadToAWS(const std::wstring& wspath, const std::wstring& fileName);
+	static void abortUploadAWS();
 	static void updateAppState(bool unresponsive_detected);
 	static void setCachePath(std::wstring path);
 };

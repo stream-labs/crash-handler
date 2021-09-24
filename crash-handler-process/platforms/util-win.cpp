@@ -436,10 +436,12 @@ bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std:
 }
 
 
+std::mutex              s3_mutex;
 std::mutex              upload_mutex;
 std::condition_variable upload_variable;
 long long               total_sent_amout = 0;
 std::chrono::steady_clock::time_point last_progress_update;
+std::unique_ptr<Aws::S3::S3Client> s3_client_ptr;
 
 void PutObjectAsyncFinished(
     const Aws::S3::S3Client*                                      s3Client,
@@ -509,6 +511,14 @@ bool PutObjectAsync(
 	return true;
 }
 
+void Util::abortUploadAWS()
+{
+	std::lock_guard<std::mutex> grd(s3_mutex);
+
+	if (s3_client_ptr != nullptr)
+		s3_client_ptr->DisableRequestProcessing();
+}
+
 bool Util::uploadToAWS(const std::wstring& wspath, const std::wstring& fileName)
 {
 	UploadWindow::getInstance()->uploadStarted();
@@ -535,10 +545,15 @@ bool Util::uploadToAWS(const std::wstring& wspath, const std::wstring& fileName)
 		aws_credentials.SetAWSAccessKeyId(accessIDKey);
 		aws_credentials.SetAWSSecretKey(Key);
 
-		Aws::S3::S3Client s3_client(
-		    aws_credentials, config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, false);
+		{
+			std::lock_guard<std::mutex> grd(s3_mutex);
+
+			s3_client_ptr = std::make_unique<Aws::S3::S3Client>(
+			    aws_credentials, config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, false);
+		}
+
 		log_info << "Upload to ASW ready to start upload" << std::endl;
-		if (!PutObjectAsync(s3_client, bucket_name, wspath, fileName)) {
+		if (!PutObjectAsync(*s3_client_ptr, bucket_name, wspath, fileName)) {
 			log_info << "Upload to ASW PutObjectAsync failed" << std::endl;
 			UploadWindow::getInstance()->uploadFailed();
 		} else {
@@ -552,6 +567,13 @@ bool Util::uploadToAWS(const std::wstring& wspath, const std::wstring& fileName)
 			}
 		}
 	}
+
 	Aws::ShutdownAPI(options);
+
+	{
+		std::lock_guard<std::mutex> grd(s3_mutex);
+		s3_client_ptr.reset();
+	}
+
 	return ret;
 }
