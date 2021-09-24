@@ -14,7 +14,6 @@ variables:
   RuntimeURL: https://atom.io/download/atom-shell
   RuntimeName: iojs
   RuntimeVersion: v12.1.0
-  DEPS: dependencies2019.0
 
 jobs:
 - job: 'Windows'
@@ -44,7 +43,7 @@ jobs:
   - script: ./ci/install-zlib.cmd
     displayName: 'Install zlib'
 
-  - script: 'cmake -H. -B"%SLBuildDirectory%" -G"%SLGenerator%" -A x64 -DCMAKE_INSTALL_PREFIX="%FullDistributePath%\crash-handler" -DNODEJS_NAME=%RuntimeName% -DNODEJS_URL=%RuntimeURL% -DNODEJS_VERSION=%RuntimeVersion% -DDepsPath=%CD%\%DEPS%'
+  - script: 'cmake -H. -B"%SLBuildDirectory%" -G"%SLGenerator%" -A x64 -DCMAKE_INSTALL_PREFIX="%FullDistributePath%\crash-handler" -DNODEJS_NAME=%RuntimeName% -DNODEJS_URL=%RuntimeURL% -DNODEJS_VERSION=%RuntimeVersion%'
     displayName: 'Configure crash-handler'
     env:
       AWS_CRASH_UPLOAD_BUCKET_KEY: $(aws_crash_upload_bucket_key)
