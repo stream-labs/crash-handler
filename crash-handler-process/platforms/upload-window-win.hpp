@@ -40,7 +40,10 @@ class UploadWindow
 
 	bool createWindow();
 	bool hasRemoveFilesQueued();
+	bool userWantsToClose() const { return user_wants_to_close; }
+
 	int  waitForUserChoise();
+
 	void setDumpFileName(const std::wstring& new_file_name);
 	void setDumpPath(const std::wstring& new_path);
 	void setTotalBytes(long long);
@@ -49,9 +52,9 @@ class UploadWindow
 	void unregisterRemoveFile(const std::wstring& fullPath);
 	void popRemoveFiles();
 	void popRemoveFile(const std::wstring& fullPath);
-	
+	void onUserWantsToClose();
+
 	void crashCaught();
-	void savingFinished();
 	void savingFailed();
 	void savingStarted();
 	void zippingStarted();
@@ -70,6 +73,8 @@ class UploadWindow
 	void enableButtons(const DialogButtonsState&);
 	void windowThread();
 
+	bool blockedMessageDueToShutdown(const INT msg) const;
+
 	HINSTANCE hInstance          = NULL;
 	HWND      upload_window_hwnd = NULL;
 	HWND      progresss_bar_hwnd = NULL;
@@ -81,6 +86,7 @@ class UploadWindow
 	int       width              = 500;
 	int       height             = 250;
 
+	bool                    user_wants_to_close = false;
 	int                     button_clicked      = 0;
 	long long               total_bytes_to_send = 0;
 	long long               bytes_sent          = 0;

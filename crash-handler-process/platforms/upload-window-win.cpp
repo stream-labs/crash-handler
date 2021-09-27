@@ -39,20 +39,22 @@ std::unique_ptr<UploadWindow> UploadWindow::instance = nullptr;
 #define CUSTOM_UPLOAD_FAILED (WM_USER + 9)
 #define CUSTOM_UPLOAD_CANCELED (WM_USER + 10)
 #define CUSTOM_ZIPPING_STARTED (WM_USER + 11)
-
 #define CUSTOM_REQUESTED_CLICK (WM_USER + 12)
 
 LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg) {
-	case WM_CLOSE: {
+	case WM_CLOSE: {	
+		UploadWindow::getInstance()->onUserWantsToClose();
+		SetCursor(LoadCursor(NULL, IDC_WAIT));	
+
+		// Aws/File operations tied to WM_CLOSE instead of onUserWantsToClose to avoid future risk of misusing onUserWantsToClose
 		Util::abortUploadAWS();
 		while (UploadWindow::getInstance()->hasRemoveFilesQueued()) {
 			using namespace std::chrono_literals;
 			UploadWindow::getInstance()->popRemoveFiles();
 			std::this_thread::sleep_for(50ms);
 		}
-		exit(1);
 		return 0;
 	}
 	case WM_NCCREATE:
@@ -93,6 +95,9 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		return DefWindowProc(hwnd, msg, wParam, lParam);
 	}
 
+	if (blockedMessageDueToShutdown(msg))
+		return DefWindowProc(hwnd, msg, wParam, lParam);
+
 	switch (msg) {
 	case CUSTOM_CLOSE_MSG:
 		log_info << "UploadWindow close message recieved" << std::endl;
@@ -115,16 +120,6 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		PostMessage(progresss_bar_hwnd, PBM_SETPOS, (int)progress, 0);
 		swprintf(upload_progress_message, upload_message_len, L"Uploading... %.2f%%\r\n%.1f / %.1fmb", static_cast<float>(progress), static_cast<float>(bytes_sent) / (1024.f * 1024.f), static_cast<float>(total_bytes_to_send) / (1024.f * 1024.f));
 		SetWindowText(upload_label_hwnd, upload_progress_message);
-		break;
-	}
-	case CUSTOM_SAVED_DUMP: {
-		PostMessage(progresss_bar_hwnd, PBM_SETPOS, (int)50, 0);
-		swprintf(upload_progress_message, upload_message_len, L"Additional debug information ready for upload.\r\n"
-		"Continue with upload?\r\n"
-		"File size: %.1fMb\r\n", (float)total_bytes_to_send/1024/1024);
-		SetWindowText(upload_label_hwnd, upload_progress_message);
-		showButtons({.ok = false, .cancel = false, .yes = true, .no = true});
-		enableButtons({.ok = false, .cancel = false, .yes = true, .no = true});
 		break;
 	}
 	case CUSTOM_SAVE_STARTED: {
@@ -263,6 +258,14 @@ UploadWindow* UploadWindow::getInstance()
 void UploadWindow::shutdownInstance()
 {
 	instance.reset();
+}
+
+void UploadWindow::onUserWantsToClose()
+{
+	user_wants_to_close = true;
+	button_clicked = IDABORT;
+	upload_window_choose_variable.notify_one();
+	SetWindowText(upload_label_hwnd, L"Closing...");
 }
 
 void UploadWindow::registerRemoveFile(const std::wstring& fullPath)
@@ -523,54 +526,80 @@ bool UploadWindow::createWindow()
 
 void UploadWindow::uploadFinished()
 {
+	if (user_wants_to_close) {
+		return;
+	}
+
 	button_clicked = 0;
 	PostMessage(upload_window_hwnd, CUSTOM_UPLOAD_FINISHED, NULL, NULL);
 }
 
 void UploadWindow::uploadStarted()
 {
+	if (user_wants_to_close) {
+		return;
+	}
+
 	button_clicked = 0;
 	PostMessage(upload_window_hwnd, CUSTOM_UPLOAD_STARTED, NULL, NULL);
 }
 
 void UploadWindow::uploadFailed()
 {
+	if (user_wants_to_close) {
+		return;
+	}
+
 	button_clicked = 0;
 	PostMessage(upload_window_hwnd, CUSTOM_UPLOAD_FAILED, NULL, NULL);
 }
 
 void UploadWindow::uploadCanceled()
 {
+	if (user_wants_to_close) {
+		return;
+	}
+
 	button_clicked = 0;
 	PostMessage(upload_window_hwnd, CUSTOM_UPLOAD_CANCELED, NULL, NULL);
 }
 
-void UploadWindow::savingFinished()
-{
-	button_clicked = 0;
-	PostMessage(upload_window_hwnd, CUSTOM_SAVED_DUMP, NULL, NULL);
-}
-
 void UploadWindow::savingStarted()
 {
+	if (user_wants_to_close) {
+		return;
+	}
+
 	button_clicked = 0;
 	PostMessage(upload_window_hwnd, CUSTOM_SAVE_STARTED, NULL, NULL);
 }
 
 void UploadWindow::zippingStarted() 
 {
+	if (user_wants_to_close) {
+		return;
+	}
+
 	button_clicked = 0;
 	PostMessage(upload_window_hwnd, CUSTOM_ZIPPING_STARTED, NULL, NULL);
 }
 
 void UploadWindow::savingFailed()
 {
+	if (user_wants_to_close) {
+		return;
+	}
+
 	button_clicked = 0;
 	PostMessage(upload_window_hwnd, CUSTOM_SAVING_DUMP_FAILED, NULL, NULL);
 }
 
 void UploadWindow::crashCaught()
 {
+	if (user_wants_to_close) {
+		return;
+	}
+
 	button_clicked = 0;
 	PostMessage(upload_window_hwnd, CUSTOM_CAUGHT_CRASH, NULL, NULL);
 }
@@ -579,6 +608,10 @@ int UploadWindow::waitForUserChoise()
 {
 	if (button_clicked != 0) {
 		return button_clicked;
+	}
+
+	if (user_wants_to_close) {
+		return IDABORT;
 	}
 
 	std::unique_lock<std::mutex> lock(upload_window_choose_mutex);
@@ -607,4 +640,27 @@ void UploadWindow::setUploadProgress(long long sent_amount)
 {
 	bytes_sent = sent_amount;
 	PostMessage(upload_window_hwnd, CUSTOM_PROGRESS_MSG, NULL, NULL);
+}
+
+bool UploadWindow::blockedMessageDueToShutdown(const INT msg) const
+{
+	if (!user_wants_to_close) {
+		return false;
+	}
+
+	switch (msg) {
+		case CUSTOM_PROGRESS_MSG:
+		case CUSTOM_SAVE_STARTED:
+		case CUSTOM_SAVED_DUMP:
+		case CUSTOM_SAVING_DUMP_FAILED:
+		case CUSTOM_UPLOAD_STARTED:
+		case CUSTOM_UPLOAD_FINISHED:
+		case CUSTOM_UPLOAD_FAILED:
+		case CUSTOM_UPLOAD_CANCELED:
+		case CUSTOM_ZIPPING_STARTED:
+		case CUSTOM_REQUESTED_CLICK:
+		    return true;
+	}
+
+	return false;
 }
