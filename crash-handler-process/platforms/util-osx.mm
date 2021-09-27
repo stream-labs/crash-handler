@@ -79,4 +79,5 @@ void Util::setCachePath(std::wstring path) {}
 void Util::updateAppState(bool unresponsive_detected) {}
 
 bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std::wstring& dumpFileName) { return false;}
-bool Util::removeMemoryDump(const std::wstring& dumpPath, const std::wstring& dumpFileName) { return false;};
+bool Util::archiveFile(const std::wstring& srcFullPath, const std::wstring& dstFullPath, const std::string& nameInsideArchive) { return false;}
+void Util::abortUploadAWS() { }

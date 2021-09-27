@@ -120,8 +120,8 @@ const std::wstring generateCrashDumpFileName()
 {
 	std::time_t t = std::time(nullptr);
 	wchar_t wstr[100];
-	std::wstring file_name = L"crash_memory_dump.dmp";
-	if (std::wcsftime(wstr, 100, L"%Y%M%d_%H%M%S.dmp", std::localtime(&t))) {
+	std::wstring file_name = L"MiniDumpWriteDump.dmp";
+	if (std::wcsftime(wstr, 100, L"%Y-%m-%d__%H-%M-%S.dmp", std::localtime(&t))) {
 		file_name = wstr;
 	}
 	return file_name;
@@ -140,35 +140,50 @@ void Process_WIN::memorydump_worker() {
 			log_info << "Window created. Waiting for user decision" << std::endl;
 			if (UploadWindow::getInstance()->waitForUserChoise() == IDYES) {
 				log_info << "User selected OK for saving a dump" << std::endl;
+				UploadWindow::getInstance()->setDumpPath(memorydumpPath);
 
 				const std::wstring file_name = generateCrashDumpFileName();
 				log_info << "File name for upload generated : " << std::string(file_name.begin(), file_name.end()) << std::endl;
 				UploadWindow::getInstance()->setDumpFileName(file_name);
 				UploadWindow::getInstance()->savingStarted();
 
+				const std::wstring archiveName = file_name + L".zip";
+				const std::wstring fullArchivePath = memorydumpPath + L"/" + archiveName;
+				const std::wstring fullDumpPath = memorydumpPath + L"/" + file_name;
+				
+				// Before any writing is done, register these paths to make sure that whatever happens below, they get removed
+				UploadWindow::getInstance()->registerRemoveFile(fullArchivePath);
+				UploadWindow::getInstance()->registerRemoveFile(fullDumpPath);
+
 				bool dump_saved = Util::saveMemoryDump(PID, memorydumpPath, file_name);
-				if (dump_saved) {
-					UploadWindow::getInstance()->savingFinished();
-					if (UploadWindow::getInstance()->waitForUserChoise() == IDYES) {
-						Util::uploadToAWS(memorydumpPath, file_name);
-					} else {
-						log_info << "User selected Cancel for uploading a dump" << std::endl;
-						UploadWindow::getInstance()->uploadCanceled();
+
+				if (dump_saved && !UploadWindow::getInstance()->userWantsToClose()) {
+					UploadWindow::getInstance()->setDumpFileName(archiveName);
+					UploadWindow::getInstance()->zippingStarted();
+					dump_saved = Util::archiveFile(fullDumpPath, fullArchivePath, "MiniDumpWriteDump.dmp");
+				}
+				
+				UploadWindow::getInstance()->popRemoveFile(fullDumpPath);
+
+				if (dump_saved && !UploadWindow::getInstance()->userWantsToClose()) {
+					UploadWindow::getInstance()->setTotalBytes(std::filesystem::file_size(fullArchivePath));
+					UploadWindow::getInstance()->setUploadProgress(0);
+					
+					if (!UploadWindow::getInstance()->userWantsToClose() && !Util::uploadToAWS(memorydumpPath, archiveName)) {
+						if (UploadWindow::getInstance()->waitForUserChoise() == IDYES)
+							UploadWindow::getInstance()->unregisterRemoveFile(fullArchivePath);
 					}
 
-					if (UploadWindow::getInstance()->waitForUserChoise() != IDYES) {
-						remove_dump_file = true;
-					}
+					UploadWindow::getInstance()->popRemoveFiles();
+					UploadWindow::getInstance()->waitForUserChoise();
+
 				} else {
+					UploadWindow::getInstance()->popRemoveFiles();
 					UploadWindow::getInstance()->savingFailed();
 					UploadWindow::getInstance()->waitForUserChoise();
 				}
+					
 
-				if (dump_saved && remove_dump_file) {
-					if (!Util::removeMemoryDump(memorydumpPath, file_name)) {
-						log_error << "Failed to auto remove dump file after upload " << std::endl;
-					}
-				}
 			} else {
 				log_info << "User selected Cancel for saving a dump" << std::endl;
 			}
