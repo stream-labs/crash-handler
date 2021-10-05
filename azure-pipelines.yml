@@ -56,6 +56,9 @@ jobs:
   - script: 'cmake --build %SLBuildDirectory% --target install --config RelWithDebInfo'
     displayName: 'Build crash-handler'
 
+  - script: ./ci/copy-dependencies.cmd
+    displayName: 'Copy necessary dll files'
+
   - task: ArchiveFiles@2
     displayName: 'Generate artifact'
     inputs:
