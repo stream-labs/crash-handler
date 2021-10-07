@@ -50,32 +50,22 @@ Process_WIN::Process_WIN(int32_t pid, bool isCritical) {
 	this->PID = pid;
 	this->critical = isCritical;
 	this->alive = true;
-	this->hdl = OpenProcess(PROCESS_ALL_ACCESS, FALSE, getPIDDWORD());
-
+	this->handle_OpenProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, getPIDDWORD());
 	this->checker = new std::thread(&Process_WIN::worker, this);
-
-	this->memorydump = nullptr;
-	this->mds = INVALID_HANDLE_VALUE;
-	this->mdf = INVALID_HANDLE_VALUE;
 }
 
 Process_WIN::~Process_WIN() {
-	if(this->hdl)
-		CloseHandle(this->hdl);
+	safeCloseHandle(this->handle_OpenProcess);
 
 	if (this->checker->joinable())
 		this->checker->join();
 
 	if (memorydump != nullptr && memorydump->joinable())
 		memorydump->join();
-	if (mds && mds != INVALID_HANDLE_VALUE) {
-		CloseHandle(mds);
-		mds = NULL;
-	}
-	if (mdf && mdf != INVALID_HANDLE_VALUE) {
-		CloseHandle(mdf);
-		mdf = NULL;
-	}
+	
+	safeCloseHandle(this->handle_event_Start);
+	safeCloseHandle(this->handle_event_Fail);
+	safeCloseHandle(this->handle_event_Success);
 }
 
 int32_t Process_WIN::getPID(void) {
@@ -86,76 +76,73 @@ bool Process_WIN::isCritical(void) {
 	return critical;
 }
 
-void Process_WIN::startMemoryDumpMonitoring(const std::wstring& eventName, const std::wstring& eventFinishedName, const std::wstring& dumpPath) {
+void Process_WIN::startMemoryDumpMonitoring(const std::wstring& eventName_Start, const std::wstring& eventName_Fail, const std::wstring& eventName_Success, const std::wstring& dumpPath, const std::wstring& dumpName) {
 	if (memorydump && memorydump->joinable()) {
 		return;
 	}
 
-	mds = OpenEvent(EVENT_ALL_ACCESS, FALSE, eventName.c_str());
-	if (!mds || mds == INVALID_HANDLE_VALUE) {
-		log_info << "Failed to open event for memory dump " << GetLastError()<< std::endl;
+	// Open event from the other process
+	if (!isValidHandleValue(handle_event_Start = OpenEvent(EVENT_ALL_ACCESS, FALSE, eventName_Start.c_str()))) {
+		log_info << "Failed to open start event for memory dump " << GetLastError() << std::endl;
 		return;
 	}
 
-	PSECURITY_DESCRIPTOR securityDescriptor = (PSECURITY_DESCRIPTOR) LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
-	if (InitializeSecurityDescriptor(securityDescriptor, SECURITY_DESCRIPTOR_REVISION)) {
-		if (SetSecurityDescriptorDacl(securityDescriptor, TRUE, NULL, FALSE)) {
-			SECURITY_ATTRIBUTES eventSecurityAttr = {0};
-			eventSecurityAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
-			eventSecurityAttr.lpSecurityDescriptor = securityDescriptor;
-			eventSecurityAttr.bInheritHandle = FALSE;
-
-			mdf = CreateEvent( &eventSecurityAttr, TRUE, FALSE, eventFinishedName.c_str());
-			if (!mdf || mdf == INVALID_HANDLE_VALUE) {
-				log_info << "Failed to create event for memory dump finish " << GetLastError()<< std::endl;
+	auto initEventByName = [](const std::wstring& eventName) {
+		HANDLE result = NULL;
+		PSECURITY_DESCRIPTOR securityDescriptor = (PSECURITY_DESCRIPTOR)LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
+		if (InitializeSecurityDescriptor(securityDescriptor, SECURITY_DESCRIPTOR_REVISION)) {
+			if (SetSecurityDescriptorDacl(securityDescriptor, TRUE, NULL, FALSE)) {
+				SECURITY_ATTRIBUTES eventSecurityAttr = {0};
+				eventSecurityAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+				eventSecurityAttr.lpSecurityDescriptor = securityDescriptor;
+				eventSecurityAttr.bInheritHandle = FALSE;
+				result = CreateEvent(&eventSecurityAttr, TRUE, FALSE, eventName.c_str());
 			}
 		}
+
+		LocalFree(securityDescriptor);
+		return result;
+	};
+			
+	if (!isValidHandleValue(handle_event_Fail = initEventByName(eventName_Fail)) || !isValidHandleValue(handle_event_Success = initEventByName(eventName_Success))) {
+		log_info << "Failed to create events for memory dump " << GetLastError() << std::endl;
+		safeCloseHandle(handle_event_Fail);
+		safeCloseHandle(handle_event_Success);
+		return;
 	}
-	LocalFree(securityDescriptor);
+
+	memorydumpName = dumpName;
 	memorydumpPath = dumpPath;
 	memorydump = new std::thread(&Process_WIN::memorydump_worker, this);
 }
 
-const std::wstring generateCrashDumpFileName()
-{
-	std::time_t t = std::time(nullptr);
-	wchar_t wstr[100];
-	std::wstring file_name = L"MiniDumpWriteDump.dmp";
-	if (std::wcsftime(wstr, 100, L"%Y-%m-%d__%H-%M-%S.dmp", std::localtime(&t))) {
-		file_name = wstr;
-	}
-	return file_name;
-}
-
 void Process_WIN::memorydump_worker() {
 	log_info << "Memory dump worker started" << std::endl;
-	HANDLE handles[] = { hdl, mds };
+	HANDLE handles[] = { handle_OpenProcess, handle_event_Start };
 	DWORD ret = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
 	if (ret - WAIT_OBJECT_0 == 1) {
+		recievedDmpEvent = true;
 		alive = false;
 		log_info << "Memory dump worker event recieved" << std::endl;
-		bool remove_dump_file = false;
+		bool successful_upload = false;
 		if (std::filesystem::exists(memorydumpPath) && UploadWindow::getInstance()->createWindow()) {
 			UploadWindow::getInstance()->crashCaught();
 			log_info << "Window created. Waiting for user decision" << std::endl;
 			if (UploadWindow::getInstance()->waitForUserChoise() == IDYES) {
 				log_info << "User selected OK for saving a dump" << std::endl;
 				UploadWindow::getInstance()->setDumpPath(memorydumpPath);
-
-				const std::wstring file_name = generateCrashDumpFileName();
-				log_info << "File name for upload generated : " << std::string(file_name.begin(), file_name.end()) << std::endl;
-				UploadWindow::getInstance()->setDumpFileName(file_name);
+				UploadWindow::getInstance()->setDumpFileName(memorydumpName);
 				UploadWindow::getInstance()->savingStarted();
 
-				const std::wstring archiveName = file_name + L".zip";
+				const std::wstring archiveName = memorydumpName + L".zip";
 				const std::wstring fullArchivePath = memorydumpPath + L"/" + archiveName;
-				const std::wstring fullDumpPath = memorydumpPath + L"/" + file_name;
+				const std::wstring fullDumpPath = memorydumpPath + L"/" + memorydumpName;
 				
 				// Before any writing is done, register these paths to make sure that whatever happens below, they get removed
 				UploadWindow::getInstance()->registerRemoveFile(fullArchivePath);
 				UploadWindow::getInstance()->registerRemoveFile(fullDumpPath);
 
-				bool dump_saved = Util::saveMemoryDump(PID, memorydumpPath, file_name);
+				bool dump_saved = Util::saveMemoryDump(PID, memorydumpPath, memorydumpName);
 
 				if (dump_saved && !UploadWindow::getInstance()->userWantsToClose()) {
 					UploadWindow::getInstance()->setDumpFileName(archiveName);
@@ -169,9 +156,13 @@ void Process_WIN::memorydump_worker() {
 					UploadWindow::getInstance()->setTotalBytes(std::filesystem::file_size(fullArchivePath));
 					UploadWindow::getInstance()->setUploadProgress(0);
 					
-					if (!UploadWindow::getInstance()->userWantsToClose() && !Util::uploadToAWS(memorydumpPath, archiveName)) {
-						if (UploadWindow::getInstance()->waitForUserChoise() == IDYES)
+					if (!UploadWindow::getInstance()->userWantsToClose()) {
+						if (Util::uploadToAWS(memorydumpPath, archiveName)) {
+							successful_upload = true;
+							SetEvent(handle_event_Success);
+						} else if (UploadWindow::getInstance()->waitForUserChoise() == IDYES) {
 							UploadWindow::getInstance()->unregisterRemoveFile(fullArchivePath);
+						}
 					}
 
 					UploadWindow::getInstance()->popRemoveFiles();
@@ -181,14 +172,17 @@ void Process_WIN::memorydump_worker() {
 					UploadWindow::getInstance()->popRemoveFiles();
 					UploadWindow::getInstance()->savingFailed();
 					UploadWindow::getInstance()->waitForUserChoise();
-				}
-					
+				}					
 
 			} else {
 				log_info << "User selected Cancel for saving a dump" << std::endl;
 			}
 		}
-		SetEvent(mdf);
+		
+		if (!successful_upload) {
+			SetEvent(handle_event_Fail);
+		}
+
 		UploadWindow::shutdownInstance();
 	} else {
 		DWORD last_error = GetLastError();
@@ -197,13 +191,13 @@ void Process_WIN::memorydump_worker() {
 }
 
 void Process_WIN::worker() {
-    if (!this->hdl)
+    if (!this->handle_OpenProcess)
         return;
 
-    if (!WaitForSingleObject(this->hdl, INFINITE)) {
+    if (!WaitForSingleObject(this->handle_OpenProcess, INFINITE)) {
         std::unique_lock<std::mutex> ul(this->mtx);
         this->alive = false;
-        this->hdl = NULL;
+        this->handle_OpenProcess = NULL;
     }
 }
 
@@ -222,26 +216,28 @@ bool Process_WIN::isResponsive(void) {
 }
 
 void Process_WIN::terminate(void) {
-    if (mds && mds != INVALID_HANDLE_VALUE) {
-        CloseHandle(mds);
-        mds = NULL;
-    }
+	// As a note, when a memorydump thread is 'activated' by the Start signal, it sets in motion a series of events that will 'terminateAll' (every other process), and then this terminate will wait at the join() below
+	safeCloseHandle(handle_event_Start);
 
     if (memorydump != nullptr && memorydump->joinable())
         memorydump->join();
+	
+    safeCloseHandle(handle_event_Fail);
+    safeCloseHandle(handle_event_Success);
 
-    if (mdf && mdf != INVALID_HANDLE_VALUE) {
-        CloseHandle(mdf);
-        mdf = NULL;
-    }
+    if (this->handle_OpenProcess && this->handle_OpenProcess != INVALID_HANDLE_VALUE) {
+		// Do not terminate a process that wanted a .dmp to be uploaded, because it still needs to make its sentry report
+		// Normally, we wouldn't end up here until after the crashing process submitted the sentry report, however, as stated above, when a memorydump thread is 'activated' by the Start signal, it sets in motion a series of events that will 'terminateAll' (every other process)
+		if (recievedDmpEvent == false) {
+			TerminateProcess(handle_OpenProcess, 1);
+		}
 
-    if (this->hdl && this->hdl != INVALID_HANDLE_VALUE) {
-        TerminateProcess(hdl, 1);
-        CloseHandle(hdl);
-    }
+		safeCloseHandle(handle_OpenProcess);
+	}
 
     if (this->checker->joinable())
         this->checker->join();
+
     log_debug << "Terminated pid : " << PID << std::endl;
 }
 
@@ -256,4 +252,17 @@ HWND Process_WIN::getTopWindow()
     data.window_handle = 0;
     EnumWindows(enum_windows_callback, (LPARAM)&data);
     return data.window_handle;
+}
+
+bool Process_WIN::isValidHandleValue(const HANDLE h)
+{
+	return h != NULL && h != INVALID_HANDLE_VALUE;
+}
+
+void Process_WIN::safeCloseHandle(HANDLE& h) 
+{
+	if (isValidHandleValue(h)) {
+		CloseHandle(h);
+		h = NULL;
+	}
 }
