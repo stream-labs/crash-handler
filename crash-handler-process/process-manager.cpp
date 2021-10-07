@@ -76,8 +76,8 @@ void ProcessManager::watcher_fnc() {
                 uint32_t pid = msg.readUInt32();
                 std::wstring eventName_Start = msg.readWstring();
                 std::wstring eventName_Fail = msg.readWstring();
-			    std::wstring eventName_Success = msg.readWstring();
-			    std::wstring dumpPath = msg.readWstring();
+                std::wstring eventName_Success = msg.readWstring();
+                std::wstring dumpPath = msg.readWstring();
                 std::wstring dumpName = msg.readWstring();
                 registerProcessMemoryDump(pid, eventName_Start, eventName_Fail, eventName_Success, dumpPath, dumpName);
                 break;
