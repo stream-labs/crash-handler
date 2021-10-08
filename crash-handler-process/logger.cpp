@@ -35,6 +35,7 @@
 
 bool log_output_working = false;
 
+std::wstring log_output_path;
 std::ofstream log_output_file;
 static int pid = 0;
 
@@ -102,6 +103,8 @@ void logging_start(std::wstring & log_path)
 			std::cout << "Failed to open log file, error = " << strerror(errno) << std::endl; 
 		}
 	}
+
+	log_output_path = log_path;
 }
 
 void logging_end()

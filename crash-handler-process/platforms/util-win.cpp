@@ -51,6 +51,31 @@
 #include "..\minizip\zip.h"
 #include "..\minizip\iowin32.h"
 
+LONG CALLBACK unhandledHandler(EXCEPTION_POINTERS* e)
+{
+	if (log_output_file.is_open() && !log_output_path.empty())  {	
+		log_info << "!! Crashed !!" << std::endl;
+
+		// Small file, ~50-100 kb, MiniDumpNormal will only have stack, always same name to overwrite on purpose (small footprint)
+		HANDLE hFile = CreateFileW((log_output_path + L".dmp").c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);			
+		if (hFile != INVALID_HANDLE_VALUE && hFile != NULL) {	
+			MINIDUMP_EXCEPTION_INFORMATION exceptionInfo = { GetCurrentThreadId(), e, FALSE}; 
+			MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, MINIDUMP_TYPE(MiniDumpNormal), e ? &exceptionInfo : nullptr, nullptr, nullptr);
+			CloseHandle(hFile);
+		}
+	}
+
+	// If the lock inside is locked then the process will abort, so this comes after
+	UploadWindow::getInstance()->popRemoveFiles();
+	return EXCEPTION_CONTINUE_SEARCH;
+}
+
+struct unhandledHandlerObj {
+	unhandledHandlerObj() { ::SetUnhandledExceptionFilter(unhandledHandler); }
+};
+
+unhandledHandlerObj unhandledHandlerObj_Impl;
+
 #ifndef AWS_CRASH_UPLOAD_BUCKET_KEY
 #define AWS_CRASH_UPLOAD_BUCKET_KEY "KEY"
 #endif
