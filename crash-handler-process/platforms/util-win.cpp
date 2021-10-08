@@ -369,7 +369,7 @@ bool Util::archiveFile(const std::wstring& fileFullPath, const std::wstring& arc
 
 	// If we can't close the archive for some reason... does that mean we failed to archive the file??
 	// Probably it's archived successfully?? and then the archive is read/write stuck or something?? imo still return true
-	zipClose(zf, NULL);	
+	zipClose(zf, NULL);
 	log_info << "Finished archiving file" << std::endl;
 	return result;
 }
