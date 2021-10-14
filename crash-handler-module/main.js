@@ -24,7 +24,11 @@ function tryConnect(buffer, attempt = 5, waitMs = 100) {
         }
       });
     } else {
-      fs.writeFileSync(socket_name, buffer);
+      if (fs.existsSync(socket_name)) {
+        fs.writeFileSync(socket_name, buffer);
+      } else {
+        throw "crash handler pipe not exists";
+      }
     }
   } catch (error) {
     if (attempt > 0) {
