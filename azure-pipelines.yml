@@ -53,12 +53,9 @@ jobs:
     displayName: 'Bump version number'
     condition: and(succeeded(), contains(variables['Build.SourceBranch'], 'tags'))
 
-  - script: 'cmake --build %SLBuildDirectory% --target install --config RelWithDebInfo'
-    displayName: 'Build crash-handler'
-
-  - powershell: '$(Agent.BuildDirectory)/ci/symbols.ps1 "$(Agent.BuildDirectory)/%SLBuildDirectory%" "s3symbols" "stream-labs" "$(Build.Repository.Name)" "$(Build.SourceVersion)" "abc" "123"'
+  - powershell: '$(Agent.BuildDirectory)/%FullDistributePath%/ci/symbols.ps1 "$(Agent.BuildDirectory)/%SLBuildDirectory%" "s3symbols" "stream-labs" "$(Build.Repository.Name)" "$(Build.SourceVersion)" "abc" "123"'
     displayName: 'Generating symbol server files'    
-    workingDirectory: '$(Agent.BuildDirectory)/ci/'
+    workingDirectory: '$(Agent.BuildDirectory)/%FullDistributePath%/ci/'
 
   - script: ./ci/copy-dependencies.cmd
     displayName: 'Copy necessary dll files'
