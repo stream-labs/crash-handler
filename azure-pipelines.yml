@@ -40,10 +40,6 @@ jobs:
 
   - script: 'yarn install'
     displayName: 'Install dependencies'
-
-  - script: .\ci\symbols.cmd
-    displayName: 'Symbols script'
-    workingDirectory: .\ci\
     
   - script: ./ci/install-zlib.cmd
     displayName: 'Install zlib'
