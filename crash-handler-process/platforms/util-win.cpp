@@ -366,8 +366,16 @@ bool Util::archiveFile(const std::wstring& fileFullPath, const std::wstring& arc
 
 	if (file.is_open())	{
 		file.seekg(0, std::ios::end);
-		long size = file.tellg();
+		uint64_t size = file.tellg();
 		file.seekg(0, std::ios::beg);
+
+		#undef max
+		if (size > uint64_t(std::numeric_limits<uint32_t>().max())) {
+			log_info << "File is too large for minizip" << std::endl;
+			zipClose(zf, NULL);
+			file.close();
+			return false;
+		}
 
 		std::vector<char> buffer(size);
 		if (size == 0 || file.read(&buffer[0], size)) {
@@ -387,7 +395,7 @@ bool Util::archiveFile(const std::wstring& fileFullPath, const std::wstring& arc
 	// If we can't close the archive for some reason... does that mean we failed to archive the file??
 	// Probably it's archived successfully?? and then the archive is read/write stuck or something?? imo still return true
 	zipClose(zf, NULL);
-
+	log_info << "Finished archiving file" << std::endl;
 	return result;
 }
 
