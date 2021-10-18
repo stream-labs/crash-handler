@@ -60,7 +60,7 @@ void ProcessManager::watcher_fnc() {
             case Action::REGISTER: {
                 bool isCritical = msg.readBool();
                 uint32_t pid = msg.readUInt32();
-                size_t size = registerProcess(isCritical, (int32_t)pid);
+                size_t size = registerProcess(isCritical, pid);
 
                 if (size == 1)
                     startMonitoring();
@@ -74,11 +74,12 @@ void ProcessManager::watcher_fnc() {
             }
             case Action::REGISTERMEMORYDUMP: {
                 uint32_t pid = msg.readUInt32();
-                std::wstring eventName = msg.readWstring();
-                std::wstring eventFinishedName = msg.readWstring();
+                std::wstring eventName_Start = msg.readWstring();
+                std::wstring eventName_Fail = msg.readWstring();
+                std::wstring eventName_Success = msg.readWstring();
                 std::wstring dumpPath = msg.readWstring();
-
-                registerProcessMemoryDump((int32_t)pid, eventName, eventFinishedName, dumpPath);
+                std::wstring dumpName = msg.readWstring();
+                registerProcessMemoryDump(pid, eventName_Start, eventName_Fail, eventName_Success, dumpPath, dumpName);
                 break;
             }
             default:
@@ -203,7 +204,7 @@ void ProcessManager::unregisterProcess(uint32_t PID) {
     this->processes.erase(it);
 }
 
-void ProcessManager::registerProcessMemoryDump(uint32_t PID, const std::wstring& eventName, const std::wstring& eventFinishedName, const std::wstring& dumpPath) {
+void ProcessManager::registerProcessMemoryDump(uint32_t PID, const std::wstring& eventName_Start, const std::wstring& eventName_Fail, const std::wstring& eventName_Success, const std::wstring& dumpPath, const std::wstring& dumpName) {
     const std::lock_guard<std::mutex> lock(this->mtx);
 
     log_info << "requested memory dump on crash for pid = " << PID << std::endl;
@@ -218,7 +219,7 @@ void ProcessManager::registerProcessMemoryDump(uint32_t PID, const std::wstring&
         return;
 
     log_info << "register for memory dump" << std::endl;
-    (*it)->startMemoryDumpMonitoring(eventName, eventFinishedName, dumpPath);
+    (*it)->startMemoryDumpMonitoring(eventName_Start, eventName_Fail, eventName_Success, dumpPath, dumpName);
 }
 
 void ProcessManager::handleCrash(std::wstring path) {
@@ -262,8 +263,19 @@ void ProcessManager::sendExitMessage(bool appCrashed) {
 }
 
 void ProcessManager::terminateAll(void) {
-    for (auto & process : this->processes) 
-        process->terminate();
+
+    std::vector<std::thread> workers;
+
+    // What if the head process is busy? Do we really want the other processes to keep running?
+    // Instead, seperate these out into workers so that non-busy processes are killed asap
+    for (auto& process : this->processes) {
+		workers.push_back(std::thread([](Process* ptr) { ptr->terminate(); }, process.get()));
+	}
+     
+    for (auto& itr : workers) {
+		if (itr.joinable())
+			itr.join();
+    }
 }
 
 void ProcessManager::terminateNonCritical(void) {

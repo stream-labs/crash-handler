@@ -25,15 +25,18 @@
 
 class Process_WIN : public Process {
 private:
-	std::thread *checker;
-	std::thread *memorydump;
+	std::thread* checker{nullptr};
+	std::thread* memorydump{nullptr};
 	std::mutex mtx;
-	HANDLE hdl;
-	
-	HANDLE mds;  // Event set by crashed process to initiate memory dump
-	HANDLE mdf;  // Event to inform crashed process what memory dump finished
+
+	HANDLE handle_OpenProcess{INVALID_HANDLE_VALUE};	
+	HANDLE handle_event_Start{INVALID_HANDLE_VALUE};
+	HANDLE handle_event_Fail{INVALID_HANDLE_VALUE};
+	HANDLE handle_event_Success{INVALID_HANDLE_VALUE};
 
 	std::wstring memorydumpPath;
+	std::wstring memorydumpName;
+
 	HWND getTopWindow();
 
 public:
@@ -44,12 +47,16 @@ public:
     virtual int32_t  getPID(void)     override;
     virtual bool     isCritical(void) override;
     virtual bool     isAlive(void)    override;
-    virtual void     startMemoryDumpMonitoring(const std::wstring& eventName, const std::wstring& eventFinishedName, const std::wstring& dumpPath) override;
     virtual bool     isResponsive(void) override;
     virtual void     terminate(void)  override;
+	
+public:
+    virtual void     startMemoryDumpMonitoring(const std::wstring& eventName_Start, const std::wstring& eventName_Fail, const std::wstring& eventName_Success, const std::wstring& dumpPath, const std::wstring& dumpName) override;
 
 private:
     void worker();
     void memorydump_worker();
     DWORD getPIDDWORD();
+	static bool isValidHandleValue(const HANDLE h);
+	static void safeCloseHandle(HANDLE& h);
 };
