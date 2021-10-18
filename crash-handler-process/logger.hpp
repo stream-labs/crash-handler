@@ -25,6 +25,7 @@
 
 const std::string getTimeStamp();
 
+extern std::wstring log_output_path;
 extern std::ofstream log_output_file;
 extern bool log_output_working;
 
