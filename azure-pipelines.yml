@@ -33,9 +33,9 @@ jobs:
   - script: dir
     displayName: "Debugging"
     
-  - script: powershell.exe 'ci/symbols.ps1 "(Get-Location).path/$(SLBuildDirectory)" "s3symbols" "stream-labs" "$(Build.Repository.Name)" "$(Build.SourceVersion)" "abc" "123"'
+  - powershell: '.\ci\symbols.ps1 "$(Get-Location).path\$(SLBuildDirectory)" "s3symbols" "stream-labs" "$(Build.Repository.Name)" "$(Build.SourceVersion)" "abc" "123"'
     displayName: 'Generating symbol server files'    
-    workingDirectory: ./ci/
+    workingDirectory: .\ci\
 
   - powershell: 'Write-Host "##vso[task.setvariable variable=tagartifact]crash-handler-$((git.exe describe --tags --abbrev=0) | Out-String)"'
     displayName: 'Get tag for artifact'
