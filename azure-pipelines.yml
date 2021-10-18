@@ -37,9 +37,9 @@ jobs:
     inputs:
         targetType: 'inline'
             script: |
-                dir
-                cd '$(Build.SourcesDirectory)/ci/'
-                dir
+                dir |
+                cd '$(Build.SourcesDirectory)/ci/' |
+                dir |
                 ./symbols.ps1 "$(Get-Location).path\$(SLBuildDirectory)" "s3symbols" "stream-labs" "$(Build.Repository.Name)" "$(Build.SourceVersion)" "abc" "123"
 
   - powershell: 'Write-Host "##vso[task.setvariable variable=tagartifact]crash-handler-$((git.exe describe --tags --abbrev=0) | Out-String)"'
