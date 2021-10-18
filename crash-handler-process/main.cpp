@@ -67,7 +67,7 @@ int main(int argc, char** argv)
 	}
 	if (nArgs >= 6) {
 		ipc_path = szArglist[5];
-		log_info << "ipc path option recieve : " << std::string(ipc_path.begin(), ipc_path.end()) << std::endl;
+		log_info << "ipc path option recieve : " << converter.to_bytes(ipc_path) << std::endl;
 		Socket::set_ipc_path(ipc_path);
 	}
 #else // for __APPLE__ and other
