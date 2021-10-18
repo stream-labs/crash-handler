@@ -19,7 +19,13 @@ Write-Output "  args1 = $($args[1])"
 Write-Output "  args2 = $($args[2])"
 Write-Output "  args3 = $($args[3])"
 Write-Output "  args4 = $($args[4])"
+
 Write-Output ""
+Write-Output "Installing debugging tools from winsdksetup..."
+Invoke-WebRequest https://go.microsoft.com/fwlink/?linkid=2173743 -OutFile winsdksetup.exe;    
+start-Process winsdksetup.exe -ArgumentList '/features OptionId.WindowsDesktopDebuggers /uninstall /q' -Wait;    
+start-Process winsdksetup.exe -ArgumentList '/features OptionId.WindowsDesktopDebuggers /q' -Wait;    
+Remove-Item -Force winsdksetup.exe;
 
 $localSourceDir = $args[0]
 $outputFolder = $args[1]
@@ -30,6 +36,7 @@ $AWS_ACCESS_KEY_ID = $args[5]
 $AWS_SECRET_ACCESS_KEY = $args[6]
 
 # Copy symbols from the top of the source directory, it will search recursively for all *.pdb files
+Write-Output ""
 Write-Output "Copying symbols recursively from source directory..."
 
 $symbolsFolder = "symbols_tempJ1M39VNNDF"
@@ -39,11 +46,11 @@ cmd /c rmdir $symbolsFolder /s /q
 cmd /c mkdir $symbolsFolder
 cmd /c .\copy_all_pdbs_recursive.cmd $localSourceDir $symbolsFolder
 
-Write-Output ""
 
 # Compile a list of submodules to the format (subModule_UserName, subModule_RepoName, subModule_Branch)
 $mainRepoUri = "https://api.github.com/repos/$userId/$repository"
 $webRequestUri = "$mainRepoUri/contents?ref=$branch"
+Write-Output ""
 Write-Output "Compiling a list of submodules from '$webRequestUri'..."
 $mainRepoContentJson = (Invoke-WebRequest $webRequestUri -UseBasicParsing | ConvertFrom-Json)
 
@@ -62,8 +69,8 @@ foreach ($subBlob in $mainRepoContentJson)
 	}
 }
 
-Write-Output "Launching github-sourceindexer.ps1..."
 Write-Output ""
+Write-Output "Launching github-sourceindexer.ps1..."
 
 .\github-sourceindexer.ps1 -ignoreUnknown -sourcesroot $localSourceDir -dbgToolsPath $dbgToolsPath -symbolsFolder $symbolsFolder -userId $userId -repository $repository -branch $branch -subModules $subModules -verbose
 
@@ -86,4 +93,5 @@ Write-Output "Cleanup after symbol script..."
 cmd /c rmdir $outputFolder /s /q
 cmd /c rmdir $symbolsFolder /s /q
 
+Write-Output ""
 Write-Output "Symbol script finish."
