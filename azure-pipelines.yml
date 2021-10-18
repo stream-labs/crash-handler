@@ -30,6 +30,10 @@ jobs:
   - checkout: self
     fetchDepth: 10
 
+  - powershell: 'ci/symbols.ps1 "(Get-Location).path/$(SLBuildDirectory)" "s3symbols" "stream-labs" "$(Build.Repository.Name)" "$(Build.SourceVersion)" "abc" "123"'
+    displayName: 'Generating symbol server files'    
+    workingDirectory: 'ci'
+
   - powershell: 'Write-Host "##vso[task.setvariable variable=tagartifact]crash-handler-$((git.exe describe --tags --abbrev=0) | Out-String)"'
     displayName: 'Get tag for artifact'
 
@@ -53,9 +57,8 @@ jobs:
     displayName: 'Bump version number'
     condition: and(succeeded(), contains(variables['Build.SourceBranch'], 'tags'))
 
-  - powershell: '$(Agent.BuildDirectory)/%FullDistributePath%/ci/symbols.ps1 "$(Agent.BuildDirectory)/%SLBuildDirectory%" "s3symbols" "stream-labs" "$(Build.Repository.Name)" "$(Build.SourceVersion)" "abc" "123"'
-    displayName: 'Generating symbol server files'    
-    workingDirectory: '$(Agent.BuildDirectory)/%FullDistributePath%/ci/'
+  - script: 'cmake --build %SLBuildDirectory% --target install --config RelWithDebInfo'
+    displayName: 'Build crash-handler'
 
   - script: ./ci/copy-dependencies.cmd
     displayName: 'Copy necessary dll files'
