@@ -29,7 +29,7 @@ jobs:
 
   - checkout: self
     fetchDepth: 10
-
+    
   - powershell: 'Write-Host "##vso[task.setvariable variable=tagartifact]crash-handler-$((git.exe describe --tags --abbrev=0) | Out-String)"'
     displayName: 'Get tag for artifact'
 
@@ -40,6 +40,10 @@ jobs:
 
   - script: 'yarn install'
     displayName: 'Install dependencies'
+
+  - script: .\ci\symbols.cmd
+    displayName: 'Symbols script'
+    workingDirectory: .\ci\
     
   - script: ./ci/install-zlib.cmd
     displayName: 'Install zlib'
