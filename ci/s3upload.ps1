@@ -1,7 +1,7 @@
 # $args[0] = AWS_ACCESS_KEY_ID
 # $args[1] = AWS_SECRET_ACCESS_KEY
 # $args[2] = local path to folder that will be uploaded
-
+cmd /c echo on
 $Env:AWS_ACCESS_KEY_ID=$args[0]
 $Env:AWS_SECRET_ACCESS_KEY=$args[1]
 $Env:AWS_DEFAULT_REGION="us-east-2"

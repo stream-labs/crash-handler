@@ -35,6 +35,9 @@ $branch = $args[4]
 $AWS_ACCESS_KEY_ID = $args[5]
 $AWS_SECRET_ACCESS_KEY = $args[6]
 
+# Not sure why yaml names the repo with the userId
+$repository = $repository -replace "$userId/",""
+
 # Copy symbols from the top of the source directory, it will search recursively for all *.pdb files
 Write-Output ""
 Write-Output "Copying symbols recursively from source directory..."
