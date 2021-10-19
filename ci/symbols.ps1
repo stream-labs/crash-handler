@@ -20,6 +20,7 @@ Write-Output "  args2 = $($args[2])"
 Write-Output "  args3 = $($args[3])"
 Write-Output "  args4 = $($args[4])"
 
+#Install winsdksetup to expected dir
 Write-Output ""
 Write-Output "Installing debugging tools from winsdksetup..."
 Invoke-WebRequest https://go.microsoft.com/fwlink/?linkid=2173743 -OutFile winsdksetup.exe;    
@@ -48,7 +49,6 @@ $dbgToolsPath = "C:\Program Files (x86)\Windows Kits\10\Debuggers\x64"
 cmd /c rmdir $symbolsFolder /s /q
 cmd /c mkdir $symbolsFolder
 cmd /c .\copy_all_pdbs_recursive.cmd $localSourceDir $symbolsFolder
-
 
 # Compile a list of submodules to the format (subModule_UserName, subModule_RepoName, subModule_Branch)
 $mainRepoUri = "https://api.github.com/repos/$userId/$repository"
