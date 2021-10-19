@@ -20,6 +20,7 @@ Write-Output "  args1 = $($args[1])"
 Write-Output "  args2 = $($args[2])"
 Write-Output "  args3 = $($args[3])"
 Write-Output "  args4 = $($args[4])"
+Write-Output "  args7 = $($args[7])"
 
 #Install winsdksetup to expected dir
 Write-Output ""
@@ -77,7 +78,7 @@ foreach ($subBlob in $mainRepoContentJson)
 Write-Output ""
 Write-Output "Launching github-sourceindexer.ps1..."
 
-.\github-sourceindexer.ps1 -ignoreUnknown -ignore $ignoreArray  -sourcesroot $localSourceDir -dbgToolsPath $dbgToolsPath -symbolsFolder $symbolsFolder -userId $userId -repository $repository -branch $branch -subModules $subModules -verbose
+.\github-sourceindexer.ps1 -ignoreUnknown -ignore $ignoreArray -sourcesroot $localSourceDir -dbgToolsPath $dbgToolsPath -symbolsFolder $symbolsFolder -userId $userId -repository $repository -branch $branch -subModules $subModules -verbose
 
 # Run symstore on all of the .pdb's
 Write-Output ""
