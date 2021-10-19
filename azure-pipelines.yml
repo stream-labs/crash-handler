@@ -56,7 +56,7 @@ jobs:
   - script: 'cmake --build %SLBuildDirectory% --target install --config RelWithDebInfo'
     displayName: 'Build crash-handler'
 
-  - script: ./ci/symbols.cmd "%CD%\ci" "%CD%\%FullDistributePath%\crash-handler" "s3symbols" "stream-labs" "$(Build.Repository.Name)" "$(Build.SourceVersion)" "abc" "123"
+  - script: ./ci/symbols.cmd "%CD%\ci" "%CD%" "s3symbols" "stream-labs" "$(Build.Repository.Name)" "$(Build.SourceVersion)" "abc" "123"
     displayName: 'Run symbols'
 
   - script: ./ci/copy-dependencies.cmd
