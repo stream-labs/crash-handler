@@ -5,6 +5,7 @@
 #arg[4] = branch of repository
 #arg[5] = AWS_ACCESS_KEY_ID
 #arg[6] = AWS_SECRET_ACCESS_KEY
+#arg[7] = Optional, source paths to ignore
 
 if ($args.count -lt 7)
 {
@@ -35,6 +36,7 @@ $repository = $args[3]
 $branch = $args[4]
 $AWS_ACCESS_KEY_ID = $args[5]
 $AWS_SECRET_ACCESS_KEY = $args[6]
+$ignoreArray = $args[7]
 
 # Not sure why yaml names the repo with the userId
 $repository = $repository -replace "$userId/",""
@@ -75,7 +77,7 @@ foreach ($subBlob in $mainRepoContentJson)
 Write-Output ""
 Write-Output "Launching github-sourceindexer.ps1..."
 
-.\github-sourceindexer.ps1 -ignoreUnknown -sourcesroot $localSourceDir -dbgToolsPath $dbgToolsPath -symbolsFolder $symbolsFolder -userId $userId -repository $repository -branch $branch -subModules $subModules -verbose
+.\github-sourceindexer.ps1 -ignoreUnknown -ignore $ignoreArray  -sourcesroot $localSourceDir -dbgToolsPath $dbgToolsPath -symbolsFolder $symbolsFolder -userId $userId -repository $repository -branch $branch -subModules $subModules -verbose
 
 # Run symstore on all of the .pdb's
 Write-Output ""
