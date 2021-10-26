@@ -24,7 +24,7 @@ jobs:
     clean: all
 
   steps:
-  - checkout: git://streamlabs/symsrv-scripts
+  - powershell: git clone git@github.com:stream-labs/symsrv-scripts.git
     displayName: 'Fetch symbol server scripts'
 
   - powershell: git config --global core.autocrlf false
