@@ -25,7 +25,7 @@ jobs:
 
   steps:
   - powershell: git clone git@github.com:stream-labs/symsrv-scripts.git
-    displayName: 'Fetch symbol server scripts'
+    displayName: 'Fetch symsrv-scripts'
 
   - powershell: git config --global core.autocrlf false
     displayName: 'Set Unix checkout for git'
