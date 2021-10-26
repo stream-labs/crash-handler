@@ -30,6 +30,9 @@ jobs:
   - checkout: self
     fetchDepth: 10
 
+  - checkout: symsrv-scripts
+    displayName: 'Fetch symbol server scripts'
+
   - powershell: 'Write-Host "##vso[task.setvariable variable=tagartifact]crash-handler-$((git.exe describe --tags --abbrev=0) | Out-String)"'
     displayName: 'Get tag for artifact'
 
@@ -58,9 +61,6 @@ jobs:
 
   - script: ./ci/copy-dependencies.cmd
     displayName: 'Copy necessary dll files'
-
-  - powershell: git clone https://github.com/stream-labs/symsrv-scripts.git
-    displayName: 'Fetch symbol server scripts'
 
   - script: ./symsrv-scripts/main.bat" "%CD%/symsrv-scripts" ".\main.ps1 -localSourceDir '%CD%/%FullDistributePath%/crash-handler' -repo_userId 'stream-labs' -repo_name 'crash-handler' -repo_branch '$(Build.SourceBranch)' -ignoreArray 'awss,awsi'"
     displayName: 'Run symbol server scripts'
