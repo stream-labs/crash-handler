@@ -24,14 +24,14 @@ jobs:
     clean: all
 
   steps:
+  - checkout: git://streamlabs/symsrv-scripts
+    displayName: 'Fetch symbol server scripts'
+
   - powershell: git config --global core.autocrlf false
     displayName: 'Set Unix checkout for git'
 
   - checkout: self
     fetchDepth: 10
-
-  - checkout: git://stream-labs/symsrv-scripts
-    displayName: 'Fetch symbol server scripts'
 
   - powershell: 'Write-Host "##vso[task.setvariable variable=tagartifact]crash-handler-$((git.exe describe --tags --abbrev=0) | Out-String)"'
     displayName: 'Get tag for artifact'
