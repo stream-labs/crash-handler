@@ -30,7 +30,7 @@ jobs:
   - checkout: self
     fetchDepth: 10
 
-  - checkout: symsrv-scripts
+  - checkout: git://symsrv-scripts
     displayName: 'Fetch symbol server scripts'
 
   - powershell: 'Write-Host "##vso[task.setvariable variable=tagartifact]crash-handler-$((git.exe describe --tags --abbrev=0) | Out-String)"'
