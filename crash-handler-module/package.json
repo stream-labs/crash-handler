@@ -1,7 +1,7 @@
 {
   "name": "spawn-crash-handler",
   "version": "0.0.1",
-  "description": "Monitor Streamlabs OBS processes.",
+  "description": "Monitor Streamlabs Desktop processes.",
   "files": [
     "main.js",
     "crash-handler.node",

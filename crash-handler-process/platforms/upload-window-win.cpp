@@ -372,7 +372,7 @@ void UploadWindow::windowThread()
 	upload_window_hwnd = CreateWindowEx(
 	    WS_EX_CLIENTEDGE,
 	    L"uploaderwindowclass",
-	    L"Streamlabs OBS has encountered a critical error",
+	    L"Streamlabs Desktop has encountered a critical error",
 	    WS_OVERLAPPED | WS_MINIMIZEBOX | WS_SYSMENU | WS_EX_TOPMOST,
 	    (screen_width - width) / 2,
 	    (screen_height - height) / 2,
