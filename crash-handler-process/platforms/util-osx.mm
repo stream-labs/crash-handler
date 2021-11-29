@@ -20,7 +20,7 @@ void stopApplication(void) {
     NSAlert *alert = [[NSAlert alloc] init];
     [alert addButtonWithTitle:@"NO"];
     [alert addButtonWithTitle:@"YES"];
-    [alert setMessageText:@"An error occurred which has caused Streamlabs OBS to close. Don't worry! If you were streaming or recording, that is still happening in the background.\
+    [alert setMessageText:@"An error occurred which has caused Streamlabs Desktop to close. Don't worry! If you were streaming or recording, that is still happening in the background.\
     \n\nWhenever you're ready, we can relaunch the application, however this will end your stream / recording session.\
     \n\nClick the Yes button to keep streaming / recording.\
     \n\nClick the No button to stop streaming / recording."];
@@ -71,7 +71,7 @@ std::string Util::get_temp_directory() {
 }
 
 void Util::restartApp(std::wstring path) {
-    [[NSWorkspace sharedWorkspace] launchApplication:@"/Applications/Streamlabs OBS.app"];
+    [[NSWorkspace sharedWorkspace] launchApplication:@"/Applications/Streamlabs Desktop.app"];
 }
 
 void Util::setCachePath(std::wstring path) {}

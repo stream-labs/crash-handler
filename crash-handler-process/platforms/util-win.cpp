@@ -115,7 +115,7 @@ void Util::restartApp(std::wstring path) {
 void Util::runTerminateWindow(bool& shouldRestart) {
     int code = MessageBox(
         NULL,
-        L"An error occurred which has caused Streamlabs OBS to close. Don't worry! If you were streaming or recording, that is still happening in the background."
+        L"An error occurred which has caused Streamlabs Desktop to close. Don't worry! If you were streaming or recording, that is still happening in the background."
         L"\n\nWhenever you're ready, we can relaunch the application, however this will end your stream / recording session.\n\n"
         L"Click the Yes button to keep streaming / recording. \n\n"
         L"Click the No button to stop streaming / recording.",
