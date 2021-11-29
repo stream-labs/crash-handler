@@ -71,7 +71,15 @@ std::string Util::get_temp_directory() {
 }
 
 void Util::restartApp(std::wstring path) {
-    [[NSWorkspace sharedWorkspace] launchApplication:@"/Applications/Streamlabs Desktop.app"];
+    auto index = path.find(L"Contents");
+    if (index != std::string::npos) {
+        auto appPath = path.substr(0, index - 1);
+        log_info << "Restart app at: " << std::string(appPath.begin(), appPath.end()) << std::endl;
+        NSString * sObjC = [[NSString alloc] initWithBytes:appPath.data()
+                                        length:appPath.size() * sizeof(wchar_t)
+                                        encoding:NSUTF32LittleEndianStringEncoding];
+        [[NSWorkspace sharedWorkspace] launchApplication:sObjC];
+    }
 }
 
 void Util::setCachePath(std::wstring path) {}
