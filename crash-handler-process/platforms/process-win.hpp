@@ -40,14 +40,13 @@ private:
 	HWND getTopWindow();
 
 public:
-    Process_WIN(int32_t pid, bool isCritical);
+    Process_WIN(int32_t pid);
     ~Process_WIN();
 
 public:
     virtual int32_t  getPID(void)     override;
-    virtual bool     isCritical(void) override;
-    virtual bool     isAlive(void)    override;
     virtual bool     isResponsive(void) override;
+    virtual bool     isRunning(void) override;
     virtual void     terminate(void)  override;
 	
 public:

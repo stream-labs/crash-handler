@@ -359,6 +359,7 @@ void UploadWindow::windowThread()
 	wc.lpszMenuName  = NULL;
 	wc.lpszClassName = L"uploaderwindowclass";
 	wc.hIcon         = LoadIcon(NULL, IDI_ERROR);
+	wc.hIconSm       = NULL;
 	if (!RegisterClassEx(&wc)) {
 		log_error << "Failed to create a class for uploader window " << GetLastError() << std::endl;
 		upload_window_choose_variable.notify_one();
@@ -509,7 +510,6 @@ void UploadWindow::windowThread()
 bool UploadWindow::createWindow()
 {
 	window_thread = new std::thread(&UploadWindow::windowThread, this);
-
 	std::unique_lock<std::mutex> lock(upload_window_choose_mutex);
 	upload_window_choose_variable.wait(lock);
 
