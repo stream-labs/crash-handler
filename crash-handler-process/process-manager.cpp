@@ -46,16 +46,10 @@ void ProcessManager::watcher_fnc() {
     this->socket = Socket::create();
     if (this->socket->initialization_failed)
         return;
-    bool registered = false;
 
     while (!this->watcher->stop) {
         std::vector<char> buffer = this->socket->read();
         if (!buffer.size()) {
-            // {
-            //     const std::lock_guard<std::mutex> lock(this->mtx);
-            //     if (registered && this->processes.size() > 0 && !this->processes[0]->isRunning())
-            //         break;
-            // }
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
             continue;
         }
@@ -70,7 +64,6 @@ void ProcessManager::watcher_fnc() {
                 if (size == 1)
                     startMonitoring();
 
-                registered = true;
                 break;
             }
             case Action::UNREGISTER: {

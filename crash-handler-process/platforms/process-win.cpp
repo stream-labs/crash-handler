@@ -52,7 +52,6 @@ Process_WIN::Process_WIN(int32_t pid, bool isCritical) {
 	this->alive = true;
 	this->handle_OpenProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, getPIDDWORD());
 	this->checker = new std::thread(&Process_WIN::worker, this);
-	this->running = true;
 }
 
 Process_WIN::~Process_WIN() {
@@ -72,7 +71,6 @@ Process_WIN::~Process_WIN() {
 int32_t Process_WIN::getPID(void) {
 	return PID;
 }
-
 
 bool Process_WIN::isCritical(void) {
 	return critical;
@@ -123,7 +121,6 @@ void Process_WIN::memorydump_worker() {
 	HANDLE handles[] = { handle_OpenProcess, handle_event_Start };
 	DWORD ret = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
 	if (ret - WAIT_OBJECT_0 == 1) {
-		running = false;
 		recievedDmpEvent = true;
 		alive = false;
 		log_info << "Memory dump worker event recieved" << std::endl;
@@ -216,11 +213,6 @@ bool Process_WIN::isResponsive(void) {
 		return IsHungAppWindow(window);
 	else 
 		return false;
-}
-
-bool Process_WIN::isRunning(void) {
-    std::unique_lock<std::mutex> ul(this->mtx);
-	return this->running;
 }
 
 void Process_WIN::terminate(void) {

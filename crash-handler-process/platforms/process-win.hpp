@@ -48,7 +48,6 @@ public:
     virtual bool     isCritical(void) override;
     virtual bool     isAlive(void)    override;
     virtual bool     isResponsive(void) override;
-    virtual bool     isRunning(void) override;
     virtual void     terminate(void)  override;
 	
 public:

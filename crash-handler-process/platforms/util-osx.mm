@@ -57,7 +57,6 @@ void Util::runTerminateWindow(bool &shouldRestart) {
     }
 }
 
-
 void Util::check_pid_file(std::string& pid_path) {
     //TODO
 }

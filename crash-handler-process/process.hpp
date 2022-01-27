@@ -37,15 +37,12 @@ protected:
 	bool     critical = false;
 	bool     alive = false;
 	bool     recievedDmpEvent = false;
-	bool     running = false;
-
 
 public:
 	virtual int32_t  getPID(void)     = 0;
 	virtual bool     isCritical(void) = 0;
 	virtual bool     isAlive(void)    = 0;
-    virtual bool     isResponsive(void) = 0;
-    virtual bool     isRunning(void) = 0;
+	virtual bool     isResponsive(void) = 0;
 	virtual void     terminate(void)    = 0;
 
 public:
