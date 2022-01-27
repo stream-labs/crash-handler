@@ -42,12 +42,14 @@ BOOL CALLBACK enum_windows_callback(HWND handle, LPARAM lParam)
     return FALSE;   
 }
 
-std::unique_ptr<Process> Process::create(int32_t pid) {
-	return std::make_unique<Process_WIN>(pid);
+std::unique_ptr<Process> Process::create(int32_t pid, bool isCritical) {
+	return std::make_unique<Process_WIN>(pid, isCritical);
 }
 
-Process_WIN::Process_WIN(int32_t pid) {
+Process_WIN::Process_WIN(int32_t pid, bool isCritical) {
 	this->PID = pid;
+	this->critical = isCritical;
+	this->alive = true;
 	this->handle_OpenProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, getPIDDWORD());
 	this->checker = new std::thread(&Process_WIN::worker, this);
 	this->running = true;
@@ -69,6 +71,11 @@ Process_WIN::~Process_WIN() {
 
 int32_t Process_WIN::getPID(void) {
 	return PID;
+}
+
+
+bool Process_WIN::isCritical(void) {
+	return critical;
 }
 
 void Process_WIN::startMemoryDumpMonitoring(const std::wstring& eventName_Start, const std::wstring& eventName_Fail, const std::wstring& eventName_Success, const std::wstring& dumpPath, const std::wstring& dumpName) {
@@ -118,6 +125,7 @@ void Process_WIN::memorydump_worker() {
 	if (ret - WAIT_OBJECT_0 == 1) {
 		running = false;
 		recievedDmpEvent = true;
+		alive = false;
 		log_info << "Memory dump worker event recieved" << std::endl;
 		bool successful_upload = false;
 		if (std::filesystem::exists(memorydumpPath) && UploadWindow::getInstance()->createWindow()) {
@@ -191,8 +199,14 @@ void Process_WIN::worker() {
 
     if (!WaitForSingleObject(this->handle_OpenProcess, INFINITE)) {
         std::unique_lock<std::mutex> ul(this->mtx);
+        this->alive = false;
         this->handle_OpenProcess = NULL;
     }
+}
+
+bool Process_WIN::isAlive(void) {
+    std::unique_lock<std::mutex> ul(this->mtx);
+    return this->alive;
 }
 
 bool Process_WIN::isResponsive(void) {

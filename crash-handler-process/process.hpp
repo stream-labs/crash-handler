@@ -28,18 +28,22 @@
 
 class Process {
 public:
-	static std::unique_ptr<Process> create(int32_t pid);
+	static std::unique_ptr<Process> create(int32_t pid, bool isCritical);
 	Process() {};
 	virtual ~Process() {};
 
 protected:
 	int32_t  PID = 0;
+	bool     critical = false;
+	bool     alive = false;
 	bool     recievedDmpEvent = false;
 	bool     running = false;
 
 
 public:
 	virtual int32_t  getPID(void)     = 0;
+	virtual bool     isCritical(void) = 0;
+	virtual bool     isAlive(void)    = 0;
     virtual bool     isResponsive(void) = 0;
     virtual bool     isRunning(void) = 0;
 	virtual void     terminate(void)    = 0;

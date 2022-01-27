@@ -112,6 +112,34 @@ void Util::restartApp(std::wstring path) {
 	);
 }
 
+void Util::runTerminateWindow(bool& shouldRestart) {
+    int code = MessageBox(
+        NULL,
+        L"An error occurred which has caused Streamlabs Desktop to close. Don't worry! If you were streaming or recording, that is still happening in the background."
+        L"\n\nWhenever you're ready, we can relaunch the application, however this will end your stream / recording session.\n\n"
+        L"Click the Yes button to keep streaming / recording. \n\n"
+        L"Click the No button to stop streaming / recording.",
+        L"An error occurred",
+        MB_YESNO | MB_SYSTEMMODAL
+        );
+    switch (code) {
+        case IDYES:
+        {
+            MessageBox(
+                NULL,
+                L"Your stream / recording session is still running in the background. Whenever you're ready, click the OK button below to end your stream / recording and relaunch the application.",
+                L"Choose when to restart",
+                MB_OK | MB_SYSTEMMODAL
+            );
+			shouldRestart = true;
+            break;
+        }
+        case IDNO:
+        default:
+            break;
+    }
+}
+
 static thread_local std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 
 std::string from_utf16_wide_to_utf8(const wchar_t* from, size_t length = -1)

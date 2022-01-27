@@ -41,6 +41,7 @@ public:
 
     void runWatcher();
     bool m_applicationCrashed;
+    bool m_criticalCrash;
 
     void handleCrash(std::wstring path);
     void sendExitMessage(bool appCrashed);
@@ -53,8 +54,12 @@ private:
     std::unique_ptr<Socket> socket;
 
     void watcher_fnc();
+    void monitor_fnc();
 
-    size_t registerProcess(uint32_t PID);
+    void startMonitoring();
+    void stopMonitoring();
+
+    size_t registerProcess(bool isCritical, uint32_t PID);
     void unregisterProcess(uint32_t PID);
     void registerProcessMemoryDump(uint32_t PID, const std::wstring& eventName_Start, const std::wstring& eventName_Fail, const std::wstring& eventName_Success, const std::wstring& dumpPath, const std::wstring& dumpName);
 

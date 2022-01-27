@@ -47,6 +47,16 @@ void stopApplication(void) {
 }
 @end
 
+void Util::runTerminateWindow(bool &shouldRestart) {
+    @autoreleasepool {
+        NSApplication *app = [NSApplication sharedApplication];
+        AppDelegate *del = [[AppDelegate alloc] init];
+        app.delegate = del;
+        [app run];
+        shouldRestart = restart;
+    }
+}
+
 
 void Util::check_pid_file(std::string& pid_path) {
     //TODO
