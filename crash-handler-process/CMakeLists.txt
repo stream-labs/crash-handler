@@ -35,6 +35,7 @@ IF(WIN32)
 		BUILD_ALWAYS      TRUE
 		TEST_COMMAND      ""
 		PREFIX 		  awss
+		GIT_SHALLOW 	TRUE
 	)
 ENDIF()
 
@@ -94,7 +95,7 @@ IF(WIN32)
 		message(STATUS "Found include directory: " ${ZLIB_INCLUDE_DIRS})	
 
 		include(FindZLIB_Bin)
-
+		message(STATUS "ZLIB_BIN_FILES=" ${ZLIB_BIN_FILES})
 		add_custom_command(
 				TARGET crash-handler-process POST_BUILD
 				COMMAND ${CMAKE_COMMAND} -E copy
@@ -122,6 +123,14 @@ IF(WIN32)
 		)
 	target_link_libraries(crash-handler-process "${AWS_LIBS}")
 	target_link_libraries(crash-handler-process ${ZLIB_LIBRARIES})
+
+
+	# Compare current linked libs with prev
+	FetchContent_Declare(deps_checker URL "https://raw.githubusercontent.com/stream-labs/obs-studio-node/staging/dependency_checker/check_dependencies.cmd" DOWNLOAD_NO_EXTRACT true)
+	FetchContent_MakeAvailable(deps_checker)
+
+	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${deps_checker_SOURCE_DIR}/check_dependencies.cmd $<TARGET_FILE:crash-handler-process> ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} $<CONFIG> )
+
 ELSE()
 	target_link_libraries(crash-handler-process ${COCOA})
 ENDIF()
