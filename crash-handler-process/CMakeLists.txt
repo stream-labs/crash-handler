@@ -95,7 +95,7 @@ IF(WIN32)
 		message(STATUS "Found include directory: " ${ZLIB_INCLUDE_DIRS})	
 
 		include(FindZLIB_Bin)
-		message(STATUS "ZLIB_BIN_FILES=" ${ZLIB_BIN_FILES})
+
 		add_custom_command(
 				TARGET crash-handler-process POST_BUILD
 				COMMAND ${CMAKE_COMMAND} -E copy
