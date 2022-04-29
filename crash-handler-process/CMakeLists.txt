@@ -25,16 +25,18 @@ IF(WIN32)
 
 	ExternalProject_Add(libawscpp
 		GIT_REPOSITORY    https://github.com/aws/aws-sdk-cpp.git
-		GIT_TAG           1.8.186
+		GIT_TAG           1.9.247
 		LIST_SEPARATOR    "|"
 		CMAKE_ARGS       -DBUILD_SHARED_LIBS=OFF
+				 -DBUILD_DEPS=ON
 				 -DBUILD_ONLY=s3|sts
 				 -DENABLE_TESTING=OFF
 				 -DCUSTOM_MEMORY_MANAGEMENT=OFF
 				 -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}/awsi
 		BUILD_ALWAYS      TRUE
 		TEST_COMMAND      ""
-		PREFIX 		  awss
+		PREFIX            awss
+		GIT_SHALLOW       TRUE
 	)
 ENDIF()
 
@@ -113,14 +115,23 @@ IF(WIN32)
 	add_compile_definitions(AWS_CRASH_UPLOAD_BUCKET_KEY=\"$ENV{AWS_CRASH_UPLOAD_BUCKET_KEY}\")
 
 	set( AWS_LIBS
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-auth.lib"
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-cal.lib"
 		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-common.lib"
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-compression.lib"
 		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-event-stream.lib"
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-http.lib"
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-io.lib"
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-mqtt.lib"
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-s3.lib"
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-sdkutils.lib"
 		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-checksums.lib"
 		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-cpp-sdk-core.lib"
-		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-cpp-sdk-sts.lib"
 		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-cpp-sdk-s3.lib"
-		)
-	target_link_libraries(crash-handler-process "${AWS_LIBS}")
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-cpp-sdk-sts.lib"
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-crt-cpp.lib"
+	)
+	target_link_libraries(crash-handler-process "${AWS_LIBS}" Secur32.lib Ncrypt.lib Shlwapi.lib crypt32.lib)
 	target_link_libraries(crash-handler-process ${ZLIB_LIBRARIES})
 ELSE()
 	target_link_libraries(crash-handler-process ${COCOA})
