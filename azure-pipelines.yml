@@ -18,8 +18,7 @@ variables:
 
 jobs:
 - job: 'Windows'
-  pool:
-    vmImage: 'windows-2019'
+  pool: 'Default'
   workspace:
     clean: all
 
@@ -32,11 +31,6 @@ jobs:
 
   - powershell: 'Write-Host "##vso[task.setvariable variable=tagartifact]crash-handler-$((git.exe describe --tags --abbrev=0) | Out-String)"'
     displayName: 'Get tag for artifact'
-
-  - task: NodeTool@0
-    displayName: 'Install Node'
-    inputs:
-      versionSpec: '10.x'
 
   - script: 'yarn install'
     displayName: 'Install dependencies'
@@ -97,7 +91,7 @@ jobs:
 
 - job: 'MacOSX'
   pool:
-    vmImage: 'macos-10.15'
+    vmImage: 'macos-11'
   workspace:
     clean: all
 
@@ -114,7 +108,7 @@ jobs:
   - task: NodeTool@0
     displayName: 'Install Node'
     inputs:
-      versionSpec: '10.x'
+      versionSpec: '14.x'
 
   - script: 'yarn install'
     displayName: 'Install dependencies'
