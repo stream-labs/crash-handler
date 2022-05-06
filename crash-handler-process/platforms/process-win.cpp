@@ -60,9 +60,11 @@ Process_WIN::~Process_WIN() {
 	if (this->checker->joinable())
 		this->checker->join();
 
+	SetEvent(this->handle_event_StopMonitoring);
 	if (memorydump != nullptr && memorydump->joinable())
 		memorydump->join();
-	
+
+	safeCloseHandle(this->handle_event_StopMonitoring);
 	safeCloseHandle(this->handle_event_Start);
 	safeCloseHandle(this->handle_event_Fail);
 	safeCloseHandle(this->handle_event_Success);
@@ -76,6 +78,9 @@ bool Process_WIN::isCritical(void) {
 	return critical;
 }
 
+void Process_WIN::stopMemoryDumpMonitoring() {
+	SetEvent(this->handle_event_StopMonitoring);
+}
 void Process_WIN::startMemoryDumpMonitoring(const std::wstring& eventName_Start, const std::wstring& eventName_Fail, const std::wstring& eventName_Success, const std::wstring& dumpPath, const std::wstring& dumpName) {
 	if (memorydump && memorydump->joinable()) {
 		return;
@@ -110,6 +115,7 @@ void Process_WIN::startMemoryDumpMonitoring(const std::wstring& eventName_Start,
 		safeCloseHandle(handle_event_Success);
 		return;
 	}
+	handle_event_StopMonitoring = CreateEvent(NULL, TRUE, FALSE, L"");
 
 	memorydumpName = dumpName;
 	memorydumpPath = dumpPath;
@@ -118,8 +124,8 @@ void Process_WIN::startMemoryDumpMonitoring(const std::wstring& eventName_Start,
 
 void Process_WIN::memorydump_worker() {
 	log_info << "Memory dump worker started" << std::endl;
-	HANDLE handles[] = { handle_OpenProcess, handle_event_Start };
-	DWORD ret = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
+	HANDLE handles[] = { handle_OpenProcess, handle_event_Start, handle_event_StopMonitoring};
+	DWORD ret = WaitForMultipleObjects(3, handles, FALSE, INFINITE);
 	if (ret - WAIT_OBJECT_0 == 1) {
 		recievedDmpEvent = true;
 		alive = false;
@@ -194,7 +200,9 @@ void Process_WIN::worker() {
     if (!this->handle_OpenProcess)
         return;
 
-    if (!WaitForSingleObject(this->handle_OpenProcess, INFINITE)) {
+    HANDLE handles[] = { this->handle_OpenProcess, this->handle_event_StopMonitoring};
+    DWORD ret = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
+    if (ret - WAIT_OBJECT_0 == 0) {
         std::unique_lock<std::mutex> ul(this->mtx);
         this->alive = false;
         this->handle_OpenProcess = NULL;
@@ -221,7 +229,8 @@ void Process_WIN::terminate(void) {
 
     if (memorydump != nullptr && memorydump->joinable())
         memorydump->join();
-	
+
+    safeCloseHandle(handle_event_StopMonitoring);
     safeCloseHandle(handle_event_Fail);
     safeCloseHandle(handle_event_Success);
 

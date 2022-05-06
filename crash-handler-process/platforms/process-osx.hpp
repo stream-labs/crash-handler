@@ -14,4 +14,5 @@ public:
     
 public:
     virtual void     startMemoryDumpMonitoring(const std::wstring& eventName_Start, const std::wstring& eventName_Fail, const std::wstring& eventName_Success, const std::wstring& dumpPath, const std::wstring& dumpName) override;
+    virtual void     stopMemoryDumpMonitoring() override;
 };

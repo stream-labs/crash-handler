@@ -43,9 +43,10 @@ public:
 	virtual int32_t  getPID(void)     = 0;
 	virtual bool     isCritical(void) = 0;
 	virtual bool     isAlive(void)    = 0;
-    virtual bool     isResponsive(void) = 0;
+	virtual bool     isResponsive(void) = 0;
 	virtual void     terminate(void)    = 0;
 
 public:
 	virtual void     startMemoryDumpMonitoring(const std::wstring& eventName_Start, const std::wstring& eventName_Fail, const std::wstring& eventName_Success, const std::wstring& dumpPath, const std::wstring& dumpName) = 0;
+	virtual void     stopMemoryDumpMonitoring() = 0;
 };

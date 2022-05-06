@@ -33,6 +33,7 @@ private:
 	HANDLE handle_event_Start{INVALID_HANDLE_VALUE};
 	HANDLE handle_event_Fail{INVALID_HANDLE_VALUE};
 	HANDLE handle_event_Success{INVALID_HANDLE_VALUE};
+	HANDLE handle_event_StopMonitoring{INVALID_HANDLE_VALUE};
 
 	std::wstring memorydumpPath;
 	std::wstring memorydumpName;
@@ -52,6 +53,7 @@ public:
 	
 public:
     virtual void     startMemoryDumpMonitoring(const std::wstring& eventName_Start, const std::wstring& eventName_Fail, const std::wstring& eventName_Success, const std::wstring& dumpPath, const std::wstring& dumpName) override;
+    virtual void     stopMemoryDumpMonitoring() override;
 
 private:
     void worker();

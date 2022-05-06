@@ -25,13 +25,14 @@
 #include "logger.hpp"
 #include "util.hpp"
 
-using stopper = std::atomic<bool>;
-
 struct ThreadData {
     bool         isRunnning = false;
-    stopper      stop = { false };
-    std::mutex*  mtx = nullptr;
+    std::mutex   mtx;
     std::thread* worker = nullptr;
+
+    bool         should_stop = false;
+    std::condition_variable stop_event;
+    std::mutex   stop_mutex;
 };
 
 class ProcessManager {

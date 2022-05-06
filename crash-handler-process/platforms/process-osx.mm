@@ -30,6 +30,9 @@ bool Process_OSX::isResponsive(void) {
 void Process_OSX::startMemoryDumpMonitoring(const std::wstring& eventName_Start, const std::wstring& eventName_Fail, const std::wstring& eventName_Success, const std::wstring& dumpPath, const std::wstring& dumpName) {
 	return;
 }
+void Process_OSX::stopMemoryDumpMonitoring() {
+	return;
+}
 
 bool Process_OSX::isAlive(void) {
 	struct proc_bsdinfo proc;
