@@ -19,6 +19,21 @@
 #include "process-manager.hpp"
 
 #include <iostream>
+void ThreadData::send_stop() {
+    {
+        const std::lock_guard<std::recursive_mutex> lock(stop_mutex);
+        should_stop = true;
+    }
+    stop_event.notify_one();
+}
+
+bool ThreadData::wait_or_stop() {
+    std::unique_lock<std::recursive_mutex> lck(stop_mutex);
+    if (should_stop)
+        return true;
+    else
+        return stop_event.wait_for(lck, std::chrono::milliseconds(50), [&flag = this->should_stop]{return flag;});
+}
 
 ProcessManager::ProcessManager() {
     m_applicationCrashed = false;
@@ -33,7 +48,6 @@ ProcessManager::~ProcessManager() {
 
 void ProcessManager::runWatcher() {
     this->watcher = new ThreadData();
-    this->watcher->isRunnning = false;
     this->watcher->should_stop = false;
     this->watcher->worker =
         new std::thread(&ProcessManager::watcher_fnc, this);
@@ -47,8 +61,8 @@ void ProcessManager::watcher_fnc() {
     this->socket = Socket::create();
     if (this->socket->initialization_failed)
         return;
-    std::unique_lock<std::mutex> lk(this->watcher->stop_mutex);
-    while (!this->watcher->stop_event.wait_for(lk, std::chrono::milliseconds(50), [&flag = this->watcher->should_stop]{return flag;})) {
+
+    while (!this->watcher->wait_or_stop()) {
         std::vector<char> buffer = this->socket->read();
         while(buffer.size()) {
             Message msg(buffer);
@@ -93,8 +107,7 @@ void ProcessManager::monitor_fnc() {
     bool unresponsiveMarked = false;
     uint32_t last_responsive_check = 0;
 
-    std::unique_lock<std::mutex> lk(this->monitor->stop_mutex);
-    while (!this->monitor->stop_event.wait_for(lk, std::chrono::milliseconds(50), [&flag = this->monitor->should_stop]{return flag;})) {
+    while (!this->monitor->wait_or_stop()) {
         bool detectedUnresponsive = false;
         if (this->mtx.try_lock()) {
             if (++last_responsive_check % 100 == 0)
@@ -108,7 +121,7 @@ void ProcessManager::monitor_fnc() {
                     log_info << "process.isCritical: " << process->isCritical() << std::endl;
 
                     m_criticalCrash = process->isCritical();
-                    m_applicationCrashed = this->monitor->should_stop = true;
+                    m_applicationCrashed = true;
                 } else if (last_responsive_check == 0) {
                     detectedUnresponsive |= process->isResponsive();
                 }
@@ -127,12 +140,11 @@ void ProcessManager::monitor_fnc() {
                 unresponsiveMarked = true;
             }
         }
-        if(this->monitor->should_stop)
+        if(m_applicationCrashed)
             break;
     }
 
-    this->watcher->should_stop = true;
-    this->watcher->stop_event.notify_one();
+    this->watcher->send_stop();
 #ifdef __APPLE__
     if (m_applicationCrashed) {
         std::vector<char> buffer;
@@ -145,7 +157,6 @@ void ProcessManager::monitor_fnc() {
 
 void ProcessManager::startMonitoring() {
     this->monitor = new ThreadData();
-    this->monitor->isRunnning = false;
     this->monitor->should_stop = false;
 
     this->monitor->worker =
@@ -153,8 +164,7 @@ void ProcessManager::startMonitoring() {
 }
 
 void ProcessManager::stopMonitoring() {
-    this->monitor->should_stop = true;
-    this->monitor->stop_event.notify_all();
+    this->monitor->send_stop();
 
     if (this->monitor->worker->joinable())
         this->monitor->worker->join();
@@ -199,8 +209,7 @@ void ProcessManager::unregisterProcess(uint32_t PID) {
 
     if ((*it)->isCritical()) {
         (*it)->stopMemoryDumpMonitoring();
-        this->watcher->should_stop = true;
-        this->watcher->stop_event.notify_one();
+        this->watcher->send_stop();
         this->stopMonitoring();
         this->sendExitMessage(false);
     }

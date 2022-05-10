@@ -124,9 +124,12 @@ void Process_WIN::startMemoryDumpMonitoring(const std::wstring& eventName_Start,
 
 void Process_WIN::memorydump_worker() {
 	log_info << "Memory dump worker started" << std::endl;
-	HANDLE handles[] = { handle_OpenProcess, handle_event_Start, handle_event_StopMonitoring};
+	HANDLE handles[] = { handle_OpenProcess, handle_event_Start, handle_event_StopMonitoring };
 	DWORD ret = WaitForMultipleObjects(3, handles, FALSE, INFINITE);
-	if (ret - WAIT_OBJECT_0 == 1) {
+	if ((ret - WAIT_OBJECT_0) == 2 || (ret - WAIT_OBJECT_0) == 0) {
+		safeCloseHandle(handle_event_Success);
+		SetEvent(handle_event_Fail);
+	} else if (ret - WAIT_OBJECT_0 == 1) {
 		recievedDmpEvent = true;
 		alive = false;
 		log_info << "Memory dump worker event recieved" << std::endl;
