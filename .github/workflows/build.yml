@@ -21,6 +21,8 @@ env:
   RELEASE_BUCKET: "slobs-crash-handler"
   ELECTRON_VERSION: "v12.1.0"
   BIN_DEPENDENCIES: "dependencies2019.0"
+  AWS_SDK_VERSION: "1.8.186"
+  AWS_SDK_PATH: "aws-sdk/awsi"
 
 permissions:
   contents: read
@@ -45,6 +47,22 @@ jobs:
           node-version: '16.x'
       - name: Install dependencies
         run: yarn install --immutable --immutable-cache --check-cache
+
+      - name: Get aws sdk from cache
+        id: aws-sdk-cache-check
+        uses: actions/cache@v2
+        with:
+          path: ${{env.AWS_SDK_PATH}}
+          key: ${{ runner.os }}-aws-${{ env.AWS_SDK_VERSION }}
+      - name: Build aws sdk
+        if: steps.aws-sdk-cache-check.outputs.cache-hit != 'true'
+        run: ./ci/build-aws-sdk.cmd
+      - name: Put aws sdk to cache
+        if: steps.aws-sdk-cache-check.outputs.cache-hit != 'true'
+        uses: actions/cache@v2
+        with:
+          path: ${{env.AWS_SDK_PATH}}
+          key: ${{ runner.os }}-zlib-${{ env.AWS_SDK_VERSION }}
 
       - name: Get zlib from cache
         id: zlib-cache-check
@@ -202,7 +220,7 @@ jobs:
         if: steps.cache-check.outputs.cache-hit != 'true'
         run: exit 1
       - name: Tar artifact for deployment
-        run: tar -cvzf ${{env.TARGET_ARTIFACT}}.tar.gz -C "${{env.INSTALL_DISTRIBUTE_PATH}}"" ${{env.PACKAGE_DIRECTORY}}
+        run: tar -cvzf ${{env.TARGET_ARTIFACT}}.tar.gz -C "${{env.INSTALL_DISTRIBUTE_PATH}}" ${{env.PACKAGE_DIRECTORY}}
         env:
           TARGET_ARTIFACT: ${{env.PACKAGE_NAME}}-${{ steps.get_version.outputs.VERSION }}-${{env.OS_TAG}}
           INSTALL_DISTRIBUTE_PATH: "${{env.BUILD_DIRECTORY}}/${{env.DISTRIBUTE_DIRECTORY}}"
