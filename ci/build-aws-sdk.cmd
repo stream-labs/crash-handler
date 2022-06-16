@@ -1,7 +1,7 @@
 mkdir aws-sdk
 cd aws-sdk
 
-git clone --branch %AWS_SDK_VERSION% --depth 1 --recurse-submodules git@github.com:aws/aws-sdk-cpp.git
+git clone --branch %AWS_SDK_VERSION% --depth 1 --recurse-submodules https://github.com/aws/aws-sdk-cpp.git
 
 mkdir build
 cd build
