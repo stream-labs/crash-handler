@@ -53,7 +53,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{env.AWS_SDK_PATH}}
-          key: ${{ runner.os }}-aws-${{ env.AWS_SDK_VERSION }}
+          key: ${{ runner.os }}-awssdk-${{ env.AWS_SDK_VERSION }}
       - name: Build aws sdk
         if: steps.aws-sdk-cache-check.outputs.cache-hit != 'true'
         run: ./ci/build-aws-sdk.cmd
@@ -62,7 +62,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{env.AWS_SDK_PATH}}
-          key: ${{ runner.os }}-zlib-${{ env.AWS_SDK_VERSION }}
+          key: ${{ runner.os }}-awssdk-${{ env.AWS_SDK_VERSION }}
 
       - name: Get zlib from cache
         id: zlib-cache-check
