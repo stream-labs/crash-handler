@@ -50,7 +50,7 @@ jobs:
 
       - name: Get aws sdk from cache
         id: aws-sdk-cache-check
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{env.AWS_SDK_PATH}}
           key: ${{ runner.os }}-awssdk-${{ env.AWS_SDK_VERSION }}
@@ -59,14 +59,14 @@ jobs:
         run: ./ci/build-aws-sdk.cmd
       - name: Put aws sdk to cache
         if: steps.aws-sdk-cache-check.outputs.cache-hit != 'true'
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{env.AWS_SDK_PATH}}
           key: ${{ runner.os }}-awssdk-${{ env.AWS_SDK_VERSION }}
 
       - name: Get zlib from cache
         id: zlib-cache-check
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{env.BIN_DEPENDENCIES}}
           key: ${{ runner.os }}-zlib-${{ env.BIN_DEPENDENCIES }}
@@ -75,7 +75,7 @@ jobs:
         run: ./ci/install-zlib.cmd
       - name: Put zlib to cache
         if: steps.zlib-cache-check.outputs.cache-hit != 'true'
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{env.BIN_DEPENDENCIES}}
           key: ${{ runner.os }}-zlib-${{ env.BIN_DEPENDENCIES }}
@@ -94,7 +94,7 @@ jobs:
         env:
           PACKAGE_PATH: "${{env.BUILD_DIRECTORY}}/${{env.DISTRIBUTE_DIRECTORY}}/${{env.PACKAGE_DIRECTORY}}"
       - name: Cache build
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{env.BUILD_DIRECTORY}}
           key: ${{ runner.os }}-build-${{ github.sha }}
@@ -107,7 +107,7 @@ jobs:
     steps:
       - name: Get build from cache
         id: cache-check
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{env.BUILD_DIRECTORY}}
           key: ${{ runner.os }}-build-${{ github.sha }}
@@ -141,7 +141,7 @@ jobs:
         shell: bash
       - name: Get build from cache
         id: cache-check
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{env.BUILD_DIRECTORY}}
           key: ${{ runner.os }}-build-${{ github.sha }}
@@ -193,7 +193,7 @@ jobs:
         env:
           PACKAGE_PATH: "${{env.BUILD_DIRECTORY}}/${{env.DISTRIBUTE_DIRECTORY}}/${{env.PACKAGE_DIRECTORY}}"
       - name: Cache build
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{env.BUILD_DIRECTORY}}
           key: ${{ runner.os }}-build-${{ github.sha }}
@@ -212,7 +212,7 @@ jobs:
         shell: bash
       - name: Get build from cache
         id: cache-check
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{env.BUILD_DIRECTORY}}
           key: ${{ runner.os }}-build-${{ github.sha }}
