@@ -1,3 +1,6 @@
+:: run before cmake of main project to build aws cpp sdk locally 
+:: it expect AWS_SDK_VERSION env variable to be set
+
 mkdir aws-sdk
 cd aws-sdk
 
