@@ -20,7 +20,7 @@
 #include "process-manager.hpp"
 #include "util.hpp"
 #include <codecvt>
-
+#include <boost/locale.hpp>
 
 #if defined(WIN32)
 	const std::string log_file_name = "\\crash-handler.log";

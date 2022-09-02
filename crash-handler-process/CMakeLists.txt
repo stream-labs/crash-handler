@@ -56,6 +56,25 @@ ENDIF()
 find_library(COCOA Cocoa)
 
 
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_STATIC_RUNTIME ON)
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME ON)
+set(Boost_DEBUG OFF)
+set(Boost_RELEASE ON)
+
+find_package(Boost
+	1.79.0 EXACT
+	REQUIRED
+	COMPONENTS
+		iostreams
+		system
+		date_time
+		locale
+)
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+
 #############################
 # Building
 #############################
@@ -64,11 +83,17 @@ IF(WIN32)
 ENDIF()
 
 IF(WIN32)
-
 	ADD_EXECUTABLE(crash-handler-process ${PROJECT_SOURCE} ${WINDOWS_SOURCE})
 ELSE(APPLE)
 	ADD_EXECUTABLE(crash-handler-process ${PROJECT_SOURCE} ${APPLE_SOURCE})
 ENDIF()
+
+target_compile_options(crash-handler-process
+	PRIVATE
+		$<IF:$<CONFIG:Debug>,-MTd,-MT>
+		-W3 -Zi
+		-bigobj
+)
 
 IF(WIN32)
 	find_package(ZLIB)
@@ -123,7 +148,7 @@ IF(WIN32)
 
  
 	target_link_libraries(crash-handler-process ${AWSSDK_LINK_LIBRARIES})
-	target_link_libraries(crash-handler-process ${ZLIB_LIBRARIES})
+	target_link_libraries(crash-handler-process ${ZLIB_LIBRARIES} Boost::boost Boost::locale Boost::system)
 
 	# Compare current linked libs with prev
 	FetchContent_Declare(deps_checker URL "https://raw.githubusercontent.com/stream-labs/obs-studio-node/staging/dependency_checker/check_dependencies.cmd" DOWNLOAD_NO_EXTRACT true)
@@ -133,7 +158,7 @@ IF(WIN32)
 ELSE()
 	target_link_libraries(crash-handler-process ${COCOA})
 ENDIF()
-				
+
 #############################
 # Distribute
 #############################
