@@ -35,6 +35,8 @@ public:
 	static void abortUploadAWS();
 	static void updateAppState(bool unresponsive_detected);
 	static void setCachePath(std::wstring path);
+
+	static void setupLocale();
 };
 
 #endif

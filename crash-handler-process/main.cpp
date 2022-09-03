@@ -20,7 +20,6 @@
 #include "process-manager.hpp"
 #include "util.hpp"
 #include <codecvt>
-#include <boost/locale.hpp>
 
 #if defined(WIN32)
 	const std::string log_file_name = "\\crash-handler.log";
@@ -30,6 +29,8 @@
 
 int main(int argc, char** argv)
 {
+	Util::setupLocale();
+
 	std::string pid_path(Util::get_temp_directory());
 	pid_path.append("crash-handler.pid");
 	Util::check_pid_file(pid_path);
@@ -105,7 +106,4 @@ int main(int argc, char** argv)
 	logging_end();
 	return 0;
 }
-
-
-
 

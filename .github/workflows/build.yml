@@ -79,7 +79,8 @@ jobs:
         with:
           path: build/deps/
           key: ${{ runner.os }}-bin-${{ env.BIN_DEPENDENCIES }}
-
+      - name: Download gettext binaries
+        run: ./ci/localization_prepare_binaries.cmd
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1
       - name: Configure
