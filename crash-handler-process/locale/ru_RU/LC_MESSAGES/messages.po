@@ -1,5 +1,5 @@
 # Russian translations for PACKAGE package
-# ���������� �������� ��� ������ PACKAGE.
+# ���������� �������� ��� ������ PACKAGE.
 # Copyright (C) 2022 THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # <EMAIL@ADDRESS>, 2022.
@@ -8,17 +8,53 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-09-03 12:16-0700\n"
+"POT-Creation-Date: 2022-09-06 13:04-0700\n"
 "PO-Revision-Date: 2022-09-03 12:16-0700\n"
 "Last-Translator: <EMAIL@ADDRESS>\n"
 "Language-Team: Russian\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CP1251\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: crash-handler-process\platforms\util-win.cpp:118
+#: crash-handler-process\platforms\util-win.cpp:121
 msgid "An error occurred"
-msgstr ""
+msgstr "Обнаружена ошибка"
+
+#: crash-handler-process\platforms\util-win.cpp:123
+msgid ""
+"An error occurred which has caused Streamlabs Desktop to close. Don't worry! "
+"If you were streaming or recording, that is still happening in the "
+"background.\n"
+"\n"
+"Whenever you're ready, we can relaunch the application, however this will "
+"end your stream / recording session.\n"
+"\n"
+"Click the Yes button to keep streaming / recording. \n"
+"\n"
+"Click the No button to stop streaming / recording."
+msgstr "Обнаружена ошибка, которая привела к закрытию Streamlabs Desktop. Не "
+"волнуйтесь! Если вы транслировали или записывали, то это все еще происходит в "
+"фоновом режиме.\n"
+"\n"
+"Когда вы будете готовы, мы можем перезапустить приложение, однако это "
+"завершит вашу трансляцию / запись.\n"
+"\n"
+"Нажмите кнопку Да, чтобы продолжить трансляцию / запись.\n"
+"\n"
+"Нажмите кнопку Нет, чтобы остановить трансляцию / запись."
+
+#: crash-handler-process\platforms\util-win.cpp:134
+msgid "Choose when to restart"
+msgstr "Ожидание перезапуска"
+
+#: crash-handler-process\platforms\util-win.cpp:136
+msgid ""
+"Your stream / recording session is still running in the background. Whenever "
+"you're ready, click the OK button below to end your stream / recording and "
+"relaunch the application."
+msgstr "Ваш стрим / запись продолжается в фоновом режиме. Когда вы будете "
+"готовы, нажмите кнопку OK ниже, чтобы завершить стрим / запись и перезапустить "
+"приложение."

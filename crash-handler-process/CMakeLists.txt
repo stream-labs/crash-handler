@@ -138,7 +138,8 @@ IF(WIN32)
 		"${ZLIB_INCLUDE_DIRS}")
 	add_compile_definitions(AWS_CRASH_UPLOAD_BUCKET_KEY=\"$ENV{AWS_CRASH_UPLOAD_BUCKET_KEY}\")
 
- 
+	target_sources(crash-handler-process PUBLIC "${PROJECT_SOURCE_DIR}/platforms/resource-win.rc")
+
 	target_link_libraries(crash-handler-process ${AWSSDK_LINK_LIBRARIES})
 	target_link_libraries(crash-handler-process ${ZLIB_LIBRARIES} Boost::boost Boost::locale Boost::system)
 	target_link_libraries(crash-handler-process ${ZLIB_LIBRARIES} )
