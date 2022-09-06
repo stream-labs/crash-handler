@@ -20,6 +20,22 @@ IF(WIN32)
 	if(NOT nlohmannjson_POPULATED)
 	FetchContent_Populate(nlohmannjson)
 	endif()
+
+	set(Boost_USE_STATIC_LIBS ON)
+	set(Boost_USE_STATIC_RUNTIME ON)
+	set(Boost_USE_MULTITHREADED ON)
+	set(Boost_DEBUG OFF)
+	set(Boost_RELEASE ON)
+	
+	find_package(Boost
+		1.79.0 EXACT
+		REQUIRED
+		COMPONENTS
+			iostreams
+			system
+			locale
+	)
+	INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 ENDIF()
 
 #############################
@@ -55,22 +71,6 @@ ENDIF()
 
 find_library(COCOA Cocoa)
 
-
-set(Boost_USE_STATIC_LIBS ON)
-set(Boost_USE_STATIC_RUNTIME ON)
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_DEBUG OFF)
-set(Boost_RELEASE ON)
-
-find_package(Boost
-	1.79.0 EXACT
-	REQUIRED
-	COMPONENTS
-		iostreams
-		system
-		locale
-)
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
 #############################
 # Building
