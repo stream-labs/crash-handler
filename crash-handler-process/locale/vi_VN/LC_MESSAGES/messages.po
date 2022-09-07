@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-09-06 13:04-0700\n"
+"POT-Creation-Date: 2022-09-07 15:04-0700\n"
 "PO-Revision-Date: 2022-09-03 12:16-0700\n"
 "Last-Translator: <EMAIL@ADDRESS>\n"
 "Language-Team: Vietnamese\n"
@@ -17,10 +17,15 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: crash-handler-process\platforms\util-win.cpp:121
-msgid "An error occurred"
+#: crash-handler-process\platforms\util-osx.mm:27
+msgid "No"
 msgstr ""
 
+#: crash-handler-process\platforms\util-osx.mm:28
+msgid "YES"
+msgstr ""
+
+#: crash-handler-process\platforms\util-osx.mm:30
 #: crash-handler-process\platforms\util-win.cpp:123
 msgid ""
 "An error occurred which has caused Streamlabs Desktop to close. Don't worry! "
@@ -35,13 +40,22 @@ msgid ""
 "Click the No button to stop streaming / recording."
 msgstr ""
 
-#: crash-handler-process\platforms\util-win.cpp:134
-msgid "Choose when to restart"
+#: crash-handler-process\platforms\util-osx.mm:44
+msgid "OK"
 msgstr ""
 
+#: crash-handler-process\platforms\util-osx.mm:45
 #: crash-handler-process\platforms\util-win.cpp:136
 msgid ""
 "Your stream / recording session is still running in the background. Whenever "
 "you're ready, click the OK button below to end your stream / recording and "
 "relaunch the application."
+msgstr ""
+
+#: crash-handler-process\platforms\util-win.cpp:121
+msgid "An error occurred"
+msgstr ""
+
+#: crash-handler-process\platforms\util-win.cpp:134
+msgid "Choose when to restart"
 msgstr ""

@@ -120,8 +120,8 @@ void Util::runTerminateWindow(bool& shouldRestart)
 {
 	std::wstring title   = from_utf8_to_utf16_wide(boost::locale::translate("An error occurred").str().c_str());
 	std::wstring message = from_utf8_to_utf16_wide(boost::locale::translate(
-		"An error occurred which has caused Streamlabs Desktop to close. Don't worry! If you "
-		"were streaming or recording, that is still happening in the background."
+		"An error occurred which has caused Streamlabs Desktop to close. Don't worry! "
+		"If you were streaming or recording, that is still happening in the background."
 		"\n\nWhenever you're ready, we can relaunch the application, however this will end "
 		"your stream / recording session.\n\n"
 		"Click the Yes button to keep streaming / recording. \n\n"
