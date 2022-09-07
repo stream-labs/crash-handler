@@ -66,11 +66,15 @@ IF(WIN32)
 		"${PROJECT_SOURCE_DIR}/minizip/iowin32.c" "${PROJECT_SOURCE_DIR}/minizip/iowin32.h"
 	)
 ELSE(APPLE)
+	find_package(Intl)
+	find_package(Gettext)
 	SET(APPLE_SOURCE
 		"${PROJECT_SOURCE_DIR}/platforms/util-osx.mm"
 		"${PROJECT_SOURCE_DIR}/platforms/socket-osx.cpp" "${PROJECT_SOURCE_DIR}/platforms/socket-osx.hpp"
 		"${PROJECT_SOURCE_DIR}/platforms/process-osx.mm" "${PROJECT_SOURCE_DIR}/platforms/process-osx.hpp"
+
 	)
+	include_directories(${Intl_INCLUDE_DIR})
 	find_library(COCOA Cocoa)
 ENDIF()
 
@@ -155,7 +159,7 @@ IF(WIN32)
 
 	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${deps_checker_SOURCE_DIR}/check_dependencies.cmd $<TARGET_FILE:crash-handler-process> ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} $<CONFIG> )
 ELSE()
-	target_link_libraries(crash-handler-process ${COCOA})
+	target_link_libraries(crash-handler-process ${COCOA} ${Intl_LIBRARIES})
 ENDIF()
 
 #############################

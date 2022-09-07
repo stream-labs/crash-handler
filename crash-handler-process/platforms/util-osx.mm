@@ -1,9 +1,14 @@
 #include "../util.hpp"
 #include "../logger.hpp"
+#include <libintl.h>
 
 #import <Cocoa/Cocoa.h>
 
 bool restart = false;
+
+NSString *translate(const char *input) {
+    return [NSString stringWithUTF8String: gettext(input)];
+}
 
 @interface AppDelegate : NSObject <NSApplicationDelegate, NSWindowDelegate> {
 }
@@ -18,12 +23,13 @@ void stopApplication(void) {
 @implementation AppDelegate
 - (void)applicationDidFinishLaunching:(NSNotification *)notification {
     NSAlert *alert = [[NSAlert alloc] init];
-    [alert addButtonWithTitle:@"NO"];
-    [alert addButtonWithTitle:@"YES"];
-    [alert setMessageText:@"An error occurred which has caused Streamlabs Desktop to close. Don't worry! If you were streaming or recording, that is still happening in the background.\
+
+    [alert addButtonWithTitle:translate("No")];
+    [alert addButtonWithTitle:translate("YES")];
+    [alert setMessageText:translate("An error occurred which has caused Streamlabs Desktop to close. Don't worry! If you were streaming or recording, that is still happening in the background.\
     \n\nWhenever you're ready, we can relaunch the application, however this will end your stream / recording session.\
     \n\nClick the Yes button to keep streaming / recording.\
-    \n\nClick the No button to stop streaming / recording."];
+    \n\nClick the No button to stop streaming / recording.")];
     [alert setAlertStyle:NSAlertStyleCritical];
 
     NSModalResponse response = [alert runModal];
@@ -32,8 +38,8 @@ void stopApplication(void) {
         stopApplication();
     } else if (response == NSAlertSecondButtonReturn) {
         NSAlert *alert2 = [[NSAlert alloc] init];
-        [alert2 addButtonWithTitle:@"OK"];
-        [alert2 setMessageText:@"Your stream / recording session is still running in the background. Whenever you're ready, click the OK button below to end your stream / recording and relaunch the application."];
+        [alert2 addButtonWithTitle:translate("OK")];
+        [alert2 setMessageText:translate("Your stream / recording session is still running in the background. Whenever you're ready, click the OK button below to end your stream / recording and relaunch the application.")];
         [alert2 setAlertStyle:NSAlertStyleCritical];
 
         if ([alert2 runModal] == NSAlertFirstButtonReturn) {
