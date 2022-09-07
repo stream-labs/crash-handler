@@ -1,12 +1,16 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.17)
-PROJECT(crash-handler-process VERSION 0.0.1)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.21)
 
 set(CXX_STANDARD_REQUIRED ON)
 IF(WIN32)
 	set(CMAKE_CXX_STANDARD 20)
 ELSE(APPLE)
-	set(CMAKE_CXX_STANDARD 17)
+    cmake_policy(SET CMP0025 NEW)
+	set(CMAKE_CXX_STANDARD 20)
 ENDIF()
+
+PROJECT(crash-handler-process VERSION 0.0.1)
+
+
 
 IF(WIN32)
 	include(FetchContent)
@@ -67,9 +71,9 @@ ELSE(APPLE)
 		"${PROJECT_SOURCE_DIR}/platforms/socket-osx.cpp" "${PROJECT_SOURCE_DIR}/platforms/socket-osx.hpp"
 		"${PROJECT_SOURCE_DIR}/platforms/process-osx.mm" "${PROJECT_SOURCE_DIR}/platforms/process-osx.hpp"
 	)
+	find_library(COCOA Cocoa)
 ENDIF()
 
-find_library(COCOA Cocoa)
 
 
 #############################
@@ -83,11 +87,12 @@ IF(WIN32)
 	ADD_EXECUTABLE(crash-handler-process ${PROJECT_SOURCE} ${WINDOWS_SOURCE})
 ELSE(APPLE)
 	ADD_EXECUTABLE(crash-handler-process ${PROJECT_SOURCE} ${APPLE_SOURCE})
+	set_property (TARGET crash-handler-process  PROPERTY XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO")
 ENDIF()
 
-target_compile_options(crash-handler-process PRIVATE $<IF:$<CONFIG:Debug>,-MTd,-MT> )
-
 IF(WIN32)
+    target_compile_options(crash-handler-process PRIVATE $<IF:$<CONFIG:Debug>,-MTd,-MT> )
+
 	find_package(ZLIB)
 
 	list(APPEND CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR}/../aws-sdk/awsi/")

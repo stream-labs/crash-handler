@@ -38,9 +38,13 @@ set(CompilerFlags
         CMAKE_C_FLAGS_RELEASE
 		CMAKE_C_FLAGS_RELWITHDEBINFO
         )
-foreach(CompilerFlag ${CompilerFlags})
-  string(REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
-endforeach()
+IF(WIN32)        
+  foreach(CompilerFlag ${CompilerFlags})
+    string(REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
+  endforeach()
+ELSE(APPLE)
+  set_property (TARGET  ${PROJECT_NAME} PROPERTY XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO")
+ENDIF()
 
 #############################
 # Distribute
