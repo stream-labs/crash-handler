@@ -162,6 +162,7 @@ ELSE()
 	target_link_libraries(crash-handler-process ${COCOA} ${Intl_LIBRARIES})
 ENDIF()
 
+message(status "${CMAKE_CURRENT_BINARY_DIR}/locale/")
 #############################
 # Distribute
 #############################
@@ -169,5 +170,7 @@ INSTALL(TARGETS crash-handler-process RUNTIME DESTINATION "./" COMPONENT Runtime
 IF(WIN32)
 	INSTALL(FILES $<TARGET_PDB_FILE:crash-handler-process> DESTINATION "./" OPTIONAL)
 	INSTALL(FILES "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIGURATION>/zlib.dll" DESTINATION "./" OPTIONAL)
+ELSE(APPLE)
+	INSTALL(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/locale" DESTINATION "./" )
 ENDIF()
 INSTALL(DIRECTORY ${PROJECT_DATA} DESTINATION "./" OPTIONAL)

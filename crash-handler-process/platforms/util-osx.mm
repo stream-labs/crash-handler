@@ -1,6 +1,7 @@
 #include "../util.hpp"
 #include "../logger.hpp"
 #include <libintl.h>
+#include <locale>
 
 #import <Cocoa/Cocoa.h>
 
@@ -92,4 +93,21 @@ bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std:
 bool Util::archiveFile(const std::wstring& srcFullPath, const std::wstring& dstFullPath, const std::string& nameInsideArchive) { return false;}
 void Util::abortUploadAWS() { }
 
-void Util::setupLocale() { }
+void Util::setupLocale() {
+    const char * current_locale = setlocale(LC_ALL, nullptr);
+	if (current_locale == nullptr || std::strlen(current_locale) == 0)
+	{
+        setlocale(LC_ALL, "en_US.UTF-8");
+	}
+    setlocale(LC_ALL, "ru_RU.UTF-8");
+    bindtextdomain("messages", "/Users/vladimirsumarov/work/repos/streamlabs-obs/node_modules/crash-handler/locale");
+
+    std::string pwd = std::getenv("PWD");
+    
+    std::ofstream testfile; 
+    testfile.open("/Users/vladimirsumarov/work/repos/crash-handler/build/gettext.txt");
+    testfile << "test" << std::endl;
+    testfile << pwd << std::endl;
+    testfile << "testend" << std::endl;
+    testfile.close();
+}
