@@ -305,6 +305,7 @@ void Util::setCachePath(std::wstring path)
 void Util::updateAppState(Util::AppState detected)
 {
 	const std::string freez_flag = "window_unresponsive";
+	const std::string noncritical_flag = "crashed_noncritically";
 	const std::string flag_name  = "detected";
 
 	std::ifstream state_file(appCachePath + appStateFileName, std::ios::in);
@@ -332,8 +333,8 @@ void Util::updateAppState(Util::AppState detected)
 	} else if (detected == AppState::Responsive) {
 		if (existing_flag_value.compare(freez_flag) == 0)
 			jsonEntry[flag_name] = "";
-	} else if (detected == AppState::NoncriticalyDead) {
-		jsonEntry[flag_name] = "crashed_noncritically";
+	} else if (detected == AppState::NoncriticallyDead) {
+		jsonEntry[flag_name] = noncritical_flag;
 	}
 	updated_status = jsonEntry.dump(-1);
 

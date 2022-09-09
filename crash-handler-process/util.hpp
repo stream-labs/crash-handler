@@ -38,7 +38,7 @@ public:
 	enum class AppState{
 		Responsive,
 		Unresponsive,
-		NoncriticalyDead
+		NoncriticallyDead
 	};
 	static void updateAppState(AppState detected);
 };

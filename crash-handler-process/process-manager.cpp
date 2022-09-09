@@ -133,7 +133,7 @@ void ProcessManager::monitor_fnc() {
 
     if (m_applicationCrashed && !m_criticalCrash) {
         log_info << "Non critical crash detected. save it to app state file" << std::endl;
-        Util::updateAppState(Util::AppState::NoncriticalyDead);
+        Util::updateAppState(Util::AppState::NoncriticallyDead);
     }
 
     this->watcher->stop = true;
