@@ -108,7 +108,7 @@ void ProcessManager::monitor_fnc() {
                     log_info << "process.pid: " << process->getPID() << std::endl;
                     log_info << "process.isCritical: " << process->isCritical() << std::endl;
 
-                    m_criticalCrash = process->isCritical();
+                    m_criticalCrash |= process->isCritical();
                     m_applicationCrashed = this->monitor->stop = true;
                 } else if (last_responsive_check == 0) {
                     detectedUnresponsive |= process->isResponsive();
