@@ -111,7 +111,7 @@ void ProcessManager::monitor_fnc() {
                     m_criticalCrash = process->isCritical();
                     m_applicationCrashed = this->monitor->stop = true;
                 } else if (last_responsive_check == 0) {
-                    detectedUnresponsive |= process->isResponsive();
+                    detectedUnresponsive |= process->isUnResponsive();
                 }
             }
 
@@ -119,16 +119,21 @@ void ProcessManager::monitor_fnc() {
             if(unresponsiveMarked && !detectedUnresponsive) 
             {
                 log_info << "Unresponsive window not detected anymore " << std::endl;
-                Util::updateAppState(true);
+                Util::updateAppState(Util::AppState::Responsive);
                 unresponsiveMarked = false;
             } else if(!unresponsiveMarked && detectedUnresponsive) 
             {
                 log_info << "Unresponsive window detected " << std::endl;
-                Util::updateAppState(false);
+                Util::updateAppState(Util::AppState::Unresponsive);
                 unresponsiveMarked = true;
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+
+    if (m_applicationCrashed && !m_criticalCrash) {
+        log_info << "Non critical crash detected. save it to app state file" << std::endl;
+        Util::updateAppState(Util::AppState::NoncriticalyDead);
     }
 
     this->watcher->stop = true;
