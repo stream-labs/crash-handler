@@ -11,15 +11,8 @@ ENDIF()
 IF(WIN32)
 	include(FetchContent)
 	# Nlohmann JSON (modern JSON for C++)
-	FetchContent_Declare(
-	nlohmannjson
-	GIT_REPOSITORY https://github.com/nlohmann/json
-	)
-
-	FetchContent_GetProperties(nlohmannjson)
-	if(NOT nlohmannjson_POPULATED)
-	FetchContent_Populate(nlohmannjson)
-	endif()
+	FetchContent_Declare(nlohmannjson URL "https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp" DOWNLOAD_NO_EXTRACT true)
+	FetchContent_MakeAvailable(nlohmannjson)
  
 	include(ExternalProject)
 
@@ -108,7 +101,7 @@ IF(WIN32)
 	# Include/link crash manager dependencies
 	target_include_directories(crash-handler-process PUBLIC
 		"${CMAKE_CURRENT_BINARY_DIR}/awsi/include/"
-		"${nlohmannjson_SOURCE_DIR}/single_include" 
+		"${nlohmannjson_SOURCE_DIR}/" 
 		"${ZLIB_INCLUDE_DIRS}")
 	add_compile_definitions(AWS_CRASH_UPLOAD_BUCKET_KEY=\"$ENV{AWS_CRASH_UPLOAD_BUCKET_KEY}\")
 
