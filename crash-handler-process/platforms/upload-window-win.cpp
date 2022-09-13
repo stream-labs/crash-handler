@@ -24,6 +24,7 @@
 #include "../util.hpp"
 #include "../logger.hpp"
 #include "upload-window-win.hpp"
+#include <boost/locale.hpp>
 
 std::unique_ptr<UploadWindow> UploadWindow::instance = nullptr;
 
@@ -40,6 +41,8 @@ std::unique_ptr<UploadWindow> UploadWindow::instance = nullptr;
 #define CUSTOM_UPLOAD_CANCELED (WM_USER + 10)
 #define CUSTOM_ZIPPING_STARTED (WM_USER + 11)
 #define CUSTOM_REQUESTED_CLICK (WM_USER + 12)
+
+std::wstring from_utf8_to_utf16_wide(const char* from, size_t length = -1);
 
 LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -105,8 +108,10 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		upload_window_hwnd = NULL;
 		break;
 	case CUSTOM_CAUGHT_CRASH: {
-		SetWindowText(upload_label_hwnd, L"The application just crashed.\r\n\r\n"
-		"Would you like to send a report to the developers?");
+		std::wstring caught_crash_message = from_utf8_to_utf16_wide(boost::locale::translate("The application just crashed.\r\n\r\n"
+		"Would you like to send a report to the developers?").str().c_str());
+
+		SetWindowText(upload_label_hwnd, caught_crash_message.c_str());
 		showButtons({.ok = false, .cancel = true, .yes = true, .no = false});
 		enableButtons({.ok = false, .cancel = true, .yes = true, .no = false});
 		SendMessage(progresss_bar_hwnd, PBM_SETBARCOLOR, 0, RGB(49, 195, 162));
@@ -118,12 +123,14 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case CUSTOM_PROGRESS_MSG: {
 		double progress = ((double)bytes_sent) / ((double)total_bytes_to_send / 100.0);
 		PostMessage(progresss_bar_hwnd, PBM_SETPOS, (int)progress, 0);
-		swprintf(upload_progress_message, upload_message_len, L"Uploading... %.2f%%\r\n%.1f / %.1fmb", static_cast<float>(progress), static_cast<float>(bytes_sent) / (1024.f * 1024.f), static_cast<float>(total_bytes_to_send) / (1024.f * 1024.f));
+		std::wstring  upload_message = from_utf8_to_utf16_wide(boost::locale::translate("Uploading... %.2f%%\r\n%.1f / %.1fmb").str().c_str());
+		swprintf(upload_progress_message, upload_message_len, upload_message.c_str(), static_cast<float>(progress), static_cast<float>(bytes_sent) / (1024.f * 1024.f), static_cast<float>(total_bytes_to_send) / (1024.f * 1024.f));
 		SetWindowText(upload_label_hwnd, upload_progress_message);
 		break;
 	}
 	case CUSTOM_SAVE_STARTED: {
-		swprintf(upload_progress_message, upload_message_len, L"Saving... to \"%s\"", file_name.c_str());
+		std::wstring save_message = from_utf8_to_utf16_wide(boost::locale::translate("Saving... to \"%s\"").str().c_str());
+		swprintf(upload_progress_message, upload_message_len, save_message.c_str(), file_name.c_str());
 		SetWindowText(upload_label_hwnd, upload_progress_message);
 		showButtons({.ok = true, .cancel = true, .yes = false, .no = false});
 		enableButtons({.ok = false, .cancel = false, .yes = false, .no = false});
@@ -131,43 +138,49 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	}
 	case CUSTOM_ZIPPING_STARTED: {
 		PostMessage(progresss_bar_hwnd, PBM_SETPOS, (int)25, 0);
-		swprintf(upload_progress_message, upload_message_len, L"Zipping... to \"%s\"", file_name.c_str());
+		std::wstring zipping_message = from_utf8_to_utf16_wide(boost::locale::translate("Zipping... to \"%s\"").str().c_str());
+		swprintf(upload_progress_message, upload_message_len, zipping_message.c_str(), file_name.c_str());
 		SetWindowText(upload_label_hwnd, upload_progress_message);
 		showButtons({.ok = true, .cancel = true, .yes = false, .no = false});
 		enableButtons({.ok = false, .cancel = false, .yes = false, .no = false});
 		break;
 	}
 	case CUSTOM_SAVING_DUMP_FAILED: {
-		SetWindowText(upload_label_hwnd, L"Failed to save the local debug information.");
+		std::wstring dump_failed_message = from_utf8_to_utf16_wide(boost::locale::translate("Failed to save the local debug information.").str().c_str());
+		SetWindowText(upload_label_hwnd, dump_failed_message.c_str());
 		showButtons({.ok = true, .cancel = true, .yes = false, .no = false});
 		enableButtons({.ok = false, .cancel = false, .yes = false, .no = false});
 		break;
 	}
 	case CUSTOM_UPLOAD_STARTED: {
 		SendMessage(progresss_bar_hwnd, PBM_SETRANGE32, 0, 100);
-		SetWindowText(upload_label_hwnd, L"Initializing upload...");
+		std::wstring upload_start_message = from_utf8_to_utf16_wide(boost::locale::translate("Initializing upload...").str().c_str());
+		SetWindowText(upload_label_hwnd, upload_start_message.c_str());
 		showButtons({.ok = true, .cancel = true, .yes = false, .no = false});
 		enableButtons({.ok = false, .cancel = false, .yes = false, .no = false});
 		break;
 	}
 	case CUSTOM_UPLOAD_FINISHED: {
-		swprintf(upload_progress_message, upload_message_len, L"Successfully uploaded the debug information.\r\n"
+		std::wstring upload_finished_message = from_utf8_to_utf16_wide(boost::locale::translate("Successfully uploaded the debug information.\r\n"
 		"Please provide this file name to the support.\r\n"
-		"File: \"%s\".", file_name.c_str());
+		"File: \"%s\".").str().c_str());
+		swprintf(upload_progress_message, upload_message_len, upload_finished_message.c_str(), file_name.c_str());
 		SetWindowText(upload_label_hwnd, upload_progress_message);
 		showButtons({.ok = true, .cancel = true, .yes = false, .no = false});
 		enableButtons({.ok = true, .cancel = false, .yes = false, .no = false});
 		break;
 	}
 	case CUSTOM_UPLOAD_CANCELED: {
-		swprintf(upload_progress_message, upload_message_len, L"Upload cancleled.\r\n%s removed.", file_name.c_str());
+		std::wstring upload_upload_canceled = from_utf8_to_utf16_wide(boost::locale::translate("Upload cancleled.\r\n%s removed.").str().c_str());
+		swprintf(upload_progress_message, upload_message_len, upload_upload_canceled.c_str(), file_name.c_str());
 		SetWindowText(upload_label_hwnd, upload_progress_message);
 		showButtons({.ok = true, .cancel = true, .yes = false, .no = false});
 		enableButtons({.ok = true, .cancel = false, .yes = false, .no = false});
 		break;
 	}
 	case CUSTOM_UPLOAD_FAILED: {
-		swprintf(upload_progress_message, upload_message_len, L"Upload failed. Save a copy?\r\n\"%s/%s\"", dump_path.c_str(), file_name.c_str());
+		std::wstring upload_upload_failed = from_utf8_to_utf16_wide(boost::locale::translate("Upload failed. Save a copy?\r\n\"%s/%s\"").str().c_str());
+		swprintf(upload_progress_message, upload_message_len, upload_upload_failed.c_str(), dump_path.c_str(), file_name.c_str());
 		SetWindowText(upload_label_hwnd, upload_progress_message);
 		showButtons({.ok = false, .cancel = false, .yes = true, .no = true});
 		enableButtons({.ok = false, .cancel = false, .yes = true, .no = true});
@@ -368,11 +381,12 @@ void UploadWindow::windowThread()
 	/* We only care about the main display */
 	int screen_width  = GetSystemMetrics(SM_CXSCREEN);
 	int screen_height = GetSystemMetrics(SM_CYSCREEN);
+	std::wstring upload_window_title = from_utf8_to_utf16_wide(boost::locale::translate("Streamlabs Desktop has encountered a critical error").str().c_str());
 
 	upload_window_hwnd = CreateWindowEx(
 	    WS_EX_CLIENTEDGE,
 	    L"uploaderwindowclass",
-	    L"Streamlabs Desktop has encountered a critical error",
+	    upload_window_title.c_str(),
 	    WS_OVERLAPPED | WS_MINIMIZEBOX | WS_SYSMENU | WS_EX_TOPMOST,
 	    (screen_width - width) / 2,
 	    (screen_height - height) / 2,
@@ -424,9 +438,14 @@ void UploadWindow::windowThread()
 	    NULL,
 	    NULL);
 
+	std::wstring yes_button_title = from_utf8_to_utf16_wide(boost::locale::translate("Yes").str().c_str());
+	std::wstring no_button_title = from_utf8_to_utf16_wide(boost::locale::translate("No").str().c_str());
+	std::wstring cancel_button_title = from_utf8_to_utf16_wide(boost::locale::translate("Cancel").str().c_str());
+	std::wstring ok_button_title = from_utf8_to_utf16_wide(boost::locale::translate("OK").str().c_str());
+
 	ok_button_hwnd = CreateWindow(
 	    WC_BUTTON,
-	    L"OK",
+	    ok_button_title.c_str(),
 	    WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
 	    x_size - 220,
 	    y_size - 50,
@@ -439,7 +458,7 @@ void UploadWindow::windowThread()
 
 	yes_button_hwnd = CreateWindow(
 	    WC_BUTTON,
-	    L"Yes",
+	    yes_button_title.c_str(),
 	    WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
 	    x_size - 220,
 	    y_size - 50,
@@ -452,7 +471,7 @@ void UploadWindow::windowThread()
 
 	cancel_button_hwnd = CreateWindow(
 	    WC_BUTTON,
-	    L"Cancel",
+	    cancel_button_title.c_str(),
 	    WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
 	    x_size - 110,
 	    y_size - 50,
@@ -465,7 +484,7 @@ void UploadWindow::windowThread()
 
 	no_button_hwnd = CreateWindow(
 	    WC_BUTTON,
-	    L"No",
+	    no_button_title.c_str(),
 	    WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
 	    x_size - 110,
 	    y_size - 50,

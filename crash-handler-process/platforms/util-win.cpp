@@ -25,7 +25,7 @@
 #include <sstream>
 #include <codecvt>
 #include <psapi.h>
-#include "nlohmann/json.hpp"
+#include "json.hpp"
 #include <filesystem>
 
 #include "upload-window-win.hpp"

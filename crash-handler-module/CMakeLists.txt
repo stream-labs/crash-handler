@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(crash-handler)
 
-SET(NODEJS_URL "https://atom.io/download/atom-shell" CACHE STRING "Node.JS URL")
+SET(NODEJS_URL "https://electronjs.org/headers" CACHE STRING "Node.JS URL")
 SET(NODEJS_NAME "iojs" CACHE STRING "Node.JS Name")
 SET(NODEJS_VERSION "v12.1.0" CACHE STRING "Node.JS Version")
 

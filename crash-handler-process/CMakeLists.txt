@@ -1,29 +1,19 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.21)
 
 set(CXX_STANDARD_REQUIRED ON)
-IF(WIN32)
-	set(CMAKE_CXX_STANDARD 20)
-ELSE(APPLE)
-    cmake_policy(SET CMP0025 NEW)
-	set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 20)
+
+IF(APPLE)
+	cmake_policy(SET CMP0025 NEW)
 ENDIF()
 
 PROJECT(crash-handler-process VERSION 0.0.1)
 
-
-
 IF(WIN32)
 	include(FetchContent)
 	# Nlohmann JSON (modern JSON for C++)
-	FetchContent_Declare(
-	nlohmannjson
-	GIT_REPOSITORY https://github.com/nlohmann/json
-	)
-
-	FetchContent_GetProperties(nlohmannjson)
-	if(NOT nlohmannjson_POPULATED)
-	FetchContent_Populate(nlohmannjson)
-	endif()
+	FetchContent_Declare(nlohmannjson URL "https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp" DOWNLOAD_NO_EXTRACT true)
+	FetchContent_MakeAvailable(nlohmannjson)
 
 	set(Boost_USE_STATIC_LIBS ON)
 	set(Boost_USE_STATIC_RUNTIME ON)
@@ -137,13 +127,13 @@ IF(WIN32)
 						${CMAKE_CURRENT_BINARY_DIR}/$<CONFIGURATION>)
 				
 	ELSE()
-		message(FATAL_ERROR "ZLIB not found, refer to DepsPath for OBS")	
+		message(FATAL_ERROR "ZLIB not found, refer to DepsPath for OBS")
 	ENDIF()
 
 	# Include/link crash manager dependencies
 	target_include_directories(crash-handler-process PUBLIC
 		"${CMAKE_CURRENT_BINARY_DIR}/awsi/include/"
-		"${nlohmannjson_SOURCE_DIR}/single_include" 
+		"${nlohmannjson_SOURCE_DIR}/" 
 		"${ZLIB_INCLUDE_DIRS}")
 	add_compile_definitions(AWS_CRASH_UPLOAD_BUCKET_KEY=\"$ENV{AWS_CRASH_UPLOAD_BUCKET_KEY}\")
 

@@ -20,7 +20,7 @@ cmake -G "Visual Studio 17 2022" -A x64 ^
 -DCUSTOM_MEMORY_MANAGEMENT=OFF ^
 -DCPP_STANDARD=17 ^
 -DCMAKE_BUILD_TYPE=Release ^
--DCMAKE_INSTALL_PREFIX=%cd%../../awsi/ ^
+-DCMAKE_INSTALL_PREFIX=%cd%/../awsi/ ^
 ../aws-sdk-cpp
 
 cmake --build . --target install --config Release

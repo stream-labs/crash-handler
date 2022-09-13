@@ -7,26 +7,27 @@ Crash handler
 yarn install 
 
 set BIN_DEPENDENCIES="dependencies2019.0"
-ci\install-zlib.cmd
+ci\install-bin-deps.cmd
 
 set AWS_SDK_VERSION="1.8.186"
 ci\build-aws-sdk.cmd
 
-set INSTALL_PACKAGE_PATH:"../desktop/node_modules/crash_handler"
-cmake  -B"build" -G"Visual Studio 17 2022" -A x64 -DDepsPath="${PWD}\build\deps\${BIN_DEPENDENCIES}\win64" -DBOOST_ROOT="${PWD}\build\deps\boost" -DCMAKE_INSTALL_PREFIX="${INSTALL_PACKAGE_PATH}"
+cd build 
+cmake -DCMAKE_INSTALL_PREFIX="..\..\desktop\node_modules\crash-handler"  -G "Visual Studio 17 2022" -A x64 ../ -DDepsPath="deps\dependencies2019.0\win64" -DBOOST_ROOT="deps\boost"
+
 cmake --build "build" --target install --config RelWithDebInfo
 ```
 
 ## On macOS
 ```
 yarn install 
-set 
+
 ./ci/build-osx.sh
 ```
 
 ## Localization
 
-Boost.locale lib with a gettext format used for a localization. 
+Boost.locale lib with a gettext format used for a localization(on windows). 
 mo files included in exe by windows resources. 
 ### Commands 
 
