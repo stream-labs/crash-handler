@@ -1,5 +1,3 @@
-#! /bin/sh
-
 # merge new lines to existing .po files
 po_files=($(find -E . -type f -regex "^.*po$"))
 for po_input in ${po_files[*]}

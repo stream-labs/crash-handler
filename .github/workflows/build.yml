@@ -186,6 +186,7 @@ jobs:
         run: yarn install --immutable --immutable-cache --check-cache
       - name: Prepare translations
         run: ./ci/localization_prepare_binaries_osx.sh
+        shell: bash
       - name: Build
         run: './ci/build-osx.sh'
       - name: Put version into package.json
