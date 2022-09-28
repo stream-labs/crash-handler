@@ -11,30 +11,25 @@ ENDIF()
 IF(WIN32)
 	include(FetchContent)
 	# Nlohmann JSON (modern JSON for C++)
-	FetchContent_Declare(
-	nlohmannjson
-	GIT_REPOSITORY https://github.com/nlohmann/json
-	)
-
-	FetchContent_GetProperties(nlohmannjson)
-	if(NOT nlohmannjson_POPULATED)
-	FetchContent_Populate(nlohmannjson)
-	endif()
+	FetchContent_Declare(nlohmannjson URL "https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp" DOWNLOAD_NO_EXTRACT true)
+	FetchContent_MakeAvailable(nlohmannjson)
  
 	include(ExternalProject)
 
 	ExternalProject_Add(libawscpp
 		GIT_REPOSITORY    https://github.com/aws/aws-sdk-cpp.git
-		GIT_TAG           1.8.186
+		GIT_TAG           1.9.247
 		LIST_SEPARATOR    "|"
 		CMAKE_ARGS       -DBUILD_SHARED_LIBS=OFF
+				 -DBUILD_DEPS=ON
 				 -DBUILD_ONLY=s3|sts
 				 -DENABLE_TESTING=OFF
 				 -DCUSTOM_MEMORY_MANAGEMENT=OFF
 				 -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}/awsi
 		BUILD_ALWAYS      TRUE
 		TEST_COMMAND      ""
-		PREFIX 		  awss
+		PREFIX            awss
+		GIT_SHALLOW       TRUE
 	)
 ENDIF()
 
@@ -108,20 +103,35 @@ IF(WIN32)
 	# Include/link crash manager dependencies
 	target_include_directories(crash-handler-process PUBLIC
 		"${CMAKE_CURRENT_BINARY_DIR}/awsi/include/"
-		"${nlohmannjson_SOURCE_DIR}/single_include" 
+		"${nlohmannjson_SOURCE_DIR}/" 
 		"${ZLIB_INCLUDE_DIRS}")
 	add_compile_definitions(AWS_CRASH_UPLOAD_BUCKET_KEY=\"$ENV{AWS_CRASH_UPLOAD_BUCKET_KEY}\")
 
 	set( AWS_LIBS
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-auth.lib"
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-cal.lib"
 		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-common.lib"
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-compression.lib"
 		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-event-stream.lib"
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-http.lib"
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-io.lib"
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-mqtt.lib"
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-s3.lib"
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-sdkutils.lib"
 		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-checksums.lib"
 		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-cpp-sdk-core.lib"
-		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-cpp-sdk-sts.lib"
 		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-cpp-sdk-s3.lib"
-		)
-	target_link_libraries(crash-handler-process "${AWS_LIBS}")
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-cpp-sdk-sts.lib"
+		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-crt-cpp.lib"
+	)
+	target_link_libraries(crash-handler-process "${AWS_LIBS}" Secur32.lib Ncrypt.lib Shlwapi.lib crypt32.lib)
 	target_link_libraries(crash-handler-process ${ZLIB_LIBRARIES})
+
+	# Compare current linked libs with prev
+	FetchContent_Declare(deps_checker URL "https://raw.githubusercontent.com/stream-labs/obs-studio-node/staging/dependency_checker/check_dependencies.cmd" DOWNLOAD_NO_EXTRACT true)
+	FetchContent_MakeAvailable(deps_checker)
+
+	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${deps_checker_SOURCE_DIR}/check_dependencies.cmd $<TARGET_FILE:crash-handler-process> ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} $<CONFIG> )
 ELSE()
 	target_link_libraries(crash-handler-process ${COCOA})
 ENDIF()

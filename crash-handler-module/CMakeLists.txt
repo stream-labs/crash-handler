@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(crash-handler)
 
-SET(NODEJS_URL "https://atom.io/download/atom-shell" CACHE STRING "Node.JS URL")
+SET(NODEJS_URL "https://electronjs.org/headers" CACHE STRING "Node.JS URL")
 SET(NODEJS_NAME "iojs" CACHE STRING "Node.JS Name")
 SET(NODEJS_VERSION "v12.1.0" CACHE STRING "Node.JS Version")
 
@@ -49,6 +49,16 @@ install(TARGETS ${PROJECT_NAME}
 	RUNTIME DESTINATION "./" COMPONENT Runtime
 	LIBRARY DESTINATION "./" COMPONENT Runtime
 )
+
+include(FetchContent)
+
+IF(WIN32)
+  # Compare current linked libs with prev
+  FetchContent_Declare(deps_checker URL "https://raw.githubusercontent.com/stream-labs/obs-studio-node/staging/dependency_checker/check_dependencies.cmd" DOWNLOAD_NO_EXTRACT true)
+  FetchContent_MakeAvailable(deps_checker)
+
+  add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${deps_checker_SOURCE_DIR}/check_dependencies.cmd $<TARGET_FILE:${PROJECT_NAME}> ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} $<CONFIG> )
+ENDIF()
 
 IF(WIN32)
   install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION "./" OPTIONAL)

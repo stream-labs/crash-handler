@@ -24,8 +24,8 @@ int32_t Process_OSX::getPID(void) {
 bool Process_OSX::isCritical(void) {
 	return critical;
 }
-bool Process_OSX::isResponsive(void) {
-	return true; // check for responsiveness not impemented
+bool Process_OSX::isUnResponsive(void) {
+	return false; // check for responsiveness not impemented
 }
 void Process_OSX::startMemoryDumpMonitoring(const std::wstring& eventName_Start, const std::wstring& eventName_Fail, const std::wstring& eventName_Success, const std::wstring& dumpPath, const std::wstring& dumpName) {
 	return;
