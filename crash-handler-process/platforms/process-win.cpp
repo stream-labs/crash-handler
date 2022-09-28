@@ -206,7 +206,7 @@ bool Process_WIN::isAlive(void) {
     return this->alive;
 }
 
-bool Process_WIN::isResponsive(void) {
+bool Process_WIN::isUnResponsive(void) {
     std::unique_lock<std::mutex> ul(this->mtx);
 	HWND window = getTopWindow();
 	if (window)
