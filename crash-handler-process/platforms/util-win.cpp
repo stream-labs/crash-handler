@@ -302,7 +302,7 @@ void Util::setCachePath(std::wstring path)
 	appCachePath = path;
 }
 
-void Util::updateAppState(Util::AppState detected)
+void Util::updateAppState(Util::AppState state)
 {
 	const std::string freez_flag = "window_unresponsive";
 	const std::string noncritical_flag = "crashed_noncritically";
@@ -327,13 +327,13 @@ void Util::updateAppState(Util::AppState detected)
 		existing_flag_value = jsonEntry.at(flag_name);
 	} catch (...) {
 	}
-	if (detected == AppState::Unresponsive) {
+	if (state == AppState::Unresponsive) {
 		if (existing_flag_value.empty())
 			jsonEntry[flag_name] = freez_flag;
-	} else if (detected == AppState::Responsive) {
+	} else if (state == AppState::Responsive) {
 		if (existing_flag_value.compare(freez_flag) == 0)
 			jsonEntry[flag_name] = "";
-	} else if (detected == AppState::NoncriticallyDead) {
+	} else if (state == AppState::NoncriticallyDead) {
 		jsonEntry[flag_name] = noncritical_flag;
 	}
 	updated_status = jsonEntry.dump(-1);
