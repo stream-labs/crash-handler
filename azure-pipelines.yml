@@ -11,7 +11,7 @@ variables:
   SLGenerator: Visual Studio 16 2019
   SLDistributeDirectory: distribute
   FullDistributePath: $(SLBuildDirectory)/$(SLDistributeDirectory)
-  RuntimeURL: https://atom.io/download/atom-shell
+  RuntimeURL: https://electronjs.org/headers
   RuntimeName: iojs
   RuntimeVersion: v12.1.0
   DEPS: dependencies2019.0
@@ -49,9 +49,6 @@ jobs:
 
   - script: 'cmake --build %SLBuildDirectory% --target install --config RelWithDebInfo'
     displayName: 'Build crash-handler'
-
-  - script: ./ci/copy-dependencies.cmd
-    displayName: 'Copy necessary dll files'
     
   - powershell: git clone https://github.com/stream-labs/symsrv-scripts.git
     displayName: 'Fetch symsrv-scripts'
