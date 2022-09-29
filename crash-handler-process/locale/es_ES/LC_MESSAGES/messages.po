@@ -1,8 +1,6 @@
-# Spanish translations for PACKAGE package
-# Traducciones al español para el paquete PACKAGE.
-# Copyright (C) 2022 THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# <EMAIL@ADDRESS>, 2022.
+# Spanish translations for crash-handler package.
+# Copyright (C) 2016-2022 by Streamlabs (General Workings Inc)
+# This file is distributed under the same license as the crash-handler package.
 #
 msgid ""
 msgstr ""

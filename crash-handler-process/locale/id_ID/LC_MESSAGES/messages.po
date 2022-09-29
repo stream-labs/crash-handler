@@ -1,8 +1,6 @@
-# Indonesian translations for PACKAGE package
-# Terjemahan bahasa inggris untuk paket PACKAGE.
-# Copyright (C) 2022 THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# <EMAIL@ADDRESS>, 2022.
+# Indonesian translations for crash-handler package.
+# Copyright (C) 2016-2022 by Streamlabs (General Workings Inc)
+# This file is distributed under the same license as the crash-handler package.
 #
 msgid ""
 msgstr ""
