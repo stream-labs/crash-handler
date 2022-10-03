@@ -7,19 +7,21 @@ Crash handler
 yarn install
 
 set BIN_DEPENDENCIES=dependencies2019.0
-ci\install-zlib.cmd
+ci\install-bin-deps.cmd
 
-set AWS_SDK_VERSION="1.9.247"
+set AWS_SDK_VERSION="1.9.248"
 ci\build-aws-sdk.cmd
 
+ci\localization_prepare_binaries.cmd
+
 set INSTALL_PACKAGE_PATH:"../desktop/node_modules/crash_handler"
-cmake  -B"build" -G"Visual Studio 17 2022" -A x64 -DDepsPath="%CD%\%BIN_DEPENDENCIES%\win64" -DCMAKE_INSTALL_PREFIX="%INSTALL_PACKAGE_PATH%"
+cmake  -B"build" -G"Visual Studio 17 2022" -A x64  -DDepsPath="%CD%\build\deps\%BIN_DEPENDENCIES%\win64" -DBOOST_ROOT="%CD%\build\deps\boost"  -DCMAKE_INSTALL_PREFIX="%INSTALL_PACKAGE_PATH%"
 cmake --build "build" --target install --config RelWithDebInfo
 ```
 
 ## On macOS
 ```
-yarn install 
+yarn install
 
 ./ci/build-osx.sh
 ```
