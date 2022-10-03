@@ -38,7 +38,7 @@ set(CompilerFlags
         CMAKE_C_FLAGS_RELEASE
 		CMAKE_C_FLAGS_RELWITHDEBINFO
         )
-IF(WIN32)        
+IF(WIN32)
   foreach(CompilerFlag ${CompilerFlags})
     string(REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
   endforeach()

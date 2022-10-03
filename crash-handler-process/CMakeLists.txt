@@ -85,7 +85,7 @@ ELSE(APPLE)
 ENDIF()
 
 IF(WIN32)
-    target_compile_options(crash-handler-process PRIVATE $<IF:$<CONFIG:Debug>,-MTd,-MT> )
+	target_compile_options(crash-handler-process PRIVATE $<IF:$<CONFIG:Debug>,-MTd,-MT> )
 
 	find_package(ZLIB)
 
