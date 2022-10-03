@@ -64,7 +64,7 @@ jobs:
           path: ${{env.AWS_SDK_PATH}}
           key: ${{ runner.os }}-awssdk-${{ env.AWS_SDK_VERSION }}
 
-          - name: Get binary deps from cache
+      - name: Get binary deps from cache
         id: zlib-cache-check
         uses: actions/cache@v3
         with:
