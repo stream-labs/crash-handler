@@ -33,11 +33,11 @@ mo files included in exe by windows resources.
 
 `ci\localization_prepare_binaries.cmd` - prepares mo files with current translation 
 
-`ci\localization_set_translations.cmd` - update po files with current strings from source code 
+`ci\generate_new_translations.cmd` - update po files with current strings from source code 
 
 ### Add new language 
 
-* Add new lang code into `ci\localization_get_tools.cmd` and run `ci\localization_set_translations.cmd`
+* Add new lang code into `ci\localization_get_tools.cmd` and run `ci\generate_new_translations.cmd`
 * Translate lines inside `locale\NEW_LANG\LC_MESSAGES\messages.po`
 * Add new mo file to `resources\slobs-updater.rc`
 * Add it to `locales_resources` map inside `get_messages_callback()`
