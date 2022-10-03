@@ -19,19 +19,21 @@
 #include <mutex>
 #include <thread>
 #include <atomic>
+#include <condition_variable>
 
 #include "socket.hpp"
 #include "process.hpp"
 #include "logger.hpp"
 #include "util.hpp"
 
-using stopper = std::atomic<bool>;
-
 struct ThreadData {
-    bool         isRunnning = false;
-    stopper      stop = { false };
-    std::mutex*  mtx = nullptr;
     std::thread* worker = nullptr;
+
+    bool should_stop = false;
+    std::condition_variable_any stop_event;
+    std::recursive_mutex stop_mutex;
+    void send_stop();
+    bool wait_or_stop();
 };
 
 class ProcessManager {
