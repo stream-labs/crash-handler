@@ -33,8 +33,14 @@ public:
 	static bool saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std::wstring& dumpFileName);
 	static bool uploadToAWS(const std::wstring& wspath, const std::wstring& fileName);
 	static void abortUploadAWS();
-	static void updateAppState(bool unresponsive_detected);
 	static void setCachePath(std::wstring path);
+
+	enum class AppState{
+		Responsive,
+		Unresponsive,
+		NoncriticallyDead
+	};
+	static void updateAppState(AppState detected);
 
 	static void setupLocale();
 };

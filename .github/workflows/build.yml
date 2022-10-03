@@ -21,7 +21,7 @@ env:
   RELEASE_BUCKET: "slobs-crash-handler"
   ELECTRON_VERSION: "v12.1.0"
   BIN_DEPENDENCIES: "dependencies2019.0"
-  AWS_SDK_VERSION: "1.8.186"
+  AWS_SDK_VERSION: "1.9.247"
   AWS_SDK_PATH: "aws-sdk/awsi"
 
 permissions:
@@ -64,27 +64,28 @@ jobs:
           path: ${{env.AWS_SDK_PATH}}
           key: ${{ runner.os }}-awssdk-${{ env.AWS_SDK_VERSION }}
 
-      - name: Get binary deps from cache
+      - name: Get zlib from cache
         id: zlib-cache-check
         uses: actions/cache@v3
         with:
-          path: build/deps/
-          key: ${{ runner.os }}-bin-${{ env.BIN_DEPENDENCIES }}
-      - name: Get bin dependencies
+          path: ${{env.BIN_DEPENDENCIES}}
+          key: ${{ runner.os }}-zlib-${{ env.BIN_DEPENDENCIES }}
+      - name: Install zlib
         if: steps.zlib-cache-check.outputs.cache-hit != 'true'
-        run: ./ci/install-bin-deps.cmd
-      - name: Put bin deps to cache
+        run: ./ci/install-zlib.cmd
+      - name: Put zlib to cache
         if: steps.zlib-cache-check.outputs.cache-hit != 'true'
         uses: actions/cache@v3
         with:
-          path: build/deps/
-          key: ${{ runner.os }}-bin-${{ env.BIN_DEPENDENCIES }}
+          path: ${{env.BIN_DEPENDENCIES}}
+          key: ${{ runner.os }}-zlib-${{ env.BIN_DEPENDENCIES }}
       - name: Download gettext binaries
         run: ./ci/localization_prepare_binaries.cmd
+
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1
       - name: Configure
-        run: cmake -H"${{ github.workspace }}" -B"${{env.BUILD_DIRECTORY}}" -G"Visual Studio 17 2022" -A x64 -DNODEJS_VERSION="${{env.ELECTRON_VERSION}}" -DDepsPath="${PWD}\build\deps\${{env.BIN_DEPENDENCIES}}\win64" -DBOOST_ROOT="${PWD}\build\deps\boost" -DCMAKE_INSTALL_PREFIX="${{env.INSTALL_PACKAGE_PATH}}"
+        run: cmake -H"${{ github.workspace }}" -B"${{env.BUILD_DIRECTORY}}" -G"Visual Studio 17 2022" -A x64 -DNODEJS_VERSION="${{env.ELECTRON_VERSION}}" -DDepsPath="${PWD}\${{env.BIN_DEPENDENCIES}}\win64" -DCMAKE_INSTALL_PREFIX="${{env.INSTALL_PACKAGE_PATH}}"
         env:
           INSTALL_PACKAGE_PATH: "${{env.BUILD_DIRECTORY}}/${{env.DISTRIBUTE_DIRECTORY}}/${{env.PACKAGE_DIRECTORY}}"
       - name: Build

@@ -87,7 +87,7 @@ void Util::restartApp(std::wstring path) {
 
 void Util::setCachePath(std::wstring path) {}
 
-void Util::updateAppState(bool unresponsive_detected) {}
+void Util::updateAppState(Util::AppState detected) {}
 
 bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std::wstring& dumpFileName) { return false;}
 bool Util::archiveFile(const std::wstring& srcFullPath, const std::wstring& dstFullPath, const std::string& nameInsideArchive) { return false;}

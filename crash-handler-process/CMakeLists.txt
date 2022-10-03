@@ -100,15 +100,13 @@ IF(WIN32)
 
 	if(MSVC AND BUILD_SHARED_LIBS)
 		add_definitions(-DUSE_IMPORT_EXPORT)
-		# Copy relevant AWS SDK for C++ libraries into the current binary directory for running and debugging.
+
 		list(APPEND SERVICE_LIST s3 sts)
-		#For IDE's like Xcode and Visual Studio this line will be ignored because Release/Debug 
-		#  is switched internally, but this is necessary for non-IDE builds.
-		set(CMAKE_BUILD_TYPE Debug) #TODO: Set to your build type
+
+		set(CMAKE_BUILD_TYPE Release) 
 		
-		#TODO:Choose appropriate one of the following two lines, you want to copy to the same folder where your executables are.
-		AWSSDK_CPY_DYN_LIBS(SERVICE_LIST "" ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE})  #Choose this line if your executables are in /build/Debug
-		#AWSSDK_CPY_DYN_LIBS(SERVICE_LIST "" ${CMAKE_CURRENT_BINARY_DIR})  #Choose this line for Visual Studio and possibly other IDEs
+		#AWSSDK_CPY_DYN_LIBS(SERVICE_LIST "" ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE})  #Choose this line if your executables are in /build/Debug
+		AWSSDK_CPY_DYN_LIBS(SERVICE_LIST "" ${CMAKE_CURRENT_BINARY_DIR})  #Choose this line for Visual Studio and possibly other IDEs
 		
 		message(STATUS ">>CMAKE_CURRENT_BINARY_DIR: ${CMAKE_CURRENT_BINARY_DIR}")
 		message(STATUS ">>CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
@@ -141,7 +139,7 @@ IF(WIN32)
 
 	target_link_libraries(crash-handler-process ${AWSSDK_LINK_LIBRARIES})
 	target_link_libraries(crash-handler-process ${ZLIB_LIBRARIES} Boost::boost Boost::locale Boost::system)
-	target_link_libraries(crash-handler-process ${ZLIB_LIBRARIES} )
+
 
 	# Compare current linked libs with prev
 	FetchContent_Declare(deps_checker URL "https://raw.githubusercontent.com/stream-labs/obs-studio-node/staging/dependency_checker/check_dependencies.cmd" DOWNLOAD_NO_EXTRACT true)

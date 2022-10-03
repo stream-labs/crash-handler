@@ -4,17 +4,16 @@ Crash handler
 # To build 
 ## On Windows 
 ```
-yarn install 
+yarn install
 
-set BIN_DEPENDENCIES="dependencies2019.0"
-ci\install-bin-deps.cmd
+set BIN_DEPENDENCIES=dependencies2019.0
+ci\install-zlib.cmd
 
-set AWS_SDK_VERSION="1.8.186"
+set AWS_SDK_VERSION="1.9.247"
 ci\build-aws-sdk.cmd
 
-cd build 
-cmake -DCMAKE_INSTALL_PREFIX="..\..\desktop\node_modules\crash-handler"  -G "Visual Studio 17 2022" -A x64 ../ -DDepsPath="deps\dependencies2019.0\win64" -DBOOST_ROOT="deps\boost"
-
+set INSTALL_PACKAGE_PATH:"../desktop/node_modules/crash_handler"
+cmake  -B"build" -G"Visual Studio 17 2022" -A x64 -DDepsPath="%CD%\%BIN_DEPENDENCIES%\win64" -DCMAKE_INSTALL_PREFIX="%INSTALL_PACKAGE_PATH%"
 cmake --build "build" --target install --config RelWithDebInfo
 ```
 
@@ -26,7 +25,6 @@ yarn install
 ```
 
 ## Localization
-
 Boost.locale lib with a gettext format used for a localization(on windows). 
 mo files included in exe by windows resources. 
 ### Commands 
