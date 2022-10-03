@@ -64,21 +64,21 @@ jobs:
           path: ${{env.AWS_SDK_PATH}}
           key: ${{ runner.os }}-awssdk-${{ env.AWS_SDK_VERSION }}
 
-      - name: Get zlib from cache
+          - name: Get binary deps from cache
         id: zlib-cache-check
         uses: actions/cache@v3
         with:
-          path: ${{env.BIN_DEPENDENCIES}}
-          key: ${{ runner.os }}-zlib-${{ env.BIN_DEPENDENCIES }}
-      - name: Install zlib
+          path: build/deps/
+          key: ${{ runner.os }}-bin-${{ env.BIN_DEPENDENCIES }}
+      - name: Get bin dependencies
         if: steps.zlib-cache-check.outputs.cache-hit != 'true'
-        run: ./ci/install-zlib.cmd
-      - name: Put zlib to cache
+        run: ./ci/install-bin-deps.cmd
+      - name: Put bin deps to cache
         if: steps.zlib-cache-check.outputs.cache-hit != 'true'
         uses: actions/cache@v3
         with:
-          path: ${{env.BIN_DEPENDENCIES}}
-          key: ${{ runner.os }}-zlib-${{ env.BIN_DEPENDENCIES }}
+          path: build/deps/
+          key: ${{ runner.os }}-bin-${{ env.BIN_DEPENDENCIES }}
       - name: Download gettext binaries
         run: ./ci/localization_prepare_binaries.cmd
 
