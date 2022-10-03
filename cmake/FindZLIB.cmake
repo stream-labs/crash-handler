@@ -19,14 +19,14 @@ endif()
 find_path(ZLIB_INCLUDE_DIR
 	NAMES zlib.h
 	HINTS
-		ENV zlibPath${_lib_suffix}
-		ENV zlibPath
 		ENV DepsPath${_lib_suffix}
 		ENV DepsPath
-		${zlibPath${_lib_suffix}}
-		${zlibPath}
+		ENV zlibPath${_lib_suffix}
+		ENV zlibPath
 		${DepsPath${_lib_suffix}}
 		${DepsPath}
+		${zlibPath${_lib_suffix}}
+		${zlibPath}
 		${_ZLIB_INCLUDE_DIRS}
 	PATHS
 		/usr/include /usr/local/include /opt/local/include /sw/include
@@ -36,14 +36,14 @@ find_path(ZLIB_INCLUDE_DIR
 find_library(ZLIB_LIB
 	NAMES ${_ZLIB_LIBRARIES} z zlib zdll zlib1 zlibd zlibd1 libzlib libz
 	HINTS
-		ENV zlibPath${_lib_suffix}
-		ENV zlibPath
 		ENV DepsPath${_lib_suffix}
 		ENV DepsPath
-		${zlibPath${_lib_suffix}}
-		${zlibPath}
+		ENV zlibPath${_lib_suffix}
+		ENV zlibPath
 		${DepsPath${_lib_suffix}}
 		${DepsPath}
+		${zlibPath${_lib_suffix}}
+		${zlibPath}
 		${_ZLIB_LIBRARY_DIRS}
 	PATHS
 		/usr/lib /usr/local/lib /opt/local/lib /sw/lib

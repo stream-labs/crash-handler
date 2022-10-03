@@ -13,24 +13,6 @@ IF(WIN32)
 	# Nlohmann JSON (modern JSON for C++)
 	FetchContent_Declare(nlohmannjson URL "https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp" DOWNLOAD_NO_EXTRACT true)
 	FetchContent_MakeAvailable(nlohmannjson)
- 
-	include(ExternalProject)
-
-	ExternalProject_Add(libawscpp
-		GIT_REPOSITORY    https://github.com/aws/aws-sdk-cpp.git
-		GIT_TAG           1.9.247
-		LIST_SEPARATOR    "|"
-		CMAKE_ARGS       -DBUILD_SHARED_LIBS=OFF
-				 -DBUILD_DEPS=ON
-				 -DBUILD_ONLY=s3|sts
-				 -DENABLE_TESTING=OFF
-				 -DCUSTOM_MEMORY_MANAGEMENT=OFF
-				 -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}/awsi
-		BUILD_ALWAYS      TRUE
-		TEST_COMMAND      ""
-		PREFIX            awss
-		GIT_SHALLOW       TRUE
-	)
 ENDIF()
 
 #############################
@@ -83,7 +65,30 @@ ENDIF()
 
 IF(WIN32)
 	find_package(ZLIB)
+
+	list(APPEND CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR}/../aws-sdk/awsi/")
+	#Set the location of where Windows can find the installed libraries of the SDK.
+	if(MSVC)
+		string(REPLACE ";" "/aws-cpp-sdk-all;" SYSTEM_MODULE_PATH "${CMAKE_SYSTEM_PREFIX_PATH}/aws-cpp-sdk-all")
+		list(APPEND CMAKE_PREFIX_PATH ${SYSTEM_MODULE_PATH})
+	endif()
 	
+	find_package(AWSSDK REQUIRED COMPONENTS s3 sts)
+
+	if(MSVC AND BUILD_SHARED_LIBS)
+		add_definitions(-DUSE_IMPORT_EXPORT)
+
+		list(APPEND SERVICE_LIST s3 sts)
+
+		set(CMAKE_BUILD_TYPE Release) 
+		
+		#AWSSDK_CPY_DYN_LIBS(SERVICE_LIST "" ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE})  #Choose this line if your executables are in /build/Debug
+		AWSSDK_CPY_DYN_LIBS(SERVICE_LIST "" ${CMAKE_CURRENT_BINARY_DIR})  #Choose this line for Visual Studio and possibly other IDEs
+		
+		message(STATUS ">>CMAKE_CURRENT_BINARY_DIR: ${CMAKE_CURRENT_BINARY_DIR}")
+		message(STATUS ">>CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+	endif()
+
 	IF(ZLIB_FOUND)
 		message(STATUS "Found binary: " ${ZLIB_LIBRARIES})
 		message(STATUS "Found include directory: " ${ZLIB_INCLUDE_DIRS})	
@@ -107,24 +112,8 @@ IF(WIN32)
 		"${ZLIB_INCLUDE_DIRS}")
 	add_compile_definitions(AWS_CRASH_UPLOAD_BUCKET_KEY=\"$ENV{AWS_CRASH_UPLOAD_BUCKET_KEY}\")
 
-	set( AWS_LIBS
-		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-auth.lib"
-		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-cal.lib"
-		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-common.lib"
-		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-compression.lib"
-		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-event-stream.lib"
-		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-http.lib"
-		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-io.lib"
-		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-mqtt.lib"
-		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-s3.lib"
-		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-c-sdkutils.lib"
-		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-checksums.lib"
-		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-cpp-sdk-core.lib"
-		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-cpp-sdk-s3.lib"
-		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-cpp-sdk-sts.lib"
-		"${CMAKE_CURRENT_BINARY_DIR}/awsi/lib/aws-crt-cpp.lib"
-	)
-	target_link_libraries(crash-handler-process "${AWS_LIBS}" Secur32.lib Ncrypt.lib Shlwapi.lib crypt32.lib)
+ 
+	target_link_libraries(crash-handler-process ${AWSSDK_LINK_LIBRARIES})
 	target_link_libraries(crash-handler-process ${ZLIB_LIBRARIES})
 
 	# Compare current linked libs with prev
