@@ -19,6 +19,21 @@
 #include "process-manager.hpp"
 
 #include <iostream>
+void ThreadData::send_stop() {
+    {
+        const std::lock_guard<std::recursive_mutex> lock(stop_mutex);
+        should_stop = true;
+    }
+    stop_event.notify_one();
+}
+
+bool ThreadData::wait_or_stop() {
+    std::unique_lock<std::recursive_mutex> lck(stop_mutex);
+    if (should_stop)
+        return true;
+    else
+        return stop_event.wait_for(lck, std::chrono::milliseconds(50), [&flag = this->should_stop]{return flag;});
+}
 
 ProcessManager::ProcessManager() {
     m_applicationCrashed = false;
@@ -33,8 +48,7 @@ ProcessManager::~ProcessManager() {
 
 void ProcessManager::runWatcher() {
     this->watcher = new ThreadData();
-    this->watcher->isRunnning = false;
-    this->watcher->stop = false;
+    this->watcher->should_stop = false;
     this->watcher->worker =
         new std::thread(&ProcessManager::watcher_fnc, this);
 
@@ -48,42 +62,40 @@ void ProcessManager::watcher_fnc() {
     if (this->socket->initialization_failed)
         return;
 
-    while (!this->watcher->stop) {
+    while (!this->watcher->wait_or_stop()) {
         std::vector<char> buffer = this->socket->read();
-        if (!buffer.size()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            continue;
-        }
+        while(buffer.size()) {
+            Message msg(buffer);
+            switch (static_cast<Action>(msg.readUInt8())) {
+                case Action::REGISTER: {
+                    bool isCritical = msg.readBool();
+                    uint32_t pid = msg.readUInt32();
+                    size_t size = registerProcess(isCritical, pid);
 
-        Message msg(buffer);
-        switch (static_cast<Action>(msg.readUInt8())) {
-            case Action::REGISTER: {
-                bool isCritical = msg.readBool();
-                uint32_t pid = msg.readUInt32();
-                size_t size = registerProcess(isCritical, pid);
+                    if (size == 1)
+                        startMonitoring();
 
-                if (size == 1)
-                    startMonitoring();
-
-                break;
+                    break;
+                }
+                case Action::UNREGISTER: {
+                    uint32_t pid = msg.readUInt32();
+                    unregisterProcess(pid);
+                    break;
+                }
+                case Action::REGISTERMEMORYDUMP: {
+                    uint32_t pid = msg.readUInt32();
+                    std::wstring eventName_Start = msg.readWstring();
+                    std::wstring eventName_Fail = msg.readWstring();
+                    std::wstring eventName_Success = msg.readWstring();
+                    std::wstring dumpPath = msg.readWstring();
+                    std::wstring dumpName = msg.readWstring();
+                    registerProcessMemoryDump(pid, eventName_Start, eventName_Fail, eventName_Success, dumpPath, dumpName);
+                    break;
+                }
+                default:
+                    break;
             }
-            case Action::UNREGISTER: {
-		        uint32_t pid = msg.readUInt32();
-                unregisterProcess(pid);
-                break;
-            }
-            case Action::REGISTERMEMORYDUMP: {
-                uint32_t pid = msg.readUInt32();
-                std::wstring eventName_Start = msg.readWstring();
-                std::wstring eventName_Fail = msg.readWstring();
-                std::wstring eventName_Success = msg.readWstring();
-                std::wstring dumpPath = msg.readWstring();
-                std::wstring dumpName = msg.readWstring();
-                registerProcessMemoryDump(pid, eventName_Start, eventName_Fail, eventName_Success, dumpPath, dumpName);
-                break;
-            }
-            default:
-                break;
+            buffer = this->socket->read();
         }
     }
     log_info << "End Watcher" << std::endl;
@@ -95,7 +107,7 @@ void ProcessManager::monitor_fnc() {
     bool unresponsiveMarked = false;
     uint32_t last_responsive_check = 0;
 
-    while (!this->monitor->stop) {
+    while (!this->monitor->wait_or_stop()) {
         bool detectedUnresponsive = false;
         if (this->mtx.try_lock()) {
             if (++last_responsive_check % 100 == 0)
@@ -109,7 +121,7 @@ void ProcessManager::monitor_fnc() {
                     log_info << "process.isCritical: " << process->isCritical() << std::endl;
 
                     m_criticalCrash |= process->isCritical();
-                    m_applicationCrashed = this->monitor->stop = true;
+                    m_applicationCrashed = true;
                 } else if (last_responsive_check == 0) {
                     detectedUnresponsive |= process->isUnResponsive();
                 }
@@ -128,7 +140,8 @@ void ProcessManager::monitor_fnc() {
                 unresponsiveMarked = true;
             }
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        if(m_applicationCrashed)
+            break;
     }
 
     if (m_applicationCrashed && !m_criticalCrash) {
@@ -136,7 +149,7 @@ void ProcessManager::monitor_fnc() {
         Util::updateAppState(Util::AppState::NoncriticallyDead);
     }
 
-    this->watcher->stop = true;
+    this->watcher->send_stop();
 #ifdef __APPLE__
     if (m_applicationCrashed) {
         std::vector<char> buffer;
@@ -149,15 +162,14 @@ void ProcessManager::monitor_fnc() {
 
 void ProcessManager::startMonitoring() {
     this->monitor = new ThreadData();
-    this->monitor->isRunnning = false;
-    this->monitor->stop = false;
+    this->monitor->should_stop = false;
 
     this->monitor->worker =
         new std::thread(&ProcessManager::monitor_fnc, this);
 }
 
 void ProcessManager::stopMonitoring() {
-    this->monitor->stop = true;
+    this->monitor->send_stop();
 
     if (this->monitor->worker->joinable())
         this->monitor->worker->join();
@@ -201,8 +213,8 @@ void ProcessManager::unregisterProcess(uint32_t PID) {
     log_info << "isCritical " << (*it)->isCritical() << std::endl;
 
     if ((*it)->isCritical()) {
+        this->watcher->send_stop();
         this->stopMonitoring();
-        this->watcher->stop = true;
         this->sendExitMessage(false);
     }
 
