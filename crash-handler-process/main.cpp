@@ -21,14 +21,13 @@
 #include "util.hpp"
 #include <codecvt>
 
-
 #if defined(WIN32)
-	const std::string log_file_name = "\\crash-handler.log";
-#else // for __APPLE__ and other 
-	const std::wstring log_file_name = L"/crash-handler.log";
+const std::string log_file_name = "\\crash-handler.log";
+#else // for __APPLE__ and other
+const std::wstring log_file_name = L"/crash-handler.log";
 #endif
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
 	std::string pid_path(Util::get_temp_directory());
 	pid_path.append("crash-handler.pid");
@@ -94,7 +93,7 @@ int main(int argc, char** argv)
 	}
 
 #endif
-	ProcessManager* pm = new ProcessManager();
+	ProcessManager *pm = new ProcessManager();
 	pm->runWatcher();
 
 	if (pm->m_applicationCrashed)
@@ -105,7 +104,3 @@ int main(int argc, char** argv)
 	logging_end();
 	return 0;
 }
-
-
-
-

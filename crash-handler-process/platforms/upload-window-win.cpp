@@ -44,9 +44,9 @@ std::unique_ptr<UploadWindow> UploadWindow::instance = nullptr;
 LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg) {
-	case WM_CLOSE: {	
+	case WM_CLOSE: {
 		UploadWindow::getInstance()->onUserWantsToClose();
-		SetCursor(LoadCursor(NULL, IDC_WAIT));	
+		SetCursor(LoadCursor(NULL, IDC_WAIT));
 
 		// Aws/File operations tied to WM_CLOSE instead of onUserWantsToClose to avoid future risk of misusing onUserWantsToClose
 		Util::abortUploadAWS();
@@ -73,15 +73,15 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
-void UploadWindow::showButtons(const DialogButtonsState& state)
+void UploadWindow::showButtons(const DialogButtonsState &state)
 {
-	ShowWindow(ok_button_hwnd, state.ok ? SW_SHOW:SW_HIDE);
-	ShowWindow(yes_button_hwnd, state.yes ? SW_SHOW:SW_HIDE);
-	ShowWindow(cancel_button_hwnd, state.cancel ? SW_SHOW:SW_HIDE);
-	ShowWindow(no_button_hwnd, state.no ? SW_SHOW:SW_HIDE);
+	ShowWindow(ok_button_hwnd, state.ok ? SW_SHOW : SW_HIDE);
+	ShowWindow(yes_button_hwnd, state.yes ? SW_SHOW : SW_HIDE);
+	ShowWindow(cancel_button_hwnd, state.cancel ? SW_SHOW : SW_HIDE);
+	ShowWindow(no_button_hwnd, state.no ? SW_SHOW : SW_HIDE);
 }
 
-void UploadWindow::enableButtons(const DialogButtonsState& state)
+void UploadWindow::enableButtons(const DialogButtonsState &state)
 {
 	EnableWindow(ok_button_hwnd, state.ok);
 	EnableWindow(yes_button_hwnd, state.yes);
@@ -106,7 +106,7 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		break;
 	case CUSTOM_CAUGHT_CRASH: {
 		SetWindowText(upload_label_hwnd, L"The application just crashed.\r\n\r\n"
-		"Would you like to send a report to the developers?");
+						 "Would you like to send a report to the developers?");
 		showButtons({.ok = false, .cancel = true, .yes = true, .no = false});
 		enableButtons({.ok = false, .cancel = true, .yes = true, .no = false});
 		SendMessage(progresss_bar_hwnd, PBM_SETBARCOLOR, 0, RGB(49, 195, 162));
@@ -118,7 +118,8 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case CUSTOM_PROGRESS_MSG: {
 		double progress = ((double)bytes_sent) / ((double)total_bytes_to_send / 100.0);
 		PostMessage(progresss_bar_hwnd, PBM_SETPOS, (int)progress, 0);
-		swprintf(upload_progress_message, upload_message_len, L"Uploading... %.2f%%\r\n%.1f / %.1fmb", static_cast<float>(progress), static_cast<float>(bytes_sent) / (1024.f * 1024.f), static_cast<float>(total_bytes_to_send) / (1024.f * 1024.f));
+		swprintf(upload_progress_message, upload_message_len, L"Uploading... %.2f%%\r\n%.1f / %.1fmb", static_cast<float>(progress),
+			 static_cast<float>(bytes_sent) / (1024.f * 1024.f), static_cast<float>(total_bytes_to_send) / (1024.f * 1024.f));
 		SetWindowText(upload_label_hwnd, upload_progress_message);
 		break;
 	}
@@ -151,9 +152,11 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 	case CUSTOM_UPLOAD_FINISHED: {
-		swprintf(upload_progress_message, upload_message_len, L"Successfully uploaded the debug information.\r\n"
-		"Please provide this file name to the support.\r\n"
-		"File: \"%s\".", file_name.c_str());
+		swprintf(upload_progress_message, upload_message_len,
+			 L"Successfully uploaded the debug information.\r\n"
+			 "Please provide this file name to the support.\r\n"
+			 "File: \"%s\".",
+			 file_name.c_str());
 		SetWindowText(upload_label_hwnd, upload_progress_message);
 		showButtons({.ok = true, .cancel = true, .yes = false, .no = false});
 		enableButtons({.ok = true, .cancel = false, .yes = false, .no = false});
@@ -216,8 +219,7 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 	case WM_CTLCOLORSTATIC:
-	case WM_CTLCOLOREDIT:
-	{
+	case WM_CTLCOLOREDIT: {
 		if ((HWND)lParam == upload_label_hwnd) {
 			HDC hdc = (HDC)wParam;
 			return (LRESULT)GetStockObject(CTLCOLOR_MSGBOX);
@@ -228,10 +230,7 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
-UploadWindow::UploadWindow() 
-{
-
-}
+UploadWindow::UploadWindow() {}
 
 UploadWindow::~UploadWindow()
 {
@@ -249,7 +248,7 @@ UploadWindow::~UploadWindow()
 	}
 };
 
-UploadWindow* UploadWindow::getInstance()
+UploadWindow *UploadWindow::getInstance()
 {
 	static std::unique_ptr<UploadWindow> instance = std::make_unique<UploadWindow>();
 	return instance.get();
@@ -268,23 +267,23 @@ void UploadWindow::onUserWantsToClose()
 	SetWindowText(upload_label_hwnd, L"Closing...");
 }
 
-void UploadWindow::registerRemoveFile(const std::wstring& fullPath)
+void UploadWindow::registerRemoveFile(const std::wstring &fullPath)
 {
 	std::lock_guard<std::mutex> grd(upload_remove_file_mutex);
 	filesForRemoval.insert(fullPath);
 }
 
-void UploadWindow::unregisterRemoveFile(const std::wstring& fullPath)
+void UploadWindow::unregisterRemoveFile(const std::wstring &fullPath)
 {
 	std::lock_guard<std::mutex> grd(upload_remove_file_mutex);
 	filesForRemoval.erase(fullPath);
 }
 
-bool UploadWindow::hasRemoveFilesQueued() 
+bool UploadWindow::hasRemoveFilesQueued()
 {
 	std::lock_guard<std::mutex> grd(upload_remove_file_mutex);
 
-	for (auto& itr : filesForRemoval) {
+	for (auto &itr : filesForRemoval) {
 		if (std::filesystem::exists(itr))
 			return true;
 	}
@@ -292,7 +291,7 @@ bool UploadWindow::hasRemoveFilesQueued()
 	return false;
 }
 
-void UploadWindow::popRemoveFile(const std::wstring& fullPath)
+void UploadWindow::popRemoveFile(const std::wstring &fullPath)
 {
 	std::lock_guard<std::mutex> grd(upload_remove_file_mutex);
 
@@ -300,17 +299,13 @@ void UploadWindow::popRemoveFile(const std::wstring& fullPath)
 
 	if (itr == filesForRemoval.end())
 		return;
-	
-	if (std::filesystem::exists(*itr)) 
-	{
-		try 
-		{
+
+	if (std::filesystem::exists(*itr)) {
+		try {
 			std::filesystem::remove(*itr);
 			filesForRemoval.erase(itr);
-		}
-		catch (...) 
-		{ 
-			log_error << "UploadWindow failed to auto remove file " << std::endl; 
+		} catch (...) {
+			log_error << "UploadWindow failed to auto remove file " << std::endl;
 		}
 	}
 }
@@ -320,23 +315,16 @@ void UploadWindow::popRemoveFiles()
 	std::lock_guard<std::mutex> grd(upload_remove_file_mutex);
 
 	auto itr = filesForRemoval.begin();
-	
-	while (itr != filesForRemoval.end())
-	{	
-		if (std::filesystem::exists(*itr)) 
-		{
-			try 
-			{
-				std::filesystem::remove(*itr); 
+
+	while (itr != filesForRemoval.end()) {
+		if (std::filesystem::exists(*itr)) {
+			try {
+				std::filesystem::remove(*itr);
 				itr = filesForRemoval.erase(itr);
-			} 
-			catch (...)
-			{ 
+			} catch (...) {
 				++itr;
-			} 
-		}
-		else
-		{
+			}
+		} else {
 			itr = filesForRemoval.erase(itr);
 		}
 	}
@@ -348,17 +336,17 @@ void UploadWindow::windowThread()
 	hInstance = GetModuleHandle(NULL);
 
 	WNDCLASSEX wc;
-	wc.cbSize        = sizeof(WNDCLASSEX);
-	wc.style         = 0;
-	wc.lpfnWndProc   = FrameWndProc;
-	wc.cbClsExtra    = 0;
-	wc.cbWndExtra    = 0;
-	wc.hInstance     = hInstance;
-	wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
+	wc.cbSize = sizeof(WNDCLASSEX);
+	wc.style = 0;
+	wc.lpfnWndProc = FrameWndProc;
+	wc.cbClsExtra = 0;
+	wc.cbWndExtra = 0;
+	wc.hInstance = hInstance;
+	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)GetStockObject(CTLCOLOR_MSGBOX);
-	wc.lpszMenuName  = NULL;
+	wc.lpszMenuName = NULL;
 	wc.lpszClassName = L"uploaderwindowclass";
-	wc.hIcon         = LoadIcon(NULL, IDI_ERROR);
+	wc.hIcon = LoadIcon(NULL, IDI_ERROR);
 	if (!RegisterClassEx(&wc)) {
 		log_error << "Failed to create a class for uploader window " << GetLastError() << std::endl;
 		upload_window_choose_variable.notify_one();
@@ -366,128 +354,58 @@ void UploadWindow::windowThread()
 	}
 
 	/* We only care about the main display */
-	int screen_width  = GetSystemMetrics(SM_CXSCREEN);
+	int screen_width = GetSystemMetrics(SM_CXSCREEN);
 	int screen_height = GetSystemMetrics(SM_CYSCREEN);
 
-	upload_window_hwnd = CreateWindowEx(
-	    WS_EX_CLIENTEDGE,
-	    L"uploaderwindowclass",
-	    L"Streamlabs Desktop has encountered a critical error",
-	    WS_OVERLAPPED | WS_MINIMIZEBOX | WS_SYSMENU | WS_EX_TOPMOST,
-	    (screen_width - width) / 2,
-	    (screen_height - height) / 2,
-	    width,
-	    height,
-	    NULL,
-	    NULL,
-	    hInstance,
-	    NULL);
+	upload_window_hwnd = CreateWindowEx(WS_EX_CLIENTEDGE, L"uploaderwindowclass", L"Streamlabs Desktop has encountered a critical error",
+					    WS_OVERLAPPED | WS_MINIMIZEBOX | WS_SYSMENU | WS_EX_TOPMOST, (screen_width - width) / 2, (screen_height - height) / 2, width, height,
+					    NULL, NULL, hInstance, NULL);
 	if (!upload_window_hwnd) {
 		log_error << "Failed to create an uploader window " << GetLastError() << std::endl;
 		upload_window_choose_variable.notify_one();
 		return;
 	}
 
-	int  x_pos  = 10;
-	int  y_pos  = 10;
-	int  x_size = 470;
-	int  y_size = 250;
+	int x_pos = 10;
+	int y_pos = 10;
+	int x_size = 470;
+	int y_size = 250;
 	RECT client_rect;
 	if (GetClientRect(upload_window_hwnd, &client_rect)) {
 		x_size = client_rect.right - client_rect.left;
 		y_size = client_rect.bottom - client_rect.top;
 	}
 
-	progresss_bar_hwnd = CreateWindow(
-	    PROGRESS_CLASS,
-	    TEXT("ProgressWorker"),
-	    WS_CHILD | PBS_SMOOTH,
-	    x_pos,
-	    y_pos,
-	    x_size - 20,
-	    40,
-	    upload_window_hwnd,
-	    NULL,
-	    NULL,
-	    NULL);
+	progresss_bar_hwnd = CreateWindow(PROGRESS_CLASS, TEXT("ProgressWorker"), WS_CHILD | PBS_SMOOTH, x_pos, y_pos, x_size - 20, 40, upload_window_hwnd, NULL, NULL, NULL);
 
-	upload_label_hwnd = CreateWindow(
-	    WC_EDIT,
-	    TEXT(""),
-	    WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN,
-	    x_pos,
-	    y_pos + 50,
-	    x_size - 20,
-	    90,
-	    upload_window_hwnd,
-	    NULL,
-	    NULL,
-	    NULL);
+	upload_label_hwnd = CreateWindow(WC_EDIT, TEXT(""), WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN, x_pos, y_pos + 50, x_size - 20, 90,
+					 upload_window_hwnd, NULL, NULL, NULL);
 
-	ok_button_hwnd = CreateWindow(
-	    WC_BUTTON,
-	    L"OK",
-	    WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
-	    x_size - 220,
-	    y_size - 50,
-	    100,
-	    40,
-	    upload_window_hwnd,
-	    NULL,
-	    NULL,
-	    NULL);
+	ok_button_hwnd =
+		CreateWindow(WC_BUTTON, L"OK", WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, x_size - 220, y_size - 50, 100, 40, upload_window_hwnd, NULL, NULL, NULL);
 
-	yes_button_hwnd = CreateWindow(
-	    WC_BUTTON,
-	    L"Yes",
-	    WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
-	    x_size - 220,
-	    y_size - 50,
-	    100,
-	    40,
-	    upload_window_hwnd,
-	    NULL,
-	    NULL,
-	    NULL);
+	yes_button_hwnd =
+		CreateWindow(WC_BUTTON, L"Yes", WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, x_size - 220, y_size - 50, 100, 40, upload_window_hwnd, NULL, NULL, NULL);
 
-	cancel_button_hwnd = CreateWindow(
-	    WC_BUTTON,
-	    L"Cancel",
-	    WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
-	    x_size - 110,
-	    y_size - 50,
-	    100,
-	    40,
-	    upload_window_hwnd,
-	    NULL,
-	    NULL,
-	    NULL);
+	cancel_button_hwnd =
+		CreateWindow(WC_BUTTON, L"Cancel", WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, x_size - 110, y_size - 50, 100, 40, upload_window_hwnd, NULL, NULL, NULL);
 
-	no_button_hwnd = CreateWindow(
-	    WC_BUTTON,
-	    L"No",
-	    WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
-	    x_size - 110,
-	    y_size - 50,
-	    100,
-	    40,
-	    upload_window_hwnd,
-	    NULL,
-	    NULL,
-	    NULL);
+	no_button_hwnd =
+		CreateWindow(WC_BUTTON, L"No", WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, x_size - 110, y_size - 50, 100, 40, upload_window_hwnd, NULL, NULL, NULL);
 
 	ShowWindow(upload_window_hwnd, SW_SHOWNORMAL);
 	UpdateWindow(upload_window_hwnd);
 	showButtons({.ok = true, .cancel = true, .yes = false, .no = false});
 	enableButtons({.ok = false, .cancel = false, .yes = false, .no = false});
 
-	HFONT main_font = CreateFont(0, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
+	HFONT main_font = CreateFont(0, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
+				     DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
 	if (main_font) {
-		SendMessage(upload_label_hwnd, WM_SETFONT, WPARAM (main_font), TRUE);
-		SendMessage(ok_button_hwnd, WM_SETFONT, WPARAM (main_font), TRUE);
-		SendMessage(yes_button_hwnd, WM_SETFONT, WPARAM (main_font), TRUE);
-		SendMessage(cancel_button_hwnd, WM_SETFONT, WPARAM (main_font), TRUE);
-		SendMessage(no_button_hwnd, WM_SETFONT, WPARAM (main_font), TRUE);
+		SendMessage(upload_label_hwnd, WM_SETFONT, WPARAM(main_font), TRUE);
+		SendMessage(ok_button_hwnd, WM_SETFONT, WPARAM(main_font), TRUE);
+		SendMessage(yes_button_hwnd, WM_SETFONT, WPARAM(main_font), TRUE);
+		SendMessage(cancel_button_hwnd, WM_SETFONT, WPARAM(main_font), TRUE);
+		SendMessage(no_button_hwnd, WM_SETFONT, WPARAM(main_font), TRUE);
 	}
 	SendMessage(upload_label_hwnd, EM_SETREADONLY, TRUE, 0);
 
@@ -574,7 +492,7 @@ void UploadWindow::savingStarted()
 	PostMessage(upload_window_hwnd, CUSTOM_SAVE_STARTED, NULL, NULL);
 }
 
-void UploadWindow::zippingStarted() 
+void UploadWindow::zippingStarted()
 {
 	if (user_wants_to_close) {
 		return;
@@ -621,12 +539,12 @@ int UploadWindow::waitForUserChoise()
 	return button_clicked;
 }
 
-void UploadWindow::setDumpFileName(const std::wstring& new_file_name)
+void UploadWindow::setDumpFileName(const std::wstring &new_file_name)
 {
 	file_name = new_file_name;
 }
 
-void UploadWindow::setDumpPath(const std::wstring& new_path) 
+void UploadWindow::setDumpPath(const std::wstring &new_path)
 {
 	dump_path = new_path;
 }
@@ -649,17 +567,17 @@ bool UploadWindow::blockedMessageDueToShutdown(const INT msg) const
 	}
 
 	switch (msg) {
-		case CUSTOM_PROGRESS_MSG:
-		case CUSTOM_SAVE_STARTED:
-		case CUSTOM_SAVED_DUMP:
-		case CUSTOM_SAVING_DUMP_FAILED:
-		case CUSTOM_UPLOAD_STARTED:
-		case CUSTOM_UPLOAD_FINISHED:
-		case CUSTOM_UPLOAD_FAILED:
-		case CUSTOM_UPLOAD_CANCELED:
-		case CUSTOM_ZIPPING_STARTED:
-		case CUSTOM_REQUESTED_CLICK:
-		    return true;
+	case CUSTOM_PROGRESS_MSG:
+	case CUSTOM_SAVE_STARTED:
+	case CUSTOM_SAVED_DUMP:
+	case CUSTOM_SAVING_DUMP_FAILED:
+	case CUSTOM_UPLOAD_STARTED:
+	case CUSTOM_UPLOAD_FINISHED:
+	case CUSTOM_UPLOAD_FAILED:
+	case CUSTOM_UPLOAD_CANCELED:
+	case CUSTOM_ZIPPING_STARTED:
+	case CUSTOM_REQUESTED_CLICK:
+		return true;
 	}
 
 	return false;

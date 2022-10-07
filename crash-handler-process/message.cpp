@@ -18,44 +18,49 @@
 
 #include "message.hpp"
 
-Message::Message(std::vector<char> buffer) {
+Message::Message(std::vector<char> buffer)
+{
 	m_buffer = buffer;
 }
 
-Message::~Message() {
-}
+Message::~Message() {}
 
-bool Message::readBool() {
-	bool value = reinterpret_cast<bool&> (m_buffer[index]);
+bool Message::readBool()
+{
+	bool value = reinterpret_cast<bool &>(m_buffer[index]);
 	index++;
 	return value;
 }
 
-uint8_t Message::readUInt8() {
-	uint8_t value = reinterpret_cast<uint8_t&> (m_buffer[index]);
+uint8_t Message::readUInt8()
+{
+	uint8_t value = reinterpret_cast<uint8_t &>(m_buffer[index]);
 	index += sizeof(uint8_t);
 	return value;
 }
 
-uint64_t Message::readUInt64() {
-	uint64_t value = reinterpret_cast<uint64_t&> (m_buffer[index]);
+uint64_t Message::readUInt64()
+{
+	uint64_t value = reinterpret_cast<uint64_t &>(m_buffer[index]);
 	index += sizeof(uint64_t);
 	return value;
 }
 
-uint32_t Message::readUInt32() {
-	uint32_t value = reinterpret_cast<uint32_t&> (m_buffer[index]);
+uint32_t Message::readUInt32()
+{
+	uint32_t value = reinterpret_cast<uint32_t &>(m_buffer[index]);
 	index += sizeof(uint32_t);
 	return value;
 }
 
-std::wstring Message::readWstring() {
+std::wstring Message::readWstring()
+{
 	std::wstring value;
-	uint32_t string_size = reinterpret_cast<uint32_t&> (m_buffer[index]);
+	uint32_t string_size = reinterpret_cast<uint32_t &>(m_buffer[index]);
 	index += sizeof(uint32_t);
-	value.resize(string_size/sizeof(wchar_t));
+	value.resize(string_size / sizeof(wchar_t));
 	memcpy(&value[0], &m_buffer[index], string_size);
 	index += string_size;
-	value.resize(string_size/sizeof(wchar_t)-1);
+	value.resize(string_size / sizeof(wchar_t) - 1);
 	return value;
 }

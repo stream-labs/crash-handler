@@ -24,22 +24,18 @@
 class Util {
 public:
 	static void runTerminateWindow(bool &shouldRestart);
-	static void check_pid_file(std::string& pid_path);
-	static void write_pid_file(std::string& pid_path);
+	static void check_pid_file(std::string &pid_path);
+	static void write_pid_file(std::string &pid_path);
 	static std::string get_temp_directory();
 	static void restartApp(std::wstring path);
 
-	static bool archiveFile(const std::wstring& fileFullPath, const std::wstring& archiveFullPath, const std::string& nameInsideArchive);
-	static bool saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std::wstring& dumpFileName);
-	static bool uploadToAWS(const std::wstring& wspath, const std::wstring& fileName);
+	static bool archiveFile(const std::wstring &fileFullPath, const std::wstring &archiveFullPath, const std::string &nameInsideArchive);
+	static bool saveMemoryDump(uint32_t pid, const std::wstring &dumpPath, const std::wstring &dumpFileName);
+	static bool uploadToAWS(const std::wstring &wspath, const std::wstring &fileName);
 	static void abortUploadAWS();
 	static void setCachePath(std::wstring path);
 
-	enum class AppState{
-		Responsive,
-		Unresponsive,
-		NoncriticallyDead
-	};
+	enum class AppState { Responsive, Unresponsive, NoncriticallyDead };
 	static void updateAppState(AppState detected);
 };
 

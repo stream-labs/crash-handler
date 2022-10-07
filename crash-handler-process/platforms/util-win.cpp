@@ -51,15 +51,15 @@
 #include "..\minizip\zip.h"
 #include "..\minizip\iowin32.h"
 
-LONG CALLBACK unhandledHandler(EXCEPTION_POINTERS* e)
+LONG CALLBACK unhandledHandler(EXCEPTION_POINTERS *e)
 {
-	if (log_output_file.is_open() && !log_output_path.empty())  {	
+	if (log_output_file.is_open() && !log_output_path.empty()) {
 		log_info << "!! Crashed !!" << std::endl;
 
 		// Small file, ~50-100 kb, MiniDumpNormal will only have stack, always same name to overwrite on purpose (small footprint)
-		HANDLE hFile = CreateFileW((log_output_path + L".dmp").c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);			
-		if (hFile != INVALID_HANDLE_VALUE && hFile != NULL) {	
-			MINIDUMP_EXCEPTION_INFORMATION exceptionInfo = { GetCurrentThreadId(), e, FALSE}; 
+		HANDLE hFile = CreateFileW((log_output_path + L".dmp").c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (hFile != INVALID_HANDLE_VALUE && hFile != NULL) {
+			MINIDUMP_EXCEPTION_INFORMATION exceptionInfo = {GetCurrentThreadId(), e, FALSE};
 			MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, MINIDUMP_TYPE(MiniDumpNormal), e ? &exceptionInfo : nullptr, nullptr, nullptr);
 			CloseHandle(hFile);
 		}
@@ -85,66 +85,53 @@ unhandledHandlerObj unhandledHandlerObj_Impl;
 const std::wstring appStateFileName = L"\\appState";
 std::wstring appCachePath = L"";
 
-void Util::restartApp(std::wstring path) {
-	STARTUPINFO info = { sizeof(info) };
+void Util::restartApp(std::wstring path)
+{
+	STARTUPINFO info = {sizeof(info)};
 	PROCESS_INFORMATION processInfo;
 
 	memset(&info, 0, sizeof(info));
 	memset(&processInfo, 0, sizeof(processInfo));
 
 	const std::wstring crash_handler_subdir = L"\\resources\\app.asar.unpacked/node_modules/crash-handler/crash-handler-process";
-	if(path.size() <= crash_handler_subdir.size())
+	if (path.size() <= crash_handler_subdir.size())
 		return;
 
 	std::wstring slobs_path = path.substr(0, path.size() - crash_handler_subdir.size());
 	slobs_path += L"\\Streamlabs OBS.exe";
 	log_info << "Slobs path to restart: " << std::string(slobs_path.begin(), slobs_path.end()) << std::endl;
-	CreateProcess(slobs_path.c_str(),
-		NULL,
-		NULL,
-		NULL,
-		FALSE,
-		DETACHED_PROCESS,
-		NULL,
-		NULL,
-		&info,
-		&processInfo
-	);
+	CreateProcess(slobs_path.c_str(), NULL, NULL, NULL, FALSE, DETACHED_PROCESS, NULL, NULL, &info, &processInfo);
 }
 
-void Util::runTerminateWindow(bool& shouldRestart) {
-    int code = MessageBox(
-        NULL,
-        L"An error occurred which has caused Streamlabs Desktop to close. Don't worry! If you were streaming or recording, that is still happening in the background."
-        L"\n\nWhenever you're ready, we can relaunch the application, however this will end your stream / recording session.\n\n"
-        L"Click the Yes button to keep streaming / recording. \n\n"
-        L"Click the No button to stop streaming / recording.",
-        L"An error occurred",
-        MB_YESNO | MB_SYSTEMMODAL
-        );
-    switch (code) {
-        case IDYES:
-        {
-            MessageBox(
-                NULL,
-                L"Your stream / recording session is still running in the background. Whenever you're ready, click the OK button below to end your stream / recording and relaunch the application.",
-                L"Choose when to restart",
-                MB_OK | MB_SYSTEMMODAL
-            );
-			shouldRestart = true;
-            break;
-        }
-        case IDNO:
-        default:
-            break;
-    }
+void Util::runTerminateWindow(bool &shouldRestart)
+{
+	int code = MessageBox(
+		NULL,
+		L"An error occurred which has caused Streamlabs Desktop to close. Don't worry! If you were streaming or recording, that is still happening in the background."
+		L"\n\nWhenever you're ready, we can relaunch the application, however this will end your stream / recording session.\n\n"
+		L"Click the Yes button to keep streaming / recording. \n\n"
+		L"Click the No button to stop streaming / recording.",
+		L"An error occurred", MB_YESNO | MB_SYSTEMMODAL);
+	switch (code) {
+	case IDYES: {
+		MessageBox(
+			NULL,
+			L"Your stream / recording session is still running in the background. Whenever you're ready, click the OK button below to end your stream / recording and relaunch the application.",
+			L"Choose when to restart", MB_OK | MB_SYSTEMMODAL);
+		shouldRestart = true;
+		break;
+	}
+	case IDNO:
+	default:
+		break;
+	}
 }
 
 static thread_local std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 
-std::string from_utf16_wide_to_utf8(const wchar_t* from, size_t length = -1)
+std::string from_utf16_wide_to_utf8(const wchar_t *from, size_t length = -1)
 {
-	const wchar_t* from_end;
+	const wchar_t *from_end;
 	if (length == 0)
 		return {};
 	else if (length != -1)
@@ -154,9 +141,9 @@ std::string from_utf16_wide_to_utf8(const wchar_t* from, size_t length = -1)
 	return converter.to_bytes(from, from_end);
 }
 
-std::wstring from_utf8_to_utf16_wide(const char* from, size_t length = -1)
+std::wstring from_utf8_to_utf16_wide(const char *from, size_t length = -1)
 {
-	const char* from_end;
+	const char *from_end;
 	if (length == 0)
 		return {};
 	else if (length != -1)
@@ -166,8 +153,7 @@ std::wstring from_utf8_to_utf16_wide(const char* from, size_t length = -1)
 	return converter.from_bytes(from, from_end);
 }
 
-struct ProcessInfo
-{
+struct ProcessInfo {
 	uint64_t handle;
 	uint64_t id;
 	ProcessInfo()
@@ -185,7 +171,7 @@ struct ProcessInfo
 ProcessInfo open_process(uint64_t handle)
 {
 	ProcessInfo pi;
-	DWORD       flags = PROCESS_QUERY_INFORMATION | PROCESS_TERMINATE | PROCESS_VM_READ;
+	DWORD flags = PROCESS_QUERY_INFORMATION | PROCESS_TERMINATE | PROCESS_VM_READ;
 	pi.handle = (uint64_t)OpenProcess(flags, false, (DWORD)handle);
 	return pi;
 }
@@ -197,12 +183,12 @@ bool close_process(ProcessInfo pi)
 
 std::string get_process_name(ProcessInfo pi)
 {
-	LPWSTR  lpBuffer = NULL;
-	DWORD   dwBufferLength = 256;
-	HANDLE  hProcess = (HANDLE)pi.handle;
+	LPWSTR lpBuffer = NULL;
+	DWORD dwBufferLength = 256;
+	HANDLE hProcess = (HANDLE)pi.handle;
 	HMODULE hModule;
-	DWORD   unused1;
-	BOOL    bSuccess;
+	DWORD unused1;
+	BOOL bSuccess;
 	/* We rely on undocumented behavior here where
 	* enumerating a process' modules will provide
 	* the process HMODULE first every time. */
@@ -231,7 +217,7 @@ std::string get_process_name(ProcessInfo pi)
 	return {};
 }
 
-std::fstream open_file(std::string& file_path, std::fstream::openmode mode)
+std::fstream open_file(std::string &file_path, std::fstream::openmode mode)
 {
 	return std::fstream(from_utf8_to_utf16_wide(file_path.c_str()), mode);
 }
@@ -241,13 +227,13 @@ bool kill(ProcessInfo pinfo, uint32_t code)
 	return TerminateProcess(reinterpret_cast<HANDLE>(pinfo.handle), code);
 }
 
-void Util::check_pid_file(std::string& pid_path) {
+void Util::check_pid_file(std::string &pid_path)
+{
 	std::fstream::openmode mode = std::fstream::in | std::fstream::binary;
 	std::fstream pid_file(open_file(pid_path, mode));
-	union
-	{
+	union {
 		uint64_t pid;
-		char     pid_char[sizeof(uint64_t)];
+		char pid_char[sizeof(uint64_t)];
 	};
 	if (!pid_file)
 		return;
@@ -263,13 +249,13 @@ void Util::check_pid_file(std::string& pid_path) {
 	close_process(pi);
 }
 
-void Util::write_pid_file(std::string& pid_path) {
+void Util::write_pid_file(std::string &pid_path)
+{
 	std::fstream::openmode mode = std::fstream::out | std::fstream::binary;
 	std::fstream pid_file(open_file(pid_path, mode));
-	union
-	{
+	union {
 		uint64_t pid;
-		char     pid_char[sizeof(uint64_t)];
+		char pid_char[sizeof(uint64_t)];
 	};
 	if (!pid_file)
 		return;
@@ -281,9 +267,10 @@ void Util::write_pid_file(std::string& pid_path) {
 	pid_file.close();
 }
 
-std::string Util::get_temp_directory() {
+std::string Util::get_temp_directory()
+{
 	constexpr DWORD tmp_size = MAX_PATH + 1;
-	std::wstring    tmp(tmp_size, wchar_t());
+	std::wstring tmp(tmp_size, wchar_t());
 	GetTempPathW(tmp_size, &tmp[0]);
 	/* Here we resize an in-use string and then re-use it.
 	* Note this is only okay because the long path name
@@ -306,7 +293,7 @@ void Util::updateAppState(Util::AppState state)
 {
 	const std::string freez_flag = "window_unresponsive";
 	const std::string noncritical_flag = "crashed_noncritically";
-	const std::string flag_name  = "detected";
+	const std::string flag_name = "detected";
 
 	std::ifstream state_file(appCachePath + appStateFileName, std::ios::in);
 	if (!state_file.is_open())
@@ -320,9 +307,9 @@ void Util::updateAppState(Util::AppState state)
 	if (current_status.size() == 0)
 		return;
 
-	std::string    updated_status      = "";
-	std::string    existing_flag_value = "";
-	nlohmann::json jsonEntry           = nlohmann::json::parse(current_status);
+	std::string updated_status = "";
+	std::string existing_flag_value = "";
+	nlohmann::json jsonEntry = nlohmann::json::parse(current_status);
 	try {
 		existing_flag_value = jsonEntry.at(flag_name);
 	} catch (...) {
@@ -348,7 +335,7 @@ void Util::updateAppState(Util::AppState state)
 	out_state_file.close();
 }
 
-bool Util::archiveFile(const std::wstring& fileFullPath, const std::wstring& archiveFullPath, const std::string& nameInsideArchive)
+bool Util::archiveFile(const std::wstring &fileFullPath, const std::wstring &archiveFullPath, const std::string &nameInsideArchive)
 {
 	zlib_filefunc64_def ffunc;
 	fill_win32_filefunc64W(&ffunc);
@@ -367,12 +354,12 @@ bool Util::archiveFile(const std::wstring& fileFullPath, const std::wstring& arc
 
 	std::fstream file(fileFullPath, std::ios::binary | std::ios::in);
 
-	if (file.is_open())	{
+	if (file.is_open()) {
 		file.seekg(0, std::ios::end);
 		uint64_t size = file.tellg();
 		file.seekg(0, std::ios::beg);
 
-		#undef max
+#undef max
 		if (size > uint64_t(std::numeric_limits<uint32_t>().max())) {
 			log_info << "File is too large for minizip" << std::endl;
 			zipClose(zf, NULL);
@@ -383,9 +370,9 @@ bool Util::archiveFile(const std::wstring& fileFullPath, const std::wstring& arc
 		std::vector<char> buffer(size);
 		if (size == 0 || file.read(&buffer[0], size)) {
 			zip_fileinfo zfi = {0};
-			
+
 			if (zipOpenNewFileInZip(zf, nameInsideArchive.c_str(), &zfi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_BEST_SPEED) == S_OK) {
-				if (zipWriteInFileInZip(zf, size == 0 ? "" : &buffer[0], size) == S_OK)	{
+				if (zipWriteInFileInZip(zf, size == 0 ? "" : &buffer[0], size) == S_OK) {
 					if (zipCloseFileInZip(zf) == S_OK)
 						result = true;
 				}
@@ -402,12 +389,12 @@ bool Util::archiveFile(const std::wstring& fileFullPath, const std::wstring& arc
 	return result;
 }
 
-bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std::wstring& dumpFileName)
+bool Util::saveMemoryDump(uint32_t pid, const std::wstring &dumpPath, const std::wstring &dumpFileName)
 {
 	bool dumpSaved = false;
 
 	std::filesystem::path memoryDumpFolder = dumpPath;
-	std::filesystem::path memoryDumpFile   = memoryDumpFolder;
+	std::filesystem::path memoryDumpFile = memoryDumpFolder;
 	memoryDumpFile.append(dumpFileName);
 
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS | PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, FALSE, pid);
@@ -416,13 +403,12 @@ bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std:
 		return false;
 	}
 
-	bool           enoughDiskSpace = false;
+	bool enoughDiskSpace = false;
 	ULARGE_INTEGER diskBytesAvailable;
 	if (GetDiskFreeSpaceEx(memoryDumpFolder.generic_wstring().c_str(), &diskBytesAvailable, NULL, NULL)) {
 		PROCESS_MEMORY_COUNTERS pmc;
 		if (GetProcessMemoryInfo(hProcess, &pmc, sizeof(pmc))) {
-			log_info << "Disk available space " << diskBytesAvailable.QuadPart << " , process ram size "
-			         << pmc.WorkingSetSize << std::endl;
+			log_info << "Disk available space " << diskBytesAvailable.QuadPart << " , process ram size " << pmc.WorkingSetSize << std::endl;
 
 			// There is now way to know a size of memory dump.
 			// On test crashes it was about two times bigger than a ram size used by a process.
@@ -439,19 +425,11 @@ bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std:
 		return false;
 	}
 
-	HANDLE hFile = CreateFile(
-	    memoryDumpFile.generic_wstring().c_str(),
-	    GENERIC_READ | GENERIC_WRITE,
-	    0,
-	    NULL,
-	    CREATE_ALWAYS,
-	    FILE_ATTRIBUTE_NORMAL,
-	    NULL);
+	HANDLE hFile = CreateFile(memoryDumpFile.generic_wstring().c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
 	if (hFile && hFile != INVALID_HANDLE_VALUE) {
-		const DWORD CD_Flags = MiniDumpWithFullMemory | MiniDumpWithHandleData | MiniDumpWithThreadInfo
-		                       | MiniDumpWithProcessThreadData | MiniDumpWithFullMemoryInfo
-		                       | MiniDumpWithUnloadedModules | MiniDumpIgnoreInaccessibleMemory ;
+		const DWORD CD_Flags = MiniDumpWithFullMemory | MiniDumpWithHandleData | MiniDumpWithThreadInfo | MiniDumpWithProcessThreadData | MiniDumpWithFullMemoryInfo |
+				       MiniDumpWithUnloadedModules | MiniDumpIgnoreInaccessibleMemory;
 
 		BOOL ret = MiniDumpWriteDump(hProcess, pid, hFile, (MINIDUMP_TYPE)CD_Flags, 0, 0, 0);
 		CloseHandle(hFile);
@@ -471,19 +449,15 @@ bool Util::saveMemoryDump(uint32_t pid, const std::wstring& dumpPath, const std:
 	return dumpSaved;
 }
 
-
-std::mutex              s3_mutex;
-std::mutex              upload_mutex;
+std::mutex s3_mutex;
+std::mutex upload_mutex;
 std::condition_variable upload_variable;
-long long               total_sent_amout = 0;
+long long total_sent_amout = 0;
 std::chrono::steady_clock::time_point last_progress_update;
 std::unique_ptr<Aws::S3::S3Client> s3_client_ptr;
 
-void PutObjectAsyncFinished(
-    const Aws::S3::S3Client*                                      s3Client,
-    const Aws::S3::Model::PutObjectRequest&                       request,
-    const Aws::S3::Model::PutObjectOutcome&                       outcome,
-    const std::shared_ptr<const Aws::Client::AsyncCallerContext>& context)
+void PutObjectAsyncFinished(const Aws::S3::S3Client *s3Client, const Aws::S3::Model::PutObjectRequest &request, const Aws::S3::Model::PutObjectOutcome &outcome,
+			    const std::shared_ptr<const Aws::Client::AsyncCallerContext> &context)
 {
 	if (outcome.IsSuccess()) {
 		log_info << "PutObjectAsyncFinished: Finished uploading '" << context->GetUUID() << "'." << std::endl;
@@ -495,15 +469,11 @@ void PutObjectAsyncFinished(
 	upload_variable.notify_one();
 }
 
-bool PutObjectAsync(
-    const Aws::S3::S3Client& s3_client,
-    const Aws::String&       bucket_name,
-    const std::wstring&      file_path,
-    const std::wstring&      file_name)
+bool PutObjectAsync(const Aws::S3::S3Client &s3_client, const Aws::String &bucket_name, const std::wstring &file_path, const std::wstring &file_name)
 {
 	log_info << "PutObjectAsync started  " << std::endl;
 	Aws::S3::Model::PutObjectRequest request;
-	request.SetDataSentEventHandler([](const Aws::Http::HttpRequest*, long long amount) {
+	request.SetDataSentEventHandler([](const Aws::Http::HttpRequest *, long long amount) {
 		total_sent_amout += amount;
 
 		std::chrono::steady_clock::time_point now_time = std::chrono::steady_clock::now();
@@ -519,8 +489,8 @@ bool PutObjectAsync(
 	request.SetKey(Aws::String("crash_memory_dumps/") + aws_file_name);
 
 	std::shared_ptr<Aws::IOStream> input_data;
-	std::fstream*                  fs            = new std::fstream();
-	std::filesystem::path          uploaded_file = file_path;
+	std::fstream *fs = new std::fstream();
+	std::filesystem::path uploaded_file = file_path;
 	uploaded_file.append(file_name);
 	input_data.reset(fs);
 	try {
@@ -538,8 +508,7 @@ bool PutObjectAsync(
 	request.SetBody(input_data);
 
 	log_info << "PutObjectAsync ready to call PutObjectAsync " << std::endl;
-	std::shared_ptr<Aws::Client::AsyncCallerContext> context =
-	    Aws::MakeShared<Aws::Client::AsyncCallerContext>("PutObjectAllocationTag");
+	std::shared_ptr<Aws::Client::AsyncCallerContext> context = Aws::MakeShared<Aws::Client::AsyncCallerContext>("PutObjectAllocationTag");
 	context->SetUUID(request.GetKey());
 	s3_client.PutObjectAsync(request, PutObjectAsyncFinished, context);
 	log_info << "PutObjectAsync finished. Wait for async result." << std::endl;
@@ -555,17 +524,17 @@ void Util::abortUploadAWS()
 		s3_client_ptr->DisableRequestProcessing();
 }
 
-bool Util::uploadToAWS(const std::wstring& wspath, const std::wstring& fileName)
+bool Util::uploadToAWS(const std::wstring &wspath, const std::wstring &fileName)
 {
 	UploadWindow::getInstance()->uploadStarted();
-	bool            ret = false;
+	bool ret = false;
 	Aws::SDKOptions options;
 	Aws::InitAPI(options);
 	{
 		const Aws::String bucket_name = "streamlabs-obs-user-cache";
-		const Aws::String region      = "us-west-2";
+		const Aws::String region = "us-west-2";
 		const Aws::String accessIDKey = "AKIAIAINC32O7I3KUJGQ";
-		const Aws::String Key   = GET_KEY;
+		const Aws::String Key = GET_KEY;
 
 		std::unique_lock<std::mutex> lock(upload_mutex);
 
@@ -584,8 +553,7 @@ bool Util::uploadToAWS(const std::wstring& wspath, const std::wstring& fileName)
 		{
 			std::lock_guard<std::mutex> grd(s3_mutex);
 
-			s3_client_ptr = std::make_unique<Aws::S3::S3Client>(
-			    aws_credentials, config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, false);
+			s3_client_ptr = std::make_unique<Aws::S3::S3Client>(aws_credentials, config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, false);
 		}
 
 		log_info << "Upload to ASW ready to start upload" << std::endl;
