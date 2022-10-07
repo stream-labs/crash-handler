@@ -2,11 +2,13 @@
 
 std::wstring Socket_OSX::ipc_path;
 
-void Socket::set_ipc_path(const std::wstring& new_ipc_path) {
+void Socket::set_ipc_path(const std::wstring &new_ipc_path)
+{
 	Socket_OSX::ipc_path = new_ipc_path;
 }
 
-Socket_OSX::Socket_OSX() {
+Socket_OSX::Socket_OSX()
+{
 	this->name = std::string(ipc_path.begin(), ipc_path.end());
 	this->name_exit = "/tmp/exit-slobs-crash-handler";
 
@@ -19,11 +21,13 @@ Socket_OSX::Socket_OSX() {
 	}
 }
 
-std::unique_ptr<Socket> Socket::create() {
+std::unique_ptr<Socket> Socket::create()
+{
 	return std::make_unique<Socket_OSX>();
 }
 
-std::vector<char> Socket_OSX::read() {
+std::vector<char> Socket_OSX::read()
+{
 	std::vector<char> buffer;
 	buffer.resize(30000, 0);
 	int file_descriptor = open(this->name.c_str(), O_RDONLY);
@@ -37,7 +41,8 @@ std::vector<char> Socket_OSX::read() {
 	return buffer;
 }
 
-int Socket_OSX::write(bool exit, std::vector<char> buffer) {
+int Socket_OSX::write(bool exit, std::vector<char> buffer)
+{
 	int file_descriptor = open(exit ? this->name_exit.c_str() : this->name.c_str(), O_WRONLY | O_DSYNC);
 	if (file_descriptor < 0) {
 		log_info << "Could not open " << strerror(errno) << std::endl;
@@ -47,6 +52,7 @@ int Socket_OSX::write(bool exit, std::vector<char> buffer) {
 	return bytes_wrote;
 }
 
-void Socket_OSX::disconnect() {
+void Socket_OSX::disconnect()
+{
 	remove(this->name.c_str());
 }
