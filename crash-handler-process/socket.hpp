@@ -30,13 +30,13 @@
 
 class Socket {
 public:
-    static std::unique_ptr<Socket> create();
+	static std::unique_ptr<Socket> create();
 
-    virtual std::vector<char> read() = 0;
-    virtual int write(bool exit, std::vector<char> buffer) = 0;
-    virtual void disconnect() = 0;
-    static void set_ipc_path(const std::wstring&);
-    bool initialization_failed = false;
+	virtual std::vector<char> read() = 0;
+	virtual int write(bool exit, std::vector<char> buffer) = 0;
+	virtual void disconnect() = 0;
+	static void set_ipc_path(const std::wstring &);
+	bool initialization_failed = false;
 };
 
 #endif

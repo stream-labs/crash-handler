@@ -25,11 +25,11 @@
 
 class Process_WIN : public Process {
 private:
-	std::thread* checker{nullptr};
-	std::thread* memorydump{nullptr};
+	std::thread *checker{nullptr};
+	std::thread *memorydump{nullptr};
 	std::mutex mtx;
 
-	HANDLE handle_OpenProcess{INVALID_HANDLE_VALUE};	
+	HANDLE handle_OpenProcess{INVALID_HANDLE_VALUE};
 	HANDLE handle_event_Start{INVALID_HANDLE_VALUE};
 	HANDLE handle_event_Fail{INVALID_HANDLE_VALUE};
 	HANDLE handle_event_Success{INVALID_HANDLE_VALUE};
@@ -40,23 +40,24 @@ private:
 	HWND getTopWindow();
 
 public:
-    Process_WIN(int32_t pid, bool isCritical);
-    ~Process_WIN();
+	Process_WIN(int32_t pid, bool isCritical);
+	~Process_WIN();
 
 public:
-    virtual int32_t  getPID(void)     override;
-    virtual bool     isCritical(void) override;
-    virtual bool     isAlive(void)    override;
-    virtual bool     isUnResponsive(void) override;
-    virtual void     terminate(void)  override;
+	virtual int32_t getPID(void) override;
+	virtual bool isCritical(void) override;
+	virtual bool isAlive(void) override;
+	virtual bool isUnResponsive(void) override;
+	virtual void terminate(void) override;
 
 public:
-    virtual void     startMemoryDumpMonitoring(const std::wstring& eventName_Start, const std::wstring& eventName_Fail, const std::wstring& eventName_Success, const std::wstring& dumpPath, const std::wstring& dumpName) override;
+	virtual void startMemoryDumpMonitoring(const std::wstring &eventName_Start, const std::wstring &eventName_Fail, const std::wstring &eventName_Success,
+					       const std::wstring &dumpPath, const std::wstring &dumpName) override;
 
 private:
-    void worker();
-    void memorydump_worker();
-    DWORD getPIDDWORD();
+	void worker();
+	void memorydump_worker();
+	DWORD getPIDDWORD();
 	static bool isValidHandleValue(const HANDLE h);
-	static void safeCloseHandle(HANDLE& h);
+	static void safeCloseHandle(HANDLE &h);
 };

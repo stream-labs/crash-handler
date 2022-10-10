@@ -21,15 +21,14 @@
 #include <windows.h>
 #include <tchar.h>
 
-#define CONNECTING_STATE 0 
-#define READING_STATE 1 
-#define WRITING_STATE 2 
+#define CONNECTING_STATE 0
+#define READING_STATE 1
+#define WRITING_STATE 2
 #define INSTANCES 8
 #define PIPE_TIMEOUT 5000
 #define BUFSIZE 512
 
-typedef struct
-{
+typedef struct {
 	OVERLAPPED oOverlap;
 	HANDLE hPipeInst;
 	std::vector<char> chRequest;
@@ -42,23 +41,23 @@ typedef struct
 
 class Socket_WIN : public Socket {
 private:
-    PIPEINST Pipe[INSTANCES];
-    HANDLE hEvents[INSTANCES];
+	PIPEINST Pipe[INSTANCES];
+	HANDLE hEvents[INSTANCES];
 	std::wstring name;
 	std::wstring name_exit;
 	static std::wstring ipc_path;
 
-    BOOL ConnectToNewClient(HANDLE hPipe, LPOVERLAPPED lpo);
-    void DisconnectAndReconnect(DWORD i);
-    bool initPipe(int& i);
+	BOOL ConnectToNewClient(HANDLE hPipe, LPOVERLAPPED lpo);
+	void DisconnectAndReconnect(DWORD i);
+	bool initPipe(int &i);
 
 public:
 	Socket_WIN();
 	virtual ~Socket_WIN();
 
 public:
-    virtual std::vector<char> read() override;
+	virtual std::vector<char> read() override;
 	virtual int write(bool exit, std::vector<char> buffer) override;
 	virtual void disconnect() override;
-	friend void Socket::set_ipc_path(const std::wstring& new_ipc_path);
+	friend void Socket::set_ipc_path(const std::wstring &new_ipc_path);
 };

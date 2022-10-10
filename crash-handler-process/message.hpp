@@ -22,21 +22,17 @@
 #include <vector>
 #include <string>
 
-enum class Action : uint8_t {
-	REGISTER = 0,
-	UNREGISTER = 1,
-	REGISTERMEMORYDUMP = 2
-};
+enum class Action : uint8_t { REGISTER = 0, UNREGISTER = 1, REGISTERMEMORYDUMP = 2 };
 
 class Message {
 public:
 	Message(std::vector<char> buffer);
 	~Message();
-	
+
 private:
 	std::vector<char> m_buffer;
 	uint64_t index = 0;
-	
+
 public:
 	bool readBool();
 	uint64_t readUInt64();
