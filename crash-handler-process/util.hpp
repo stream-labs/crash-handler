@@ -37,6 +37,8 @@ public:
 
 	enum class AppState { Responsive, Unresponsive, NoncriticallyDead };
 	static void updateAppState(AppState detected);
+
+	static void setupLocale();
 };
 
 #endif

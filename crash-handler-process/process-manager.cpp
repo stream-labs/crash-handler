@@ -218,8 +218,8 @@ void ProcessManager::unregisterProcess(uint32_t PID)
 	this->processes.erase(it);
 }
 
-void ProcessManager::registerProcessMemoryDump(uint32_t PID, const std::wstring &eventName_Start, const std::wstring &eventName_Fail, const std::wstring &eventName_Success,
-					       const std::wstring &dumpPath, const std::wstring &dumpName)
+void ProcessManager::registerProcessMemoryDump(uint32_t PID, const std::wstring &eventName_Start, const std::wstring &eventName_Fail,
+					       const std::wstring &eventName_Success, const std::wstring &dumpPath, const std::wstring &dumpName)
 {
 	const std::lock_guard<std::mutex> lock(this->mtx);
 

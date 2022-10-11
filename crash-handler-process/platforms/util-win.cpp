@@ -51,16 +51,22 @@
 #include "..\minizip\zip.h"
 #include "..\minizip\iowin32.h"
 
+#include <boost/locale.hpp>
+
+std::wstring from_utf8_to_utf16_wide(const char *from, size_t length = -1);
+
 LONG CALLBACK unhandledHandler(EXCEPTION_POINTERS *e)
 {
 	if (log_output_file.is_open() && !log_output_path.empty()) {
 		log_info << "!! Crashed !!" << std::endl;
 
 		// Small file, ~50-100 kb, MiniDumpNormal will only have stack, always same name to overwrite on purpose (small footprint)
-		HANDLE hFile = CreateFileW((log_output_path + L".dmp").c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		HANDLE hFile =
+			CreateFileW((log_output_path + L".dmp").c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile != INVALID_HANDLE_VALUE && hFile != NULL) {
 			MINIDUMP_EXCEPTION_INFORMATION exceptionInfo = {GetCurrentThreadId(), e, FALSE};
-			MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, MINIDUMP_TYPE(MiniDumpNormal), e ? &exceptionInfo : nullptr, nullptr, nullptr);
+			MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, MINIDUMP_TYPE(MiniDumpNormal), e ? &exceptionInfo : nullptr,
+					  nullptr, nullptr);
 			CloseHandle(hFile);
 		}
 	}
@@ -105,19 +111,24 @@ void Util::restartApp(std::wstring path)
 
 void Util::runTerminateWindow(bool &shouldRestart)
 {
-	int code = MessageBox(
-		NULL,
-		L"An error occurred which has caused Streamlabs Desktop to close. Don't worry! If you were streaming or recording, that is still happening in the background."
-		L"\n\nWhenever you're ready, we can relaunch the application, however this will end your stream / recording session.\n\n"
-		L"Click the Yes button to keep streaming / recording. \n\n"
-		L"Click the No button to stop streaming / recording.",
-		L"An error occurred", MB_YESNO | MB_SYSTEMMODAL);
+	std::wstring title = from_utf8_to_utf16_wide(boost::locale::translate("An error occurred").str().c_str());
+	auto message_translated = boost::locale::translate("An error occurred which has caused Streamlabs Desktop to close. Don't worry! "
+							   "If you were streaming or recording, that is still happening in the background."
+							   "\n\nWhenever you're ready, we can relaunch the application, however this will end "
+							   "your stream / recording session.\n\n"
+							   "Click the Yes button to keep streaming / recording. \n\n"
+							   "Click the No button to stop streaming / recording.");
+	std::wstring message = from_utf8_to_utf16_wide(message_translated.str().c_str());
+
+	int code = MessageBox(NULL, message.c_str(), title.c_str(), MB_YESNO | MB_SYSTEMMODAL);
 	switch (code) {
 	case IDYES: {
-		MessageBox(
-			NULL,
-			L"Your stream / recording session is still running in the background. Whenever you're ready, click the OK button below to end your stream / recording and relaunch the application.",
-			L"Choose when to restart", MB_OK | MB_SYSTEMMODAL);
+		title = from_utf8_to_utf16_wide(boost::locale::translate("Choose when to restart").str().c_str());
+		message_translated = boost::locale::translate("Your stream / recording session is still running in the background. "
+							      "Whenever you're ready, click the OK "
+							      "button below to end your stream / recording and relaunch the application.");
+		message = from_utf8_to_utf16_wide(message_translated.str().c_str());
+		MessageBox(NULL, message.c_str(), title.c_str(), MB_OK | MB_SYSTEMMODAL);
 		shouldRestart = true;
 		break;
 	}
@@ -141,7 +152,7 @@ std::string from_utf16_wide_to_utf8(const wchar_t *from, size_t length = -1)
 	return converter.to_bytes(from, from_end);
 }
 
-std::wstring from_utf8_to_utf16_wide(const char *from, size_t length = -1)
+std::wstring from_utf8_to_utf16_wide(const char *from, size_t length)
 {
 	const char *from_end;
 	if (length == 0)
@@ -428,8 +439,8 @@ bool Util::saveMemoryDump(uint32_t pid, const std::wstring &dumpPath, const std:
 	HANDLE hFile = CreateFile(memoryDumpFile.generic_wstring().c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
 	if (hFile && hFile != INVALID_HANDLE_VALUE) {
-		const DWORD CD_Flags = MiniDumpWithFullMemory | MiniDumpWithHandleData | MiniDumpWithThreadInfo | MiniDumpWithProcessThreadData | MiniDumpWithFullMemoryInfo |
-				       MiniDumpWithUnloadedModules | MiniDumpIgnoreInaccessibleMemory;
+		const DWORD CD_Flags = MiniDumpWithFullMemory | MiniDumpWithHandleData | MiniDumpWithThreadInfo | MiniDumpWithProcessThreadData |
+				       MiniDumpWithFullMemoryInfo | MiniDumpWithUnloadedModules | MiniDumpIgnoreInaccessibleMemory;
 
 		BOOL ret = MiniDumpWriteDump(hProcess, pid, hFile, (MINIDUMP_TYPE)CD_Flags, 0, 0, 0);
 		CloseHandle(hFile);
@@ -553,7 +564,8 @@ bool Util::uploadToAWS(const std::wstring &wspath, const std::wstring &fileName)
 		{
 			std::lock_guard<std::mutex> grd(s3_mutex);
 
-			s3_client_ptr = std::make_unique<Aws::S3::S3Client>(aws_credentials, config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, false);
+			s3_client_ptr =
+				std::make_unique<Aws::S3::S3Client>(aws_credentials, config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, false);
 		}
 
 		log_info << "Upload to ASW ready to start upload" << std::endl;
@@ -580,4 +592,69 @@ bool Util::uploadToAWS(const std::wstring &wspath, const std::wstring &fileName)
 	}
 
 	return ret;
+}
+
+std::vector<char> get_messages_callback(std::string const &file_name, std::string const &encoding)
+{
+	static std::unordered_map<std::string, int> locales_resources(
+		{{"/ar_SA/LC_MESSAGES/messages.mo", 101}, {"/cs_CZ/LC_MESSAGES/messages.mo", 102}, {"/da_DK/LC_MESSAGES/messages.mo", 103},
+		 {"/de_DE/LC_MESSAGES/messages.mo", 104}, {"/en_US/LC_MESSAGES/messages.mo", 105}, {"/es_ES/LC_MESSAGES/messages.mo", 106},
+		 {"/fr_FR/LC_MESSAGES/messages.mo", 107}, {"/hu_HU/LC_MESSAGES/messages.mo", 108}, {"/id_ID/LC_MESSAGES/messages.mo", 109},
+		 {"/it_IT/LC_MESSAGES/messages.mo", 110}, {"/ja_JP/LC_MESSAGES/messages.mo", 111}, {"/ko_KR/LC_MESSAGES/messages.mo", 112},
+		 {"/mk_MK/LC_MESSAGES/messages.mo", 113}, {"/nl_NL/LC_MESSAGES/messages.mo", 114}, {"/pl_PL/LC_MESSAGES/messages.mo", 115},
+		 {"/pt_BR/LC_MESSAGES/messages.mo", 116}, {"/pt_PT/LC_MESSAGES/messages.mo", 117}, {"/ru_RU/LC_MESSAGES/messages.mo", 118},
+		 {"/sk_SK/LC_MESSAGES/messages.mo", 119}, {"/sl_SI/LC_MESSAGES/messages.mo", 120}, {"/sv_SE/LC_MESSAGES/messages.mo", 121},
+		 {"/th_TH/LC_MESSAGES/messages.mo", 122}, {"/tr_TR/LC_MESSAGES/messages.mo", 123}, {"/vi_VN/LC_MESSAGES/messages.mo", 124},
+		 {"/zh_CN/LC_MESSAGES/messages.mo", 125}, {"/zh_TW/LC_MESSAGES/messages.mo", 126}});
+	std::vector<char> localization;
+
+	HMODULE hmodule = GetModuleHandle(NULL);
+	if (hmodule) {
+		HRSRC res;
+		auto res_id = locales_resources.at(file_name);
+		res = FindResource(hmodule, MAKEINTRESOURCEW(res_id), L"BINARY");
+		if (res) {
+			HGLOBAL res_load;
+			res_load = LoadResource(hmodule, res);
+			if (res_load) {
+				LPVOID res_memory;
+				res_memory = LockResource(res_load);
+				if (res_memory) {
+					size_t file_size = SizeofResource(hmodule, res);
+					localization.resize(file_size);
+					memcpy(localization.data(), res_memory, file_size);
+				}
+			}
+			FreeResource(res_load);
+		}
+	}
+
+	return localization;
+}
+
+void Util::setupLocale()
+{
+	const char *current_locale = std::setlocale(LC_ALL, nullptr);
+	if (current_locale == nullptr || std::strlen(current_locale) == 0) {
+		std::setlocale(LC_ALL, "en_US.UTF-8");
+	}
+
+	namespace blg = boost::locale::gnu_gettext;
+	blg::messages_info info;
+
+	info.paths.push_back("");
+	info.domains.push_back(blg::messages_info::domain("messages"));
+	info.callback = get_messages_callback;
+
+	boost::locale::generator gen;
+	std::locale base_locale = gen("");
+
+	boost::locale::info const &properties = std::use_facet<boost::locale::info>(base_locale);
+	info.language = properties.language();
+	info.country = properties.country();
+	info.encoding = properties.encoding();
+	info.variant = properties.variant();
+
+	std::locale real_locale(base_locale, blg::create_messages_facet<char>(info));
+	std::locale::global(real_locale);
 }

@@ -2,3 +2,5 @@ build/
 .vscode/
 node_modules/
 aws-sdk/
+
+*_messages.mo

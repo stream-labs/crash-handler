@@ -111,7 +111,8 @@ void Process_WIN::startMemoryDumpMonitoring(const std::wstring &eventName_Start,
 		return result;
 	};
 
-	if (!isValidHandleValue(handle_event_Fail = initEventByName(eventName_Fail)) || !isValidHandleValue(handle_event_Success = initEventByName(eventName_Success))) {
+	if (!isValidHandleValue(handle_event_Fail = initEventByName(eventName_Fail)) ||
+	    !isValidHandleValue(handle_event_Success = initEventByName(eventName_Success))) {
 		log_info << "Failed to create events for memory dump " << GetLastError() << std::endl;
 		safeCloseHandle(handle_event_Fail);
 		safeCloseHandle(handle_event_Success);

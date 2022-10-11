@@ -224,8 +224,8 @@ std::vector<char> Socket_WIN::read()
 
 int Socket_WIN::write(bool exit, std::vector<char> buffer)
 {
-	HANDLE hPipe = CreateFile(exit ? const_cast<LPWSTR>(this->name_exit.c_str()) : const_cast<LPWSTR>(this->name.c_str()), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING,
-				  0, NULL);
+	HANDLE hPipe = CreateFile(exit ? const_cast<LPWSTR>(this->name_exit.c_str()) : const_cast<LPWSTR>(this->name.c_str()), GENERIC_READ | GENERIC_WRITE, 0,
+				  NULL, OPEN_EXISTING, 0, NULL);
 
 	if (hPipe == INVALID_HANDLE_VALUE)
 		return 0;

@@ -1,18 +1,35 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.17)
-PROJECT(crash-handler-process VERSION 0.0.1)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.21)
 
 set(CXX_STANDARD_REQUIRED ON)
-IF(WIN32)
-	set(CMAKE_CXX_STANDARD 20)
-ELSE(APPLE)
-	set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
+
+IF(APPLE)
+	cmake_policy(SET CMP0025 NEW)
 ENDIF()
+
+PROJECT(crash-handler-process VERSION 0.0.1)
 
 IF(WIN32)
 	include(FetchContent)
 	# Nlohmann JSON (modern JSON for C++)
 	FetchContent_Declare(nlohmannjson URL "https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp" DOWNLOAD_NO_EXTRACT true)
 	FetchContent_MakeAvailable(nlohmannjson)
+
+	set(Boost_USE_STATIC_LIBS ON)
+	set(Boost_USE_STATIC_RUNTIME ON)
+	set(Boost_USE_MULTITHREADED ON)
+	set(Boost_DEBUG OFF)
+	set(Boost_RELEASE ON)
+	
+	find_package(Boost
+		1.79.0 EXACT
+		REQUIRED
+		COMPONENTS
+			iostreams
+			system
+			locale
+	)
+	INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 ENDIF()
 
 #############################
@@ -39,14 +56,18 @@ IF(WIN32)
 		"${PROJECT_SOURCE_DIR}/minizip/iowin32.c" "${PROJECT_SOURCE_DIR}/minizip/iowin32.h"
 	)
 ELSE(APPLE)
+	find_package(Intl)
+	find_package(Gettext)
 	SET(APPLE_SOURCE
 		"${PROJECT_SOURCE_DIR}/platforms/util-osx.mm"
 		"${PROJECT_SOURCE_DIR}/platforms/socket-osx.cpp" "${PROJECT_SOURCE_DIR}/platforms/socket-osx.hpp"
 		"${PROJECT_SOURCE_DIR}/platforms/process-osx.mm" "${PROJECT_SOURCE_DIR}/platforms/process-osx.hpp"
+
 	)
+	include_directories(${Intl_INCLUDE_DIR})
+	find_library(COCOA Cocoa)
 ENDIF()
 
-find_library(COCOA Cocoa)
 
 
 #############################
@@ -57,13 +78,15 @@ IF(WIN32)
 ENDIF()
 
 IF(WIN32)
-
 	ADD_EXECUTABLE(crash-handler-process ${PROJECT_SOURCE} ${WINDOWS_SOURCE})
 ELSE(APPLE)
 	ADD_EXECUTABLE(crash-handler-process ${PROJECT_SOURCE} ${APPLE_SOURCE})
+	set_property (TARGET crash-handler-process  PROPERTY XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO")
 ENDIF()
 
 IF(WIN32)
+	target_compile_options(crash-handler-process PRIVATE $<IF:$<CONFIG:Debug>,-MTd,-MT> )
+
 	find_package(ZLIB)
 
 	list(APPEND CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR}/../aws-sdk/awsi/")
@@ -102,7 +125,7 @@ IF(WIN32)
 						${CMAKE_CURRENT_BINARY_DIR}/$<CONFIGURATION>)
 				
 	ELSE()
-		message(FATAL_ERROR "ZLIB not found, refer to DepsPath for OBS")	
+		message(FATAL_ERROR "ZLIB not found, refer to DepsPath for OBS")
 	ENDIF()
 
 	# Include/link crash manager dependencies
@@ -112,9 +135,11 @@ IF(WIN32)
 		"${ZLIB_INCLUDE_DIRS}")
 	add_compile_definitions(AWS_CRASH_UPLOAD_BUCKET_KEY=\"$ENV{AWS_CRASH_UPLOAD_BUCKET_KEY}\")
 
- 
+	target_sources(crash-handler-process PUBLIC "${PROJECT_SOURCE_DIR}/platforms/resource-win.rc")
+
 	target_link_libraries(crash-handler-process ${AWSSDK_LINK_LIBRARIES})
-	target_link_libraries(crash-handler-process ${ZLIB_LIBRARIES})
+	target_link_libraries(crash-handler-process ${ZLIB_LIBRARIES} Boost::boost Boost::locale Boost::system)
+
 
 	# Compare current linked libs with prev
 	FetchContent_Declare(deps_checker URL "https://raw.githubusercontent.com/stream-labs/obs-studio-node/staging/dependency_checker/check_dependencies.cmd" DOWNLOAD_NO_EXTRACT true)
@@ -122,9 +147,10 @@ IF(WIN32)
 
 	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${deps_checker_SOURCE_DIR}/check_dependencies.cmd $<TARGET_FILE:crash-handler-process> ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} $<CONFIG> )
 ELSE()
-	target_link_libraries(crash-handler-process ${COCOA})
+	target_link_libraries(crash-handler-process ${COCOA} ${Intl_LIBRARIES})
 ENDIF()
-				
+
+message(status "${CMAKE_CURRENT_BINARY_DIR}/locale/")
 #############################
 # Distribute
 #############################
@@ -132,5 +158,7 @@ INSTALL(TARGETS crash-handler-process RUNTIME DESTINATION "./" COMPONENT Runtime
 IF(WIN32)
 	INSTALL(FILES $<TARGET_PDB_FILE:crash-handler-process> DESTINATION "./" OPTIONAL)
 	INSTALL(FILES "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIGURATION>/zlib.dll" DESTINATION "./" OPTIONAL)
+ELSE(APPLE)
+	INSTALL(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/locale" DESTINATION "./" )
 ENDIF()
 INSTALL(DIRECTORY ${PROJECT_DATA} DESTINATION "./" OPTIONAL)
