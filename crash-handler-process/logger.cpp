@@ -28,7 +28,7 @@
 #if defined(WIN32)
 #include <filesystem>
 #include <process.h>
-#else // for __APPLE__ and other 
+#else // for __APPLE__ and other
 #include <sys/stat.h>
 #include <unistd.h>
 #endif
@@ -41,10 +41,10 @@ static int pid = 0;
 
 const std::string getTimeStamp()
 {
-	// Use of localtime_s localtime_r reverted 
+	// Use of localtime_s localtime_r reverted
 	// Posible issue with mac os 10.13
 	time_t t = time(NULL);
-	struct tm * buf = localtime(&t); 
+	struct tm *buf = localtime(&t);
 
 	char mbstr[64] = {0};
 	std::strftime(mbstr, sizeof(mbstr), "%Y%m%d:%H%M%S.", buf);
@@ -55,7 +55,7 @@ const std::string getTimeStamp()
 	return ss.str();
 }
 
-void logging_start(std::wstring & log_path)
+void logging_start(std::wstring &log_path)
 {
 	if (!log_output_working && log_path.length()) {
 #if defined(WIN32)
@@ -70,37 +70,36 @@ void logging_start(std::wstring & log_path)
 				std::filesystem::remove_all(log_file_old);
 				std::filesystem::rename(log_file, log_file_old);
 			}
-		}
-		catch (...)	{
+		} catch (...) {
 		}
 		log_output_file.open(log_path, std::ios_base::out | std::ios_base::app);
-#else  // for __APPLE__ and other 
+#else // for __APPLE__ and other
 		pid = getpid();
-		
+
 		FILE *fp = NULL;
 		long size = 0;
 		std::string log_file = std::string(log_path.begin(), log_path.end());
-		// ! IMPORTANT ! 
+		// ! IMPORTANT !
 		// macOS 10.13 and older not support cpp filesystem functionality
 		fp = fopen(log_file.c_str(), "r");
 		if (fp != NULL) {
 			if (fseek(fp, 0, SEEK_END) != -1) {
 				size = ftell(fp);
-    			}
+			}
 			fclose(fp);
 		}
 
-		if (size > 1*1024*1024) {
+		if (size > 1 * 1024 * 1024) {
 			std::string log_file_old = log_file + ".old";
 			remove(log_file_old.c_str());
 			rename(log_file.c_str(), log_file_old.c_str());
 		}
 		log_output_file.open(log_file, std::ios_base::out | std::ios_base::app);
-#endif 	
+#endif
 		if (log_output_file.is_open()) {
 			log_output_working = true;
 		} else {
-			std::cout << "Failed to open log file, error = " << strerror(errno) << std::endl; 
+			std::cout << "Failed to open log file, error = " << strerror(errno) << std::endl;
 		}
 	}
 

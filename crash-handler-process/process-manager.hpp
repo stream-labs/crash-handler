@@ -27,44 +27,45 @@
 #include "util.hpp"
 
 struct ThreadData {
-    std::thread* worker = nullptr;
+	std::thread *worker = nullptr;
 
-    bool should_stop = false;
-    std::condition_variable_any stop_event;
-    std::recursive_mutex stop_mutex;
-    void send_stop();
-    bool wait_or_stop();
+	bool should_stop = false;
+	std::condition_variable_any stop_event;
+	std::recursive_mutex stop_mutex;
+	void send_stop();
+	bool wait_or_stop();
 };
 
 class ProcessManager {
 public:
-    ProcessManager();
-    ~ProcessManager();
+	ProcessManager();
+	~ProcessManager();
 
-    void runWatcher();
-    bool m_applicationCrashed;
-    bool m_criticalCrash;
+	void runWatcher();
+	bool m_applicationCrashed;
+	bool m_criticalCrash;
 
-    void handleCrash(std::wstring path);
-    void sendExitMessage(bool appCrashed);
+	void handleCrash(std::wstring path);
+	void sendExitMessage(bool appCrashed);
 
 private:
-    ThreadData* watcher = nullptr;
-    ThreadData* monitor = nullptr;
-    std::vector<std::unique_ptr<Process>> processes;
-    std::mutex mtx;
-    std::unique_ptr<Socket> socket;
+	ThreadData *watcher = nullptr;
+	ThreadData *monitor = nullptr;
+	std::vector<std::unique_ptr<Process>> processes;
+	std::mutex mtx;
+	std::unique_ptr<Socket> socket;
 
-    void watcher_fnc();
-    void monitor_fnc();
+	void watcher_fnc();
+	void monitor_fnc();
 
-    void startMonitoring();
-    void stopMonitoring();
+	void startMonitoring();
+	void stopMonitoring();
 
-    size_t registerProcess(bool isCritical, uint32_t PID);
-    void unregisterProcess(uint32_t PID);
-    void registerProcessMemoryDump(uint32_t PID, const std::wstring& eventName_Start, const std::wstring& eventName_Fail, const std::wstring& eventName_Success, const std::wstring& dumpPath, const std::wstring& dumpName);
+	size_t registerProcess(bool isCritical, uint32_t PID);
+	void unregisterProcess(uint32_t PID);
+	void registerProcessMemoryDump(uint32_t PID, const std::wstring &eventName_Start, const std::wstring &eventName_Fail,
+				       const std::wstring &eventName_Success, const std::wstring &dumpPath, const std::wstring &dumpName);
 
-    void terminateAll(void);
-    void terminateNonCritical(void);
+	void terminateAll(void);
+	void terminateNonCritical(void);
 };
