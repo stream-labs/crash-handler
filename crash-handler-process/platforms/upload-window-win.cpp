@@ -108,10 +108,9 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		upload_window_hwnd = NULL;
 		break;
 	case CUSTOM_CAUGHT_CRASH: {
-		std::wstring caught_crash_message = from_utf8_to_utf16_wide(boost::locale::translate("The application just crashed.\r\n\r\n"
-												     "Would you like to send a report to the developers?")
-										    .str()
-										    .c_str());
+		auto message_boost = boost::locale::translate("The application just crashed.\r\n\r\n"
+							      "Would you like to send a report to the developers?");
+		std::wstring caught_crash_message = from_utf8_to_utf16_wide(message_boost.str().c_str());
 
 		SetWindowText(upload_label_hwnd, caught_crash_message.c_str());
 		showButtons({.ok = false, .cancel = true, .yes = true, .no = false});
@@ -165,11 +164,10 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 	case CUSTOM_UPLOAD_FINISHED: {
-		std::wstring upload_finished_message = from_utf8_to_utf16_wide(boost::locale::translate("Successfully uploaded the debug information.\r\n"
-													"Please provide this file name to the support.\r\n"
-													"File: \"%s\".")
-										       .str()
-										       .c_str());
+		auto message_boost = boost::locale::translate("Successfully uploaded the debug information.\r\n"
+							      "Please provide this file name to the support.\r\n"
+							      "File: \"%s\".");
+		std::wstring upload_finished_message = from_utf8_to_utf16_wide(message_boost.str().c_str());
 		swprintf(upload_progress_message, upload_message_len, upload_finished_message.c_str(), file_name.c_str());
 		SetWindowText(upload_label_hwnd, upload_progress_message);
 		showButtons({.ok = true, .cancel = true, .yes = false, .no = false});

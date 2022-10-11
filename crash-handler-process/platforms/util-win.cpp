@@ -112,25 +112,22 @@ void Util::restartApp(std::wstring path)
 void Util::runTerminateWindow(bool &shouldRestart)
 {
 	std::wstring title = from_utf8_to_utf16_wide(boost::locale::translate("An error occurred").str().c_str());
-	std::wstring message =
-		from_utf8_to_utf16_wide(boost::locale::translate("An error occurred which has caused Streamlabs Desktop to close. Don't worry! "
-								 "If you were streaming or recording, that is still happening in the background."
-								 "\n\nWhenever you're ready, we can relaunch the application, however this will end "
-								 "your stream / recording session.\n\n"
-								 "Click the Yes button to keep streaming / recording. \n\n"
-								 "Click the No button to stop streaming / recording.")
-						.str()
-						.c_str());
+	auto message_translated = boost::locale::translate("An error occurred which has caused Streamlabs Desktop to close. Don't worry! "
+							   "If you were streaming or recording, that is still happening in the background."
+							   "\n\nWhenever you're ready, we can relaunch the application, however this will end "
+							   "your stream / recording session.\n\n"
+							   "Click the Yes button to keep streaming / recording. \n\n"
+							   "Click the No button to stop streaming / recording.");
+	std::wstring message = from_utf8_to_utf16_wide(message_translated.str().c_str());
 
 	int code = MessageBox(NULL, message.c_str(), title.c_str(), MB_YESNO | MB_SYSTEMMODAL);
 	switch (code) {
 	case IDYES: {
 		title = from_utf8_to_utf16_wide(boost::locale::translate("Choose when to restart").str().c_str());
-		message = from_utf8_to_utf16_wide(
-			boost::locale::translate("Your stream / recording session is still running in the background. Whenever you're ready, click the OK "
-						 "button below to end your stream / recording and relaunch the application.")
-				.str()
-				.c_str());
+		message_translated = boost::locale::translate("Your stream / recording session is still running in the background. "
+							      "Whenever you're ready, click the OK "
+							      "button below to end your stream / recording and relaunch the application.");
+		message = from_utf8_to_utf16_wide(message_translated.str().c_str());
 		MessageBox(NULL, message.c_str(), title.c_str(), MB_OK | MB_SYSTEMMODAL);
 		shouldRestart = true;
 		break;
