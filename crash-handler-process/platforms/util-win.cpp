@@ -654,7 +654,10 @@ void Util::setupLocale()
 	info.country = properties.country();
 	info.encoding = properties.encoding();
 	info.variant = properties.variant();
-
-	std::locale real_locale(base_locale, blg::create_messages_facet<char>(info));
-	std::locale::global(real_locale);
+	try {
+		std::locale real_locale(base_locale, blg::create_messages_facet<char>(info));
+		std::locale::global(real_locale);
+	} catch (...) {
+		log_error << "Failed to setup localizaiton for a current language: " << info.language << "-" << info.country << std::endl;
+	}
 }
