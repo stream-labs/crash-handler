@@ -43,6 +43,7 @@ fi
 
 find . -type d \( \
     -path ./\*build -o \
+    -path ./crash-handler-process/minizip -o \
     -path ./cmake \
 \) -prune -false -type f -o \
     -name '*.h' -or \
