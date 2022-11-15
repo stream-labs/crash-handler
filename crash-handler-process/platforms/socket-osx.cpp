@@ -34,7 +34,7 @@ std::vector<char> Socket_OSX::read()
 	// It emulates the Windows implementation behavior.
 
 	std::vector<char> buffer;
-	int file_descriptor = open(this->name.c_str(), O_RDONLY|O_NONBLOCK);
+	int file_descriptor = open(this->name.c_str(), O_RDONLY | O_NONBLOCK);
 	if (file_descriptor < 0) {
 		log_info << "Could not open; |open| error: " << strerror(errno) << std::endl;
 		return buffer;
