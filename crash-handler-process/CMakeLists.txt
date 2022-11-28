@@ -56,16 +56,24 @@ IF(WIN32)
 		"${PROJECT_SOURCE_DIR}/minizip/iowin32.c" "${PROJECT_SOURCE_DIR}/minizip/iowin32.h"
 	)
 ELSE(APPLE)
-	find_package(Intl)
-	find_package(Gettext)
 	SET(APPLE_SOURCE
 		"${PROJECT_SOURCE_DIR}/platforms/util-osx.mm"
 		"${PROJECT_SOURCE_DIR}/platforms/socket-osx.cpp" "${PROJECT_SOURCE_DIR}/platforms/socket-osx.hpp"
 		"${PROJECT_SOURCE_DIR}/platforms/process-osx.mm" "${PROJECT_SOURCE_DIR}/platforms/process-osx.hpp"
 
 	)
-	include_directories(${Intl_INCLUDE_DIR})
 	find_library(COCOA Cocoa)
+	# Prepare gettext
+	FetchContent_Declare(
+		gettext
+		URL "https://obs-studio-deployment.s3.us-west-2.amazonaws.com/gettext-release-0.21.1-osx-x86_64.zip"
+		URL_HASH SHA256=ec744c179637005e0e9d45c863c5311affc7eed87d04bc817580d0704d2f7455)
+	FetchContent_MakeAvailable(gettext)		
+	SET(gettext_INCLUDE_DIR ${CMAKE_BINARY_DIR}/_deps/gettext-src/include)
+	SET(gettext_LIBRARIES
+		${CMAKE_BINARY_DIR}/_deps/gettext-src/lib/libintl.a
+		libiconv.a) # libiconv.a is available on macOS; the gettext package was compiled with the default libiconv.a
+	include_directories(${gettext_INCLUDE_DIR})
 ENDIF()
 
 
@@ -147,7 +155,7 @@ IF(WIN32)
 
 	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${deps_checker_SOURCE_DIR}/check_dependencies.cmd $<TARGET_FILE:crash-handler-process> ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} $<CONFIG> )
 ELSE()
-	target_link_libraries(crash-handler-process ${COCOA} ${Intl_LIBRARIES})
+	target_link_libraries(crash-handler-process ${COCOA} ${gettext_LIBRARIES})
 ENDIF()
 
 message(status "${CMAKE_CURRENT_BINARY_DIR}/locale/")
