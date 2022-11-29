@@ -34,7 +34,7 @@ find_path(ZLIB_INCLUDE_DIR
 		include)
 
 find_library(ZLIB_LIB
-	NAMES ${_ZLIB_LIBRARIES} z zlib zdll zlib1 zlibd zlibd1 libzlib libz
+	NAMES ${_ZLIB_LIBRARIES} z zlib zdll zlibd libzlib libz
 	HINTS
 		ENV DepsPath${_lib_suffix}
 		ENV DepsPath
