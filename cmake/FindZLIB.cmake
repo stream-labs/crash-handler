@@ -53,7 +53,8 @@ find_library(ZLIB_LIB
 		bin${_lib_suffix} bin
 		../lib${_lib_suffix} ../lib
 		../libs${_lib_suffix} ../libs
-		../bin${_lib_suffix} ../bin)
+		../bin${_lib_suffix} ../bin
+	NO_DEFAULT_PATH)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(ZLIB DEFAULT_MSG ZLIB_LIB ZLIB_INCLUDE_DIR)

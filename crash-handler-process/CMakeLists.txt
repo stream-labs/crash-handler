@@ -87,7 +87,7 @@ ENDIF()
 IF(WIN32)
 	target_compile_options(crash-handler-process PRIVATE $<IF:$<CONFIG:Debug>,-MTd,-MT> )
 
-	find_package(ZLIB PATHS ${DepsPath} NO_DEFAULT_PATH)
+	find_package(ZLIB)
 
 	list(APPEND CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR}/../aws-sdk/awsi/")
 	#Set the location of where Windows can find the installed libraries of the SDK.
