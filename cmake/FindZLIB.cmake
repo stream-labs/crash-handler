@@ -34,7 +34,7 @@ find_path(ZLIB_INCLUDE_DIR
 		include)
 
 find_library(ZLIB_LIB
-	NAMES ${_ZLIB_LIBRARIES} z zlib zdll zlibd libzlib libz
+	NAMES ${_ZLIB_LIBRARIES} zlib.dll z zlib zdll zlibd libzlib libz
 	HINTS
 		ENV DepsPath${_lib_suffix}
 		ENV DepsPath
@@ -54,7 +54,7 @@ find_library(ZLIB_LIB
 		../lib${_lib_suffix} ../lib
 		../libs${_lib_suffix} ../libs
 		../bin${_lib_suffix} ../bin
-	NO_DEFAULT_PATH NO_SYSTEM_ENVIRONMENT_PATH NO_CMAKE_ENVIRONMENT_PATH)
+	NO_DEFAULT_PATH NO_SYSTEM_ENVIRONMENT_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_FIND_ROOT_PATH)
 
 message(STATUS "ZLIB_LIB 1 : ${ZLIB_LIB}")
 include(FindPackageHandleStandardArgs)
