@@ -5,11 +5,6 @@
 #  ZLIB_LIBRARIES
 #
 
-find_package(PkgConfig QUIET)
-if (PKG_CONFIG_FOUND)
-	pkg_check_modules(_ZLIB QUIET zlib)
-endif()
-
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 	set(_lib_suffix 64)
 else()
@@ -34,7 +29,7 @@ find_path(ZLIB_INCLUDE_DIR
 		include)
 
 find_library(ZLIB_LIB
-	NAMES zlib zdll zlibd libzlib
+NAMES ${_ZLIB_LIBRARIES} z zlib zdll zlib1 zlibd zlibd1 libzlib libz
 	HINTS
 		ENV DepsPath${_lib_suffix}
 		ENV DepsPath
@@ -46,7 +41,7 @@ find_library(ZLIB_LIB
 		${zlibPath}
 		${_ZLIB_LIBRARY_DIRS}
 	PATHS
-		${DepsPath} /usr/lib /usr/local/lib /opt/local/lib /sw/lib
+		/usr/lib /usr/local/lib /opt/local/lib /sw/lib
 	PATH_SUFFIXES
 		lib${_lib_suffix} lib
 		libs${_lib_suffix} libs
