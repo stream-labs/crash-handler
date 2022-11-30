@@ -34,7 +34,7 @@ find_path(ZLIB_INCLUDE_DIR
 		include)
 
 find_library(ZLIB_LIB
-	NAMES ${_ZLIB_LIBRARIES} zlib.dll zlib zdll zlibd libzlib libz
+	NAMES zlib zdll zlibd libzlib
 	HINTS
 		ENV DepsPath${_lib_suffix}
 		ENV DepsPath
@@ -46,7 +46,7 @@ find_library(ZLIB_LIB
 		${zlibPath}
 		${_ZLIB_LIBRARY_DIRS}
 	PATHS
-		/usr/lib /usr/local/lib /opt/local/lib /sw/lib
+		${DepsPath} /usr/lib /usr/local/lib /opt/local/lib /sw/lib
 	PATH_SUFFIXES
 		lib${_lib_suffix} lib
 		libs${_lib_suffix} libs
