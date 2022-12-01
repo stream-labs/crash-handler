@@ -87,30 +87,6 @@ ENDIF()
 IF(WIN32)
 	target_compile_options(crash-handler-process PRIVATE $<IF:$<CONFIG:Debug>,-MTd,-MT> )
 
-
-	list(APPEND CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR}/../aws-sdk/awsi/")
-	#Set the location of where Windows can find the installed libraries of the SDK.
-	if(MSVC)
-		string(REPLACE ";" "/aws-cpp-sdk-all;" SYSTEM_MODULE_PATH "${CMAKE_SYSTEM_PREFIX_PATH}/aws-cpp-sdk-all")
-		list(APPEND CMAKE_PREFIX_PATH ${SYSTEM_MODULE_PATH})
-	endif()
-	
-	find_package(AWSSDK REQUIRED COMPONENTS s3 sts)
-
-	if(MSVC AND BUILD_SHARED_LIBS)
-		add_definitions(-DUSE_IMPORT_EXPORT)
-
-		list(APPEND SERVICE_LIST s3 sts)
-
-		set(CMAKE_BUILD_TYPE Release) 
-		
-		#AWSSDK_CPY_DYN_LIBS(SERVICE_LIST "" ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE})  #Choose this line if your executables are in /build/Debug
-		AWSSDK_CPY_DYN_LIBS(SERVICE_LIST "" ${CMAKE_CURRENT_BINARY_DIR})  #Choose this line for Visual Studio and possibly other IDEs
-		
-		message(STATUS ">>CMAKE_CURRENT_BINARY_DIR: ${CMAKE_CURRENT_BINARY_DIR}")
-		message(STATUS ">>CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
-	endif()
-
 	find_package(ZLIB)
 
 	IF(ZLIB_FOUND)
@@ -128,6 +104,32 @@ IF(WIN32)
 	ELSE()
 		message(FATAL_ERROR "ZLIB not found, refer to DepsPath for OBS")
 	ENDIF()
+
+	list(APPEND CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR}/../aws-sdk/awsi/")
+	#Set the location of where Windows can find the installed libraries of the SDK.
+	if(MSVC)
+		string(REPLACE ";" "/aws-cpp-sdk-all;" SYSTEM_MODULE_PATH "${CMAKE_SYSTEM_PREFIX_PATH}/aws-cpp-sdk-all")
+		list(APPEND CMAKE_PREFIX_PATH ${SYSTEM_MODULE_PATH})
+	endif()
+	
+	find_package(PkgConfig QUIET)
+
+	find_package(AWSSDK REQUIRED COMPONENTS s3 sts)
+
+	if(MSVC AND BUILD_SHARED_LIBS)
+		add_definitions(-DUSE_IMPORT_EXPORT)
+
+		list(APPEND SERVICE_LIST s3 sts)
+
+		set(CMAKE_BUILD_TYPE Release) 
+		
+		#AWSSDK_CPY_DYN_LIBS(SERVICE_LIST "" ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE})  #Choose this line if your executables are in /build/Debug
+		AWSSDK_CPY_DYN_LIBS(SERVICE_LIST "" ${CMAKE_CURRENT_BINARY_DIR})  #Choose this line for Visual Studio and possibly other IDEs
+		
+		message(STATUS ">>CMAKE_CURRENT_BINARY_DIR: ${CMAKE_CURRENT_BINARY_DIR}")
+		message(STATUS ">>CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+	endif()
+
 
 	# Include/link crash manager dependencies
 	target_include_directories(crash-handler-process PUBLIC
