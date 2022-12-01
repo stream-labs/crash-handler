@@ -89,13 +89,32 @@ IF(WIN32)
 
 	find_package(ZLIB)
 
+	IF(ZLIB_FOUND)
+		message(STATUS "Found binary: " ${ZLIB_LIBRARIES})
+		message(STATUS "Found include directory: " ${ZLIB_INCLUDE_DIRS})	
+
+		include(FindZLIB_Bin)
+
+		add_custom_command(
+				TARGET crash-handler-process POST_BUILD
+				COMMAND ${CMAKE_COMMAND} -E copy
+						${ZLIB_BIN_FILES}
+						${CMAKE_CURRENT_BINARY_DIR}/$<CONFIGURATION>)
+				
+	ELSE()
+		message(FATAL_ERROR "ZLIB not found, refer to DepsPath for OBS")
+	ENDIF()
+
 	list(APPEND CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR}/../aws-sdk/awsi/")
 	#Set the location of where Windows can find the installed libraries of the SDK.
 	if(MSVC)
 		string(REPLACE ";" "/aws-cpp-sdk-all;" SYSTEM_MODULE_PATH "${CMAKE_SYSTEM_PREFIX_PATH}/aws-cpp-sdk-all")
 		list(APPEND CMAKE_PREFIX_PATH ${SYSTEM_MODULE_PATH})
 	endif()
-	
+
+	#AWSSDK gives linking error if PkgCOnfig not found explicitly before awssdk find_package
+	find_package(PkgConfig QUIET)
+
 	find_package(AWSSDK REQUIRED COMPONENTS s3 sts)
 
 	if(MSVC AND BUILD_SHARED_LIBS)
@@ -112,21 +131,6 @@ IF(WIN32)
 		message(STATUS ">>CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 	endif()
 
-	IF(ZLIB_FOUND)
-		message(STATUS "Found binary: " ${ZLIB_LIBRARIES})
-		message(STATUS "Found include directory: " ${ZLIB_INCLUDE_DIRS})	
-
-		include(FindZLIB_Bin)
-
-		add_custom_command(
-				TARGET crash-handler-process POST_BUILD
-				COMMAND ${CMAKE_COMMAND} -E copy
-						${ZLIB_BIN_FILES}
-						${CMAKE_CURRENT_BINARY_DIR}/$<CONFIGURATION>)
-				
-	ELSE()
-		message(FATAL_ERROR "ZLIB not found, refer to DepsPath for OBS")
-	ENDIF()
 
 	# Include/link crash manager dependencies
 	target_include_directories(crash-handler-process PUBLIC
