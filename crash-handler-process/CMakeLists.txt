@@ -111,7 +111,8 @@ IF(WIN32)
 		string(REPLACE ";" "/aws-cpp-sdk-all;" SYSTEM_MODULE_PATH "${CMAKE_SYSTEM_PREFIX_PATH}/aws-cpp-sdk-all")
 		list(APPEND CMAKE_PREFIX_PATH ${SYSTEM_MODULE_PATH})
 	endif()
-	
+
+	#AWSSDK gives linking error if PkgCOnfig not found explicitly before awssdk find_package
 	find_package(PkgConfig QUIET)
 
 	find_package(AWSSDK REQUIRED COMPONENTS s3 sts)
