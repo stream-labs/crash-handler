@@ -87,7 +87,6 @@ ENDIF()
 IF(WIN32)
 	target_compile_options(crash-handler-process PRIVATE $<IF:$<CONFIG:Debug>,-MTd,-MT> )
 
-	find_package(ZLIB)
 
 	list(APPEND CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR}/../aws-sdk/awsi/")
 	#Set the location of where Windows can find the installed libraries of the SDK.
@@ -111,6 +110,8 @@ IF(WIN32)
 		message(STATUS ">>CMAKE_CURRENT_BINARY_DIR: ${CMAKE_CURRENT_BINARY_DIR}")
 		message(STATUS ">>CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 	endif()
+
+	find_package(ZLIB)
 
 	IF(ZLIB_FOUND)
 		message(STATUS "Found binary: " ${ZLIB_LIBRARIES})
