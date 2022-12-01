@@ -29,7 +29,7 @@ find_path(ZLIB_INCLUDE_DIR
 		include)
 
 find_library(ZLIB_LIB
-NAMES ${_ZLIB_LIBRARIES} z zlib zdll zlib1 zlibd zlibd1 libzlib libz
+	NAMES ${_ZLIB_LIBRARIES} z zlib zdll zlib1 zlibd zlibd1 libzlib libz
 	HINTS
 		ENV DepsPath${_lib_suffix}
 		ENV DepsPath
@@ -51,13 +51,12 @@ NAMES ${_ZLIB_LIBRARIES} z zlib zdll zlib1 zlibd zlibd1 libzlib libz
 		../bin${_lib_suffix} ../bin
 	NO_DEFAULT_PATH NO_SYSTEM_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_FIND_ROOT_PATH)
 
-message(STATUS "ZLIB_LIB 1 : ${ZLIB_LIB}")
+
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(ZLIB DEFAULT_MSG ZLIB_LIB ZLIB_INCLUDE_DIR)
 mark_as_advanced(ZLIB_INCLUDE_DIR ZLIB_LIB)
-message(STATUS "ZLIB_LIB 2 : ${ZLIB_LIB}")
+
 if(ZLIB_FOUND)
 	set(ZLIB_INCLUDE_DIRS ${ZLIB_INCLUDE_DIR})
 	set(ZLIB_LIBRARIES ${ZLIB_LIB})
 endif()
-message(STATUS "ZLIB_LIB 3 : ${ZLIB_LIB}")
