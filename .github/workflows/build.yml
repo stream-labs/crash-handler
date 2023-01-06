@@ -230,12 +230,6 @@ jobs:
         env:
           TARGET_ARTIFACT: ${{env.PACKAGE_NAME}}-${{ steps.get_version.outputs.VERSION }}-${{env.OS_TAG}}-${{ matrix.arch }}
           INSTALL_DISTRIBUTE_PATH: "${{env.BUILD_DIRECTORY}}/${{env.DISTRIBUTE_DIRECTORY}}"
-      - name: Create the legacy tar artifact for deployment
-        if: ${{ matrix.arch }} == 'x86_64'
-        run: cp ${{env.TARGET_ARTIFACT}} ${{env.LEGACY_TARGET_ARTIFACT}}
-        env:
-          TARGET_ARTIFACT: ${{env.PACKAGE_NAME}}-${{ steps.get_version.outputs.VERSION }}-${{env.OS_TAG}}-${{ matrix.arch }}
-          LEGACY_TARGET_ARTIFACT: ${{env.PACKAGE_NAME}}-${{ steps.get_version.outputs.VERSION }}-${{env.OS_TAG}}
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -246,8 +240,3 @@ jobs:
         run: aws s3 cp ${{env.TARGET_ARTIFACT}}.tar.gz s3://${{env.RELEASE_BUCKET}} --acl public-read
         env:
           TARGET_ARTIFACT: ${{env.PACKAGE_NAME}}-${{ steps.get_version.outputs.VERSION }}-${{env.OS_TAG}}-${{ matrix.arch }}
-      - name: Deploy (legacy)
-        if: ${{ matrix.arch }} == 'x86_64'
-        run: aws s3 cp ${{env.LEGACY_TARGET_ARTIFACT}}.tar.gz s3://${{env.RELEASE_BUCKET}} --acl public-read
-        env:
-          LEGACY_TARGET_ARTIFACT: ${{env.PACKAGE_NAME}}-${{ steps.get_version.outputs.VERSION }}-${{env.OS_TAG}}
