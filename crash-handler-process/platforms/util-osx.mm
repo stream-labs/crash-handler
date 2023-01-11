@@ -113,15 +113,4 @@ void Util::setupLocale()
 	if (current_locale == nullptr || std::strlen(current_locale) == 0) {
 		setlocale(LC_ALL, "en_US.UTF-8");
 	}
-	setlocale(LC_ALL, "ru_RU.UTF-8");
-	bindtextdomain("messages", "/Users/vladimirsumarov/work/repos/streamlabs-obs/node_modules/crash-handler/locale");
-
-	std::string pwd = std::getenv("PWD");
-
-	std::ofstream testfile;
-	testfile.open("/Users/vladimirsumarov/work/repos/crash-handler/build/gettext.txt");
-	testfile << "test" << std::endl;
-	testfile << pwd << std::endl;
-	testfile << "testend" << std::endl;
-	testfile.close();
 }
