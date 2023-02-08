@@ -191,7 +191,7 @@ jobs:
       - name: Build
         run: './ci/build-osx.sh'
         env:
-          CMAKE_OSX_ARCHITECTURES: ${{ matrix.arch }}
+          ARCHITECTURE: ${{ matrix.arch }}
       - name: Put version into package.json
         if: startsWith(github.ref, 'refs/tags/')
         run: node ./ci/bump-version.js "${{ steps.get_version.outputs.VERSION }}" "${{env.PACKAGE_PATH}}"
