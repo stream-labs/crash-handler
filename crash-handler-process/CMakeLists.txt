@@ -66,8 +66,8 @@ ELSE(APPLE)
 	# Prepare gettext
 	FetchContent_Declare(
 		gettext
-		URL "https://obs-studio-deployment.s3.us-west-2.amazonaws.com/gettext-release-0.21.1-osx-x86_64.zip"
-		URL_HASH SHA256=ec744c179637005e0e9d45c863c5311affc7eed87d04bc817580d0704d2f7455)
+		URL "https://obs-studio-deployment.s3.us-west-2.amazonaws.com/gettext-0.21.1-osx-universal.zip"
+		URL_HASH SHA256=fe0a85235d130d6b892de8c2370893eac115471dbd1dc1b0c55b3b41f9949d3f)
 	FetchContent_MakeAvailable(gettext)		
 	SET(gettext_INCLUDE_DIR ${CMAKE_BINARY_DIR}/_deps/gettext-src/include)
 	SET(gettext_LIBRARIES

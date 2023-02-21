@@ -26,6 +26,13 @@ yarn install
 ./ci/build-osx.sh
 ```
 
+By default, Apple Silicon Macs will build arm64 binaries. Apple Intel-based Macs will build x86_64 binaries. You can change the behavior using the CMAKE_OSX_ARCHITECTURES environment variable.
+* `export CMAKE_OSX_ARCHITECTURES="arm64"` - builds arm64 binaries
+* `export CMAKE_OSX_ARCHITECTURES="x86_64"` - builds x86_64 binaries
+* `export CMAKE_OSX_ARCHITECTURES="arm64;x86_64"` - builds universal binaries
+
+Also, you can `export CMAKE_APPLE_SILICON_PROCESSOR="x86_64"` to make an Apple Silicon Mac build x86_64 binaries.
+
 ## Localization
 Boost.locale lib with a gettext format used for a localization(on windows). 
 mo files included in exe by windows resources. 
