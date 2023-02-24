@@ -19,40 +19,30 @@ msgstr ""
 
 #: crash-handler-process\platforms\util-osx.mm:27
 msgid "No"
-msgstr ""
+msgstr "Нет"
 
 #: crash-handler-process\platforms\util-osx.mm:28
 msgid "YES"
-msgstr ""
+msgstr "ДА"
 
 #: crash-handler-process\platforms\util-osx.mm:30
 #: crash-handler-process\platforms\util-win.cpp:123
 msgid ""
 "An error occurred which has caused Streamlabs Desktop to close. Don't worry! "
 "If you were streaming or recording, that is still happening in the "
-"background.\n"
-"\n"
+"background. "
+""
 "Whenever you're ready, we can relaunch the application, however this will "
-"end your stream / recording session.\n"
-"\n"
-"Click the Yes button to keep streaming / recording. \n"
-"\n"
+"end your stream / recording session. "
+""
+"Click the Yes button to keep streaming / recording. "
+""
 "Click the No button to stop streaming / recording."
-msgstr ""
-"Обнаружена ошибка, которая привела к закрытию Streamlabs Desktop. Не "
-"волнуйтесь! Если вы транслировали или записывали, то это все еще происходит "
-"в фоновом режиме.\n"
-"\n"
-"Когда вы будете готовы, мы можем перезапустить приложение, однако это "
-"завершит вашу трансляцию / запись.\n"
-"\n"
-"Нажмите кнопку Да, чтобы продолжить трансляцию / запись.\n"
-"\n"
-"Нажмите кнопку Нет, чтобы остановить трансляцию / запись."
+msgstr "В Streamlabs Desktop произошла ошибка, и приложение было закрыто. Не беспокойтесь. Если вы вели трансляцию или записывали видео, этот процесс продолжается в фоновом режиме. \n\nКогда вы будете готовы, мы можем перезапустить приложение, однако ваша трансляция / запись при этом завершится. \n\nНажмите кнопку «Да», чтобы продолжить трансляцию / запись. \n\nНажмите кнопку «Нет», чтобы остановить трансляцию / запись."
 
 #: crash-handler-process\platforms\util-osx.mm:44
 msgid "OK"
-msgstr ""
+msgstr "ОК"
 
 #: crash-handler-process\platforms\util-osx.mm:45
 #: crash-handler-process\platforms\util-win.cpp:136
@@ -60,39 +50,12 @@ msgid ""
 "Your stream / recording session is still running in the background. Whenever "
 "you're ready, click the OK button below to end your stream / recording and "
 "relaunch the application."
-msgstr ""
-"Ваш стрим / запись продолжается в фоновом режиме. Когда вы будете готовы, "
-"нажмите кнопку OK ниже, чтобы завершить стрим / запись и перезапустить "
-"приложение."
+msgstr "Ваша трансляция / запись продолжается в фоновом режиме. Когда будете готовы, нажмите кнопку «ОК» ниже, чтобы завершить трансляцию / запись и перезапустить приложение."
 
 #: crash-handler-process\platforms\util-win.cpp:121
 msgid "An error occurred"
-msgstr "Обнаружена ошибка"
+msgstr "Произошла ошибка"
 
 #: crash-handler-process\platforms\util-win.cpp:134
 msgid "Choose when to restart"
-msgstr "Ожидание перезапуска"
-
-#, fuzzy
-#~ msgid ""
-#~ "An error occurred which has caused Streamlabs Desktop to close. Don't "
-#~ "worry! If you were streaming or recording, that is still happening in the "
-#~ "background.    \n"
-#~ "\n"
-#~ "Whenever you're ready, we can relaunch the application, however this will "
-#~ "end your stream / recording session.    \n"
-#~ "\n"
-#~ "Click the Yes button to keep streaming / recording.    \n"
-#~ "\n"
-#~ "Click the No button to stop streaming / recording."
-#~ msgstr ""
-#~ "Обнаружена ошибка, которая привела к закрытию Streamlabs Desktop. Не "
-#~ "волнуйтесь! Если вы транслировали или записывали, то это все еще "
-#~ "происходит в фоновом режиме.\n"
-#~ "\n"
-#~ "Когда вы будете готовы, мы можем перезапустить приложение, однако это "
-#~ "завершит вашу трансляцию / запись.\n"
-#~ "\n"
-#~ "Нажмите кнопку Да, чтобы продолжить трансляцию / запись.\n"
-#~ "\n"
-#~ "Нажмите кнопку Нет, чтобы остановить трансляцию / запись."
+msgstr "Перезапустите трансляцию / запись, когда вам будет удобно"

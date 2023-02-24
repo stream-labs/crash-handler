@@ -1,4 +1,4 @@
-# Portuguese translations for crash-handler package.
+# Portuguese (Portugal) translations for crash-handler package.
 # Copyright (C) 2016-2022 by Streamlabs (General Workings Inc)
 # This file is distributed under the same license as the crash-handler package.
 #
@@ -18,30 +18,30 @@ msgstr ""
 
 #: crash-handler-process\platforms\util-osx.mm:27
 msgid "No"
-msgstr ""
+msgstr "Não"
 
 #: crash-handler-process\platforms\util-osx.mm:28
 msgid "YES"
-msgstr ""
+msgstr "SIM"
 
 #: crash-handler-process\platforms\util-osx.mm:30
 #: crash-handler-process\platforms\util-win.cpp:123
 msgid ""
 "An error occurred which has caused Streamlabs Desktop to close. Don't worry! "
 "If you were streaming or recording, that is still happening in the "
-"background.\n"
-"\n"
+"background. "
+""
 "Whenever you're ready, we can relaunch the application, however this will "
-"end your stream / recording session.\n"
-"\n"
-"Click the Yes button to keep streaming / recording. \n"
-"\n"
+"end your stream / recording session. "
+""
+"Click the Yes button to keep streaming / recording. "
+""
 "Click the No button to stop streaming / recording."
-msgstr ""
+msgstr "Ocorreu um erro que provocou o encerramento do Streamlabs Desktop. Não se preocupe! Se estava a transmitir ou a gravar, ainda está a ser executado em segundo plano. \n\nQuando estiver pronto, podemos reiniciar a aplicação. No entanto, essa ação irá encerrar a sua sessão de transmissão/gravação. \n\nClique no botão Sim para continuar a transmitir/gravar. \n\nClique no botão Não para parar a transmissão/gravação."
 
 #: crash-handler-process\platforms\util-osx.mm:44
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: crash-handler-process\platforms\util-osx.mm:45
 #: crash-handler-process\platforms\util-win.cpp:136
@@ -49,12 +49,12 @@ msgid ""
 "Your stream / recording session is still running in the background. Whenever "
 "you're ready, click the OK button below to end your stream / recording and "
 "relaunch the application."
-msgstr ""
+msgstr "A sua sessão de transmissão/gravação ainda está a ser executada em segundo plano. Quando estiver pronto, clique no botão OK abaixo para terminar a sua transmissão/gravação e reiniciar a aplicação."
 
 #: crash-handler-process\platforms\util-win.cpp:121
 msgid "An error occurred"
-msgstr ""
+msgstr "Ocorreu um erro"
 
 #: crash-handler-process\platforms\util-win.cpp:134
 msgid "Choose when to restart"
-msgstr ""
+msgstr "Escolher quando pretende reiniciar"

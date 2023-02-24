@@ -18,30 +18,30 @@ msgstr ""
 
 #: crash-handler-process\platforms\util-osx.mm:27
 msgid "No"
-msgstr ""
+msgstr "Non"
 
 #: crash-handler-process\platforms\util-osx.mm:28
 msgid "YES"
-msgstr ""
+msgstr "OUI"
 
 #: crash-handler-process\platforms\util-osx.mm:30
 #: crash-handler-process\platforms\util-win.cpp:123
 msgid ""
 "An error occurred which has caused Streamlabs Desktop to close. Don't worry! "
 "If you were streaming or recording, that is still happening in the "
-"background.\n"
-"\n"
+"background. "
+""
 "Whenever you're ready, we can relaunch the application, however this will "
-"end your stream / recording session.\n"
-"\n"
-"Click the Yes button to keep streaming / recording. \n"
-"\n"
+"end your stream / recording session. "
+""
+"Click the Yes button to keep streaming / recording. "
+""
 "Click the No button to stop streaming / recording."
-msgstr ""
+msgstr "Une erreur s'est produite et a provoqué la fermeture de Streamlabs Desktop. Pas d’inquiétude! Si vous étiez en streaming ou en enregistrement, cela se produit toujours en arrière-plan. \n\nLorsque vous serez prêt, nous relancerons l'application. Cependant, cela mettra fin à votre session de streaming/d'enregistrement. \n\nCliquez sur le bouton Oui pour continuer à streamer/enregistrer. \n\nCliquez sur le bouton Non pour arrêter le streaming/l'enregistrement."
 
 #: crash-handler-process\platforms\util-osx.mm:44
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: crash-handler-process\platforms\util-osx.mm:45
 #: crash-handler-process\platforms\util-win.cpp:136
@@ -49,12 +49,12 @@ msgid ""
 "Your stream / recording session is still running in the background. Whenever "
 "you're ready, click the OK button below to end your stream / recording and "
 "relaunch the application."
-msgstr ""
+msgstr "Votre session de streaming/d'enregistrement est toujours en cours d'exécution en arrière-plan. Lorsque vous êtes prêt, cliquez sur le bouton OK ci-dessous pour terminer votre streaming/enregistrement et relancer l'application."
 
 #: crash-handler-process\platforms\util-win.cpp:121
 msgid "An error occurred"
-msgstr ""
+msgstr "Une erreur est survenue"
 
 #: crash-handler-process\platforms\util-win.cpp:134
 msgid "Choose when to restart"
-msgstr ""
+msgstr "Choisissez lorsque vous souhaitez redémarrer"

@@ -1,4 +1,4 @@
-# Chinese translations for crash-handler package.
+# Chinese (simplified) translations for crash-handler package.
 # Copyright (C) 2016-2022 by Streamlabs (General Workings Inc)
 # This file is distributed under the same license as the crash-handler package.
 #
@@ -17,30 +17,30 @@ msgstr ""
 
 #: crash-handler-process\platforms\util-osx.mm:27
 msgid "No"
-msgstr ""
+msgstr "否"
 
 #: crash-handler-process\platforms\util-osx.mm:28
 msgid "YES"
-msgstr ""
+msgstr "是"
 
 #: crash-handler-process\platforms\util-osx.mm:30
 #: crash-handler-process\platforms\util-win.cpp:123
 msgid ""
 "An error occurred which has caused Streamlabs Desktop to close. Don't worry! "
 "If you were streaming or recording, that is still happening in the "
-"background.\n"
-"\n"
+"background. "
+""
 "Whenever you're ready, we can relaunch the application, however this will "
-"end your stream / recording session.\n"
-"\n"
-"Click the Yes button to keep streaming / recording. \n"
-"\n"
+"end your stream / recording session. "
+""
+"Click the Yes button to keep streaming / recording. "
+""
 "Click the No button to stop streaming / recording."
-msgstr ""
+msgstr "发生错误，导致 Streamlabs Desktop 关闭。别担心！如果您正在直播或录制，仍然会在后台进行。\n\n只要您准备就绪，我们就可以重新启动应用程序，但这将结束您的直播/录制会话。\n\n点击“是”以继续直播/录制。\n\n点击“否”以停止直播/录制。"
 
 #: crash-handler-process\platforms\util-osx.mm:44
 msgid "OK"
-msgstr ""
+msgstr "确定"
 
 #: crash-handler-process\platforms\util-osx.mm:45
 #: crash-handler-process\platforms\util-win.cpp:136
@@ -48,12 +48,12 @@ msgid ""
 "Your stream / recording session is still running in the background. Whenever "
 "you're ready, click the OK button below to end your stream / recording and "
 "relaunch the application."
-msgstr ""
+msgstr "您的直播/录制会话仍在后台运行。准备就绪后，请点击下方的“确定”按钮结束直播/录制并重新启动应用程序。"
 
 #: crash-handler-process\platforms\util-win.cpp:121
 msgid "An error occurred"
-msgstr ""
+msgstr "发生错误"
 
 #: crash-handler-process\platforms\util-win.cpp:134
 msgid "Choose when to restart"
-msgstr ""
+msgstr "选择重新启动的时间"

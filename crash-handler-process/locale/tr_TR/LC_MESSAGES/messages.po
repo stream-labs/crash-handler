@@ -18,30 +18,30 @@ msgstr ""
 
 #: crash-handler-process\platforms\util-osx.mm:27
 msgid "No"
-msgstr ""
+msgstr "Hayır"
 
 #: crash-handler-process\platforms\util-osx.mm:28
 msgid "YES"
-msgstr ""
+msgstr "EVET"
 
 #: crash-handler-process\platforms\util-osx.mm:30
 #: crash-handler-process\platforms\util-win.cpp:123
 msgid ""
 "An error occurred which has caused Streamlabs Desktop to close. Don't worry! "
 "If you were streaming or recording, that is still happening in the "
-"background.\n"
-"\n"
+"background. "
+""
 "Whenever you're ready, we can relaunch the application, however this will "
-"end your stream / recording session.\n"
-"\n"
-"Click the Yes button to keep streaming / recording. \n"
-"\n"
+"end your stream / recording session. "
+""
+"Click the Yes button to keep streaming / recording. "
+""
 "Click the No button to stop streaming / recording."
-msgstr ""
+msgstr "Streamlabs Desktop uygulamasının kapanmasına neden olan bir hata oluştu. Endişelenmeyin! Uygulama kapanmadan önce devam eden bir yayın veya kayıt varsa işlem, arka planda devam etmektedir. \n\nHazır olduğunuzda uygulamayı yeniden başlatabiliriz ancak uygulama yeniden başlatıldığında yayın/kayıt oturumu sona erer. \n\nYayın/kayıt işlemine devam etmek için Evet düğmesine tıklayın. \n\nYayın/kayıt işlemini durdurmak için Hayır düğmesine tıklayın."
 
 #: crash-handler-process\platforms\util-osx.mm:44
 msgid "OK"
-msgstr ""
+msgstr "Tamam"
 
 #: crash-handler-process\platforms\util-osx.mm:45
 #: crash-handler-process\platforms\util-win.cpp:136
@@ -49,12 +49,12 @@ msgid ""
 "Your stream / recording session is still running in the background. Whenever "
 "you're ready, click the OK button below to end your stream / recording and "
 "relaunch the application."
-msgstr ""
+msgstr "Yayın/kayıt oturumunuz arka planda çalışmaya devam ediyor. Hazır olduğunuzda yayın/kayıt işleminizi sonlandırmak ve uygulamayı yeniden başlatmak için Tamam düğmesine tıklayın."
 
 #: crash-handler-process\platforms\util-win.cpp:121
 msgid "An error occurred"
-msgstr ""
+msgstr "Bir hata oluştu"
 
 #: crash-handler-process\platforms\util-win.cpp:134
 msgid "Choose when to restart"
-msgstr ""
+msgstr "Ne zaman yeniden başlatılacağını seçin"

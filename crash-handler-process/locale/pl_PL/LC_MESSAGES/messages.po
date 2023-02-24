@@ -19,30 +19,30 @@ msgstr ""
 
 #: crash-handler-process\platforms\util-osx.mm:27
 msgid "No"
-msgstr ""
+msgstr "Nie"
 
 #: crash-handler-process\platforms\util-osx.mm:28
 msgid "YES"
-msgstr ""
+msgstr "TAK"
 
 #: crash-handler-process\platforms\util-osx.mm:30
 #: crash-handler-process\platforms\util-win.cpp:123
 msgid ""
 "An error occurred which has caused Streamlabs Desktop to close. Don't worry! "
 "If you were streaming or recording, that is still happening in the "
-"background.\n"
-"\n"
+"background. "
+""
 "Whenever you're ready, we can relaunch the application, however this will "
-"end your stream / recording session.\n"
-"\n"
-"Click the Yes button to keep streaming / recording. \n"
-"\n"
+"end your stream / recording session. "
+""
+"Click the Yes button to keep streaming / recording. "
+""
 "Click the No button to stop streaming / recording."
-msgstr ""
+msgstr "Wystąpił błąd, który spowodował zamknięcie Streamlabs Desktop. Nie martw się! Jeśli streamowałeś lub nagrywałeś, to nadal dzieje się to w tle. \n\nKiedy tylko będziesz gotowy, możemy ponownie uruchomić aplikację, ale to zakończy Twoją sesję streamowania / nagrywania. \n\nKliknij przycisk Tak, aby kontynuować streamowanie / nagrywanie. \n\nKliknij przycisk Nie, aby zatrzymać streamowanie / nagrywanie."
 
 #: crash-handler-process\platforms\util-osx.mm:44
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: crash-handler-process\platforms\util-osx.mm:45
 #: crash-handler-process\platforms\util-win.cpp:136
@@ -50,12 +50,12 @@ msgid ""
 "Your stream / recording session is still running in the background. Whenever "
 "you're ready, click the OK button below to end your stream / recording and "
 "relaunch the application."
-msgstr ""
+msgstr "Twoja sesja streamowania / nagrywania nadal działa w tle. Kiedy tylko będziesz gotowy, kliknij przycisk OK poniżej, aby zakończyć streamowanie / nagrywanie i ponownie uruchomić aplikację."
 
 #: crash-handler-process\platforms\util-win.cpp:121
 msgid "An error occurred"
-msgstr ""
+msgstr "Wystąpił błąd"
 
 #: crash-handler-process\platforms\util-win.cpp:134
 msgid "Choose when to restart"
-msgstr ""
+msgstr "Wybierz, kiedy uruchomić ponownie"

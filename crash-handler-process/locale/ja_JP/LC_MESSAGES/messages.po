@@ -18,30 +18,30 @@ msgstr ""
 
 #: crash-handler-process\platforms\util-osx.mm:27
 msgid "No"
-msgstr ""
+msgstr "いいえ"
 
 #: crash-handler-process\platforms\util-osx.mm:28
 msgid "YES"
-msgstr ""
+msgstr "はい"
 
 #: crash-handler-process\platforms\util-osx.mm:30
 #: crash-handler-process\platforms\util-win.cpp:123
 msgid ""
 "An error occurred which has caused Streamlabs Desktop to close. Don't worry! "
 "If you were streaming or recording, that is still happening in the "
-"background.\n"
-"\n"
+"background. "
+""
 "Whenever you're ready, we can relaunch the application, however this will "
-"end your stream / recording session.\n"
-"\n"
-"Click the Yes button to keep streaming / recording. \n"
-"\n"
+"end your stream / recording session. "
+""
+"Click the Yes button to keep streaming / recording. "
+""
 "Click the No button to stop streaming / recording."
-msgstr ""
+msgstr "エラーが発生したため、Streamlabs Desktop は終了しました。心配いりません。ストリーミングまたは録画を行っていた場合、それはまだバックグラウンドで実行されています。\n\n準備ができたらいつでもアプリケーションを再起動できますが、これによってストリーム/録画セッションが終了します。\n\nストリーミング/録画を続行するには、[はい] ボタンをクリックします。\n\nストリーミング/録画を停止するには、[いいえ] ボタンをクリックします。"
 
 #: crash-handler-process\platforms\util-osx.mm:44
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: crash-handler-process\platforms\util-osx.mm:45
 #: crash-handler-process\platforms\util-win.cpp:136
@@ -49,12 +49,12 @@ msgid ""
 "Your stream / recording session is still running in the background. Whenever "
 "you're ready, click the OK button below to end your stream / recording and "
 "relaunch the application."
-msgstr ""
+msgstr "ストリーム/録画セッションはまだバックグラウンドで実行中です。準備ができたら、下の [OK] ボタンをクリックしてストリーム/録画を終了し、アプリケーションを再起動してください。"
 
 #: crash-handler-process\platforms\util-win.cpp:121
 msgid "An error occurred"
-msgstr ""
+msgstr "エラーが発生しました"
 
 #: crash-handler-process\platforms\util-win.cpp:134
 msgid "Choose when to restart"
-msgstr ""
+msgstr "再起動するタイミングを選択"
