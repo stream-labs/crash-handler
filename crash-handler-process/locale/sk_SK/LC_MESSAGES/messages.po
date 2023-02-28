@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-27 16:47-0800\n"
+"POT-Creation-Date: 2023-02-28 12:07-0800\n"
 "PO-Revision-Date: 2022-09-03 12:16-0700\n"
 "Last-Translator: <EMAIL@ADDRESS>\n"
 "Language-Team: Slovak\n"
@@ -72,10 +72,11 @@ msgid "Choose when to restart"
 msgstr ""
 
 #: crash-handler-process\platforms\upload-window-win.cpp:111
-msgid ""
-"The application just crashed.\r\n"
-"\r\n"
-"Would you like to send a report to the developers?"
+msgid "The application just crashed."
+msgstr ""
+
+#: crash-handler-process\platforms\upload-window-win.cpp:112
+msgid "Would you like to send a report to the developers?"
 msgstr ""
 
 #: crash-handler-process\platforms\upload-window-win.cpp:127
