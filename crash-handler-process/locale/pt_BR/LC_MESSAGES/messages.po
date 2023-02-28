@@ -1,4 +1,4 @@
-# Portuguese translations for crash-handler package.
+# Portuguese (Brazil) translations for crash-handler package.
 # Copyright (C) 2016-2022 by Streamlabs (General Workings Inc)
 # This file is distributed under the same license as the crash-handler package.
 #
@@ -6,55 +6,166 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-09-07 15:04-0700\n"
+"POT-Creation-Date: 2023-02-28 12:07-0800\n"
 "PO-Revision-Date: 2022-09-03 12:16-0700\n"
 "Last-Translator: <EMAIL@ADDRESS>\n"
 "Language-Team: Brazilian Portuguese\n"
 "Language: pt_BR\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CP1252\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: crash-handler-process\platforms\util-osx.mm:27
-msgid "No"
-msgstr ""
-
-#: crash-handler-process\platforms\util-osx.mm:28
-msgid "YES"
-msgstr ""
-
-#: crash-handler-process\platforms\util-osx.mm:30
-#: crash-handler-process\platforms\util-win.cpp:123
+#: crash-handler-process\platforms\util-osx.mm:31
+#: crash-handler-process\platforms\util-win.cpp:116
 msgid ""
 "An error occurred which has caused Streamlabs Desktop to close. Don't worry! "
 "If you were streaming or recording, that is still happening in the "
-"background.\n"
-"\n"
+"background."
+msgstr ""
+"Ocorreu um erro que fez com que o Streamlabs Desktop fosse fechado. Não se "
+"preocupe! Se você estava transmitindo ou gravando, isso ainda está "
+"acontecendo em segundo plano."
+
+#: crash-handler-process\platforms\util-osx.mm:33
+#: crash-handler-process\platforms\util-win.cpp:119
+msgid ""
 "Whenever you're ready, we can relaunch the application, however this will "
-"end your stream / recording session.\n"
-"\n"
-"Click the Yes button to keep streaming / recording. \n"
-"\n"
-"Click the No button to stop streaming / recording."
+"end your stream / recording session."
 msgstr ""
+"Quando estiver pronto, podemos reiniciar o aplicativo, mas isso encerrará "
+"sua sessão de transmissão/gravação."
 
-#: crash-handler-process\platforms\util-osx.mm:44
+#: crash-handler-process\platforms\util-osx.mm:35
+#: crash-handler-process\platforms\util-win.cpp:122
+msgid "Click the Yes button to keep streaming / recording."
+msgstr "Clique no botão Sim para continuar a transmissão/gravação."
+
+#: crash-handler-process\platforms\util-osx.mm:36
+#: crash-handler-process\platforms\util-win.cpp:124
+msgid "Click the No button to stop streaming / recording."
+msgstr "Clique no botão Não para interromper a transmissão/gravação."
+
+#: crash-handler-process\platforms\util-osx.mm:39
+#: crash-handler-process\platforms\upload-window-win.cpp:402
+msgid "No"
+msgstr "Não"
+
+#: crash-handler-process\platforms\util-osx.mm:40
+msgid "YES"
+msgstr "SIM"
+
+#: crash-handler-process\platforms\util-osx.mm:50
+#: crash-handler-process\platforms\upload-window-win.cpp:404
 msgid "OK"
-msgstr ""
+msgstr "Ok"
 
-#: crash-handler-process\platforms\util-osx.mm:45
-#: crash-handler-process\platforms\util-win.cpp:136
+#: crash-handler-process\platforms\util-osx.mm:51
+#: crash-handler-process\platforms\util-win.cpp:133
 msgid ""
 "Your stream / recording session is still running in the background. Whenever "
 "you're ready, click the OK button below to end your stream / recording and "
 "relaunch the application."
 msgstr ""
+"Sua sessão de transmissão/gravação ainda está sendo executada em segundo "
+"plano. Quando estiver pronto, clique no botão OK abaixo para encerrar sua "
+"transmissão/gravação e reinicie o aplicativo."
 
-#: crash-handler-process\platforms\util-win.cpp:121
+#: crash-handler-process\platforms\util-win.cpp:114
 msgid "An error occurred"
+msgstr "Ocorreu um erro"
+
+#: crash-handler-process\platforms\util-win.cpp:132
+msgid "Choose when to restart"
+msgstr "Escolha quando reiniciar"
+
+#: crash-handler-process\platforms\upload-window-win.cpp:111
+msgid "The application just crashed."
 msgstr ""
 
-#: crash-handler-process\platforms\util-win.cpp:134
-msgid "Choose when to restart"
+#: crash-handler-process\platforms\upload-window-win.cpp:112
+msgid "Would you like to send a report to the developers?"
 msgstr ""
+
+#: crash-handler-process\platforms\upload-window-win.cpp:127
+#, c-format
+msgid ""
+"Uploading... %.2f%%\r\n"
+"%.1f / %.1fmb"
+msgstr ""
+
+#: crash-handler-process\platforms\upload-window-win.cpp:134
+#, c-format
+msgid "Saving... to \"%s\""
+msgstr ""
+
+#: crash-handler-process\platforms\upload-window-win.cpp:143
+#, c-format
+msgid "Zipping... to \"%s\""
+msgstr ""
+
+#: crash-handler-process\platforms\upload-window-win.cpp:152
+msgid "Failed to save the local debug information."
+msgstr ""
+
+#: crash-handler-process\platforms\upload-window-win.cpp:160
+msgid "Initializing upload..."
+msgstr ""
+
+#: crash-handler-process\platforms\upload-window-win.cpp:167
+#, c-format
+msgid ""
+"Successfully uploaded the debug information.\r\n"
+"Please provide this file name to the support.\r\n"
+"File: \"%s\"."
+msgstr ""
+
+#: crash-handler-process\platforms\upload-window-win.cpp:178
+#, c-format
+msgid ""
+"Upload cancleled.\r\n"
+"%s removed."
+msgstr ""
+
+#: crash-handler-process\platforms\upload-window-win.cpp:186
+#, c-format
+msgid ""
+"Upload failed. Save a copy?\r\n"
+"\"%s/%s\""
+msgstr ""
+
+#: crash-handler-process\platforms\upload-window-win.cpp:374
+msgid "Streamlabs Desktop has encountered a critical error"
+msgstr ""
+
+#: crash-handler-process\platforms\upload-window-win.cpp:401
+msgid "Yes"
+msgstr ""
+
+#: crash-handler-process\platforms\upload-window-win.cpp:403
+msgid "Cancel"
+msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "An error occurred which has caused Streamlabs Desktop to close. Don't "
+#~ "worry! If you were streaming or recording, that is still happening in the "
+#~ "background.\n"
+#~ "\n"
+#~ "Whenever you're ready, we can relaunch the application, however this will "
+#~ "end your stream / recording session.\n"
+#~ "\n"
+#~ "Click the Yes button to keep streaming / recording. \n"
+#~ "\n"
+#~ "Click the No button to stop streaming / recording."
+#~ msgstr ""
+#~ "Ocorreu um erro que fez com que o Streamlabs Desktop fosse fechado. Não "
+#~ "se preocupe! Se você estava transmitindo ou gravando, isso ainda está "
+#~ "acontecendo em segundo plano. \n"
+#~ "\n"
+#~ "Quando estiver pronto, podemos reiniciar o aplicativo, mas isso encerrará "
+#~ "sua sessão de transmissão/gravação. \n"
+#~ "\n"
+#~ "Clique no botão Sim para continuar a transmissão/gravação. \n"
+#~ "\n"
+#~ "Clique no botão Não para interromper a transmissão/gravação."

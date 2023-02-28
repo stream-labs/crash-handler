@@ -108,9 +108,9 @@ LRESULT UploadWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		upload_window_hwnd = NULL;
 		break;
 	case CUSTOM_CAUGHT_CRASH: {
-		auto message_boost = boost::locale::translate("The application just crashed.\r\n\r\n"
-							      "Would you like to send a report to the developers?");
-		std::wstring caught_crash_message = from_utf8_to_utf16_wide(message_boost.str().c_str());
+		std::string message_boost = boost::locale::translate("The application just crashed.").str() + std::string("\r\n\r\n") +
+					    boost::locale::translate("Would you like to send a report to the developers?").str();
+		std::wstring caught_crash_message = from_utf8_to_utf16_wide(message_boost.c_str());
 
 		SetWindowText(upload_label_hwnd, caught_crash_message.c_str());
 		showButtons({.ok = false, .cancel = true, .yes = true, .no = false});

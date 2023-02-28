@@ -112,21 +112,27 @@ void Util::restartApp(std::wstring path)
 void Util::runTerminateWindow(bool &shouldRestart)
 {
 	std::wstring title = from_utf8_to_utf16_wide(boost::locale::translate("An error occurred").str().c_str());
-	auto message_translated = boost::locale::translate("An error occurred which has caused Streamlabs Desktop to close. Don't worry! "
-							   "If you were streaming or recording, that is still happening in the background."
-							   "\n\nWhenever you're ready, we can relaunch the application, however this will end "
-							   "your stream / recording session.\n\n"
-							   "Click the Yes button to keep streaming / recording. \n\n"
-							   "Click the No button to stop streaming / recording.");
-	std::wstring message = from_utf8_to_utf16_wide(message_translated.str().c_str());
+
+	auto message_translated1 = boost::locale::translate("An error occurred which has caused Streamlabs Desktop to close. Don't worry! "
+							    "If you were streaming or recording, that is still happening in the background.");
+	std::wstring message1 = from_utf8_to_utf16_wide(message_translated1.str().c_str());
+	auto message_translated2 = boost::locale::translate("Whenever you're ready, we can relaunch the application, however this will "
+							    "end your stream / recording session.");
+	std::wstring message2 = from_utf8_to_utf16_wide(message_translated2.str().c_str());
+	auto message_translated3 = boost::locale::translate("Click the Yes button to keep streaming / recording.");
+	std::wstring message3 = from_utf8_to_utf16_wide(message_translated3.str().c_str());
+	auto message_translated4 = boost::locale::translate("Click the No button to stop streaming / recording.");
+	std::wstring message4 = from_utf8_to_utf16_wide(message_translated4.str().c_str());
+
+	std::wstring message = message1 + L"\n\n" + message2 + L"\n\n" + message3 + L"\n\n" + message4;
 
 	int code = MessageBox(NULL, message.c_str(), title.c_str(), MB_YESNO | MB_SYSTEMMODAL);
 	switch (code) {
 	case IDYES: {
 		title = from_utf8_to_utf16_wide(boost::locale::translate("Choose when to restart").str().c_str());
-		message_translated = boost::locale::translate("Your stream / recording session is still running in the background. "
-							      "Whenever you're ready, click the OK "
-							      "button below to end your stream / recording and relaunch the application.");
+		auto message_translated = boost::locale::translate("Your stream / recording session is still running in the background. "
+								   "Whenever you're ready, click the OK "
+								   "button below to end your stream / recording and relaunch the application.");
 		message = from_utf8_to_utf16_wide(message_translated.str().c_str());
 		MessageBox(NULL, message.c_str(), title.c_str(), MB_OK | MB_SYSTEMMODAL);
 		shouldRestart = true;
