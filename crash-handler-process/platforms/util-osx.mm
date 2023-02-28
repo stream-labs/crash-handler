@@ -29,9 +29,9 @@ void stopApplication(void)
 	NSAlert *alert = [[NSAlert alloc] init];
 
 	auto message1 = translate("An error occurred which has caused Streamlabs Desktop to close. Don't worry! "
-							  "If you were streaming or recording, that is still happening in the background.");
+				  "If you were streaming or recording, that is still happening in the background.");
 	auto message2 = translate("Whenever you're ready, we can relaunch the application, however this will end "
-							  "your stream / recording session.");
+				  "your stream / recording session.");
 	auto message3 = translate("Click the Yes button to keep streaming / recording.");
 	auto message4 = translate("Click the No button to stop streaming / recording.");
 	NSString *message = [NSString stringWithFormat:@"%@\n\n%@\n\n%@\n\n%@", message1, message2, message3, message4];
