@@ -25,4 +25,5 @@ jobs:
         run: |
           ./ci/check-format.sh
           ./ci/check-changes.sh
+          git diff
 
