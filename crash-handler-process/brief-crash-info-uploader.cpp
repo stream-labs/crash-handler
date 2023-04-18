@@ -36,6 +36,8 @@ std::string_view g_pathSeparator("/");
 
 std::string_view g_briefCrashDataFilename("brief-crash-info.json");
 
+#if defined(_WIN32)
+
 BriefCrashInfoUploader::BriefCrashInfoUploader(const std::string &appDataPath) : m_filename(appDataPath)
 {
 	if (*m_filename.rbegin() != '/' && *m_filename.rbegin() != '\\') {
@@ -112,3 +114,5 @@ void BriefCrashInfoUploader::UploadJson(const std::string &json)
 		log_info << "Brief crash info upload response header: " << header << " = " << value << std::endl;
 	}
 }
+
+#endif
