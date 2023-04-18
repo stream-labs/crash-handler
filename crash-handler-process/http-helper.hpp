@@ -24,41 +24,30 @@
 #include <string_view>
 #include <map>
 
-class HttpHelper
-{
+class HttpHelper {
 public:
+	enum class Result {
+		Success = 0,
+		InvalidParam,
+		CouldNotInit,
+		ConnectFailed,
+		RequestFailed,
+		ResponseFailed,
+	};
 
-    enum class Result
-    {
-        Success = 0,
-        InvalidParam,
-        CouldNotInit,
-        ConnectFailed,
-        RequestFailed,
-        ResponseFailed,
-    };
+	enum class Method { Undefined = 0, Get, Post };
 
-    enum class Method
-    {
-        Undefined = 0,
-        Get,
-        Post
-    };
+	using Headers = std::map<std::string, std::string>;
 
-    using Headers = std::map<std::string, std::string>;
+	static std::unique_ptr<HttpHelper> Create();
 
-    static std::unique_ptr<HttpHelper> Create();
+	virtual ~HttpHelper() {}
 
-    virtual ~HttpHelper() {}
+	virtual Result Request(Method method, std::string_view url, const Headers &requestHeaders, std::string_view body, Headers *responseHeaders,
+			       std::string *response) = 0;
 
-    virtual Result Request(Method method, std::string_view url, const Headers& requestHeaders,
-        std::string_view body, Headers* responseHeaders, std::string* response) = 0;
+	virtual Result GetRequest(std::string_view url, const Headers &requestHeaders, Headers *responseHeaders, std::string *response) = 0;
 
-    virtual Result GetRequest(std::string_view url, const Headers& requestHeaders,
-        Headers* responseHeaders, std::string* response) = 0;
-
-    virtual Result PostRequest(std::string_view url, const Headers& requestHeaders,
-        std::string_view body, Headers* responseHeaders, std::string* response) = 0;
-
-
+	virtual Result PostRequest(std::string_view url, const Headers &requestHeaders, std::string_view body, Headers *responseHeaders,
+				   std::string *response) = 0;
 };

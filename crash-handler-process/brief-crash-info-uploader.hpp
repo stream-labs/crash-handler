@@ -22,20 +22,17 @@
 #include <string>
 #include <string_view>
 
-class BriefCrashInfoUploader final
-{
+class BriefCrashInfoUploader final {
 public:
+	BriefCrashInfoUploader(const std::string &appDataPath);
+	~BriefCrashInfoUploader();
 
-    BriefCrashInfoUploader(const std::string& appDataPath);
-    ~BriefCrashInfoUploader();
-
-    void Run(std::int64_t maxFileWaitTimeMs = 10000);
+	void Run(std::int64_t maxFileWaitTimeMs = 10000);
 
 private:
-    std::string ProcessBriefCrashInfoJson(std::int64_t maxFileWaitTimeMs);
-    std::string LoadBriefCrashInfoJson();
-    void UploadJson(const std::string& json);
+	std::string ProcessBriefCrashInfoJson(std::int64_t maxFileWaitTimeMs);
+	std::string LoadBriefCrashInfoJson();
+	void UploadJson(const std::string &json);
 
-    std::string m_filename;
-
+	std::string m_filename;
 };

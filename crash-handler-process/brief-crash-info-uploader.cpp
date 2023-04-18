@@ -36,8 +36,7 @@ std::string_view g_pathSeparator("/");
 
 std::string_view g_briefCrashDataFilename("brief-crash-info.json");
 
-BriefCrashInfoUploader::BriefCrashInfoUploader(const std::string& appDataPath)
-    : m_filename(appDataPath)
+BriefCrashInfoUploader::BriefCrashInfoUploader(const std::string &appDataPath) : m_filename(appDataPath)
 {
 	if (*m_filename.rbegin() != '/' && *m_filename.rbegin() != '\\') {
 		m_filename += g_pathSeparator;
@@ -45,16 +44,14 @@ BriefCrashInfoUploader::BriefCrashInfoUploader(const std::string& appDataPath)
 	m_filename += g_briefCrashDataFilename;
 }
 
-BriefCrashInfoUploader::~BriefCrashInfoUploader()
-{
-}
+BriefCrashInfoUploader::~BriefCrashInfoUploader() {}
 
 void BriefCrashInfoUploader::Run(std::int64_t maxFileWaitTimeMs)
 {
 	std::string json = ProcessBriefCrashInfoJson(maxFileWaitTimeMs);
-    if (json.size()) {
-    	UploadJson(json);
-    }
+	if (json.size()) {
+		UploadJson(json);
+	}
 }
 
 std::string BriefCrashInfoUploader::ProcessBriefCrashInfoJson(std::int64_t maxFileWaitTimeMs)
@@ -65,7 +62,7 @@ std::string BriefCrashInfoUploader::ProcessBriefCrashInfoJson(std::int64_t maxFi
 	std::int64_t realFileWaitTimeMs = 0;
 	while (realFileWaitTimeMs < maxFileWaitTimeMs) {
 		if (std::filesystem::exists(briefCrashInfoPath) && std::filesystem::is_regular_file(briefCrashInfoPath)) {
-            json = LoadBriefCrashInfoJson();
+			json = LoadBriefCrashInfoJson();
 			std::filesystem::remove(briefCrashInfoPath);
 			log_info << "The brief crash info file has been loaded." << std::endl;
 			break;
@@ -81,23 +78,23 @@ std::string BriefCrashInfoUploader::ProcessBriefCrashInfoJson(std::int64_t maxFi
 std::string BriefCrashInfoUploader::LoadBriefCrashInfoJson()
 {
 #if defined(_WIN32)
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-    std::ifstream file(converter.from_bytes(m_filename));
+	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+	std::ifstream file(converter.from_bytes(m_filename));
 #else
-    std::ifstream file(m_filename);
+	std::ifstream file(m_filename);
 #endif
-    file.seekg(0, std::ios::end);
-    size_t fileSize = file.tellg();
+	file.seekg(0, std::ios::end);
+	size_t fileSize = file.tellg();
 
-    std::string buffer(fileSize, ' ');
-    file.seekg(0);
-    file.read(&buffer.front(), fileSize); 
-    file.close();
+	std::string buffer(fileSize, ' ');
+	file.seekg(0);
+	file.read(&buffer.front(), fileSize);
+	file.close();
 
-    return buffer;
+	return buffer;
 }
 
-void BriefCrashInfoUploader::UploadJson(const std::string& json)
+void BriefCrashInfoUploader::UploadJson(const std::string &json)
 {
 	log_info << "Uploading the brief crash info..." << std::endl;
 
@@ -106,13 +103,12 @@ void BriefCrashInfoUploader::UploadJson(const std::string& json)
 	std::string response;
 
 	auto httpHelper = HttpHelper::Create();
-	HttpHelper::Result result = httpHelper->PostRequest("https://httpbin.org/post",
-		requestHeaders, json, &responseHeaders, &response);
+	HttpHelper::Result result = httpHelper->PostRequest("https://httpbin.org/post", requestHeaders, json, &responseHeaders, &response);
 
 	log_info << "Brief crash info upload result (0 means SUCCESS): " << static_cast<int>(result) << std::endl;
 	log_info << "Brief crash info upload response: " << response << std::endl;
 
-	for (const auto& [header, value] : responseHeaders) {
+	for (const auto &[header, value] : responseHeaders) {
 		log_info << "Brief crash info upload response header: " << header << " = " << value << std::endl;
 	}
 }
