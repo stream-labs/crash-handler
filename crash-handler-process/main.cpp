@@ -22,9 +22,9 @@
 #include <codecvt>
 #include <filesystem>
 
-#if defined(_WIN32)
 #include "brief-crash-info-uploader.hpp"
-#endif
+
+#include "http-helper.hpp"
 
 #if defined(WIN32)
 const std::string log_file_name = "\\crash-handler.log";
@@ -111,12 +111,21 @@ int main(int argc, char **argv)
 
 	if (pm->m_applicationCrashed) {
 		pm->handleCrash(path);
-#if defined(_WIN32)
 		BriefCrashInfoUploader(appData_path).Run();
-#endif
 	}
 
 	delete pm;
+
+	/*HttpHelper::Headers requestHeaders = {{"Content-Type", "application/json; Charset=UTF-8"}};
+	HttpHelper::Headers responseHeaders;
+	std::string response;
+
+	std::uint32_t statusCode = 0;
+
+	auto httpHelper = HttpHelper::Create();
+	HttpHelper::Result result = httpHelper->PostRequest("https://httpbin.org/post",
+		requestHeaders, "{\"id\":\"qqqq\"}", &statusCode, &responseHeaders, &response);*/
+
 	log_info << "=== Terminating CrashHandler ===" << std::endl;
 	logging_end();
 

@@ -36,8 +36,6 @@ std::string_view g_pathSeparator("/");
 
 std::string_view g_briefCrashDataFilename("brief-crash-info.json");
 
-#if defined(_WIN32)
-
 BriefCrashInfoUploader::BriefCrashInfoUploader(const std::string &appDataPath) : m_filename(appDataPath)
 {
 	if (*m_filename.rbegin() != '/' && *m_filename.rbegin() != '\\') {
@@ -104,8 +102,10 @@ void BriefCrashInfoUploader::UploadJson(const std::string &json)
 	HttpHelper::Headers responseHeaders;
 	std::string response;
 
+	std::uint32_t statusCode = 0;
+
 	auto httpHelper = HttpHelper::Create();
-	HttpHelper::Result result = httpHelper->PostRequest("https://httpbin.org/post", requestHeaders, json, &responseHeaders, &response);
+	HttpHelper::Result result = httpHelper->PostRequest("https://httpbin.org/post", requestHeaders, json, &statusCode, &responseHeaders, &response);
 
 	log_info << "Brief crash info upload result (0 means SUCCESS): " << static_cast<int>(result) << std::endl;
 	log_info << "Brief crash info upload response: " << response << std::endl;
@@ -115,4 +115,3 @@ void BriefCrashInfoUploader::UploadJson(const std::string &json)
 	}
 }
 
-#endif

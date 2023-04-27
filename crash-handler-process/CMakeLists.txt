@@ -64,7 +64,7 @@ ELSE(APPLE)
 		"${PROJECT_SOURCE_DIR}/platforms/util-osx.mm"
 		"${PROJECT_SOURCE_DIR}/platforms/socket-osx.cpp" "${PROJECT_SOURCE_DIR}/platforms/socket-osx.hpp"
 		"${PROJECT_SOURCE_DIR}/platforms/process-osx.mm" "${PROJECT_SOURCE_DIR}/platforms/process-osx.hpp"
-
+		"${PROJECT_SOURCE_DIR}/platforms/http-helper-osx.mm" "${PROJECT_SOURCE_DIR}/platforms/http-helper-osx.hpp"
 	)
 	find_library(COCOA Cocoa)
 	# Prepare gettext

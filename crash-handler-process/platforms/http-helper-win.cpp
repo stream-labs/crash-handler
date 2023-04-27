@@ -56,7 +56,7 @@ HttpHelper_WIN::HttpHelper_WIN() {}
 
 HttpHelper_WIN::~HttpHelper_WIN() {}
 
-HttpHelper::Result HttpHelper_WIN::Request(Method method, std::string_view url, const Headers &requestHeaders, std::string_view body, Headers *responseHeaders,
+HttpHelper::Result HttpHelper_WIN::Request(Method method, std::string_view url, const Headers &requestHeaders, std::string_view body, std::uint32_t* statucCode, Headers *responseHeaders,
 					   std::string *response)
 {
 	VARIANT varFalse;
@@ -170,13 +170,13 @@ HttpHelper::Result HttpHelper_WIN::Request(Method method, std::string_view url, 
 	return Result::Success;
 }
 
-HttpHelper::Result HttpHelper_WIN::GetRequest(std::string_view url, const Headers &requestHeaders, Headers *responseHeaders, std::string *response)
+HttpHelper::Result HttpHelper_WIN::GetRequest(std::string_view url, const Headers &requestHeaders, std::uint32_t* statusCode, Headers *responseHeaders, std::string *response)
 {
-	return Request(Method::Get, url, requestHeaders, "", responseHeaders, response);
+	return Request(Method::Get, url, requestHeaders, "", statusCode, responseHeaders, response);
 }
 
-HttpHelper::Result HttpHelper_WIN::PostRequest(std::string_view url, const Headers &requestHeaders, std::string_view body, Headers *responseHeaders,
+HttpHelper::Result HttpHelper_WIN::PostRequest(std::string_view url, const Headers &requestHeaders, std::string_view body, std::uint32_t* statusCode, Headers *responseHeaders,
 					       std::string *response)
 {
-	return Request(Method::Post, url, requestHeaders, body, responseHeaders, response);
+	return Request(Method::Post, url, requestHeaders, body, statusCode, responseHeaders, response);
 }

@@ -22,8 +22,6 @@
 #include <string>
 #include <string_view>
 
-#if defined(_WIN32)
-
 class BriefCrashInfoUploader final {
 public:
 	BriefCrashInfoUploader(const std::string &appDataPath);
@@ -38,5 +36,3 @@ private:
 
 	std::string m_filename;
 };
-
-#endif
