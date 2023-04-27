@@ -35,92 +35,91 @@ std::unique_ptr<HttpHelper> HttpHelper::Create()
 	return std::make_unique<HttpHelper_OSX>();
 }
 
-HttpHelper_OSX::HttpHelper_OSX()
-{
+HttpHelper_OSX::HttpHelper_OSX() {}
 
+HttpHelper_OSX::~HttpHelper_OSX() {}
+
+HttpHelper_OSX::Result HttpHelper_OSX::Request(Method method, std::string_view url, const Headers &requestHeaders, std::string_view body,
+					       std::uint32_t *statusCode, Headers *responseHeaders, std::string *response)
+{
+	dispatch_semaphore_t completionSemaphore = dispatch_semaphore_create(0);
+
+	NSString *u = [NSString stringWithUTF8String:url.data()];
+	NSMutableURLRequest *urlRequest = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:u]];
+	switch (method) {
+	case Method::Get:
+		[urlRequest setHTTPMethod:@"GET"];
+		break;
+	case Method::Post:
+		[urlRequest setHTTPMethod:@"POST"];
+		break;
+	default:
+		return Result::InvalidParam;
+	}
+
+	for (const auto &[header, value] : requestHeaders) {
+		NSString *h = [NSString stringWithUTF8String:header.data()];
+		NSString *v = [NSString stringWithUTF8String:value.data()];
+		[urlRequest setValue:v forHTTPHeaderField:h];
+	}
+
+	if (method == Method::Post) {
+		NSData *b = [NSData dataWithBytes:body.data() length:static_cast<NSUInteger>(body.size())];
+		[urlRequest setHTTPBody:b];
+	}
+
+	NSURLSession *session = [NSURLSession sharedSession];
+
+	NSURLSessionDataTask *dataTask = [session
+		dataTaskWithRequest:urlRequest
+		  completionHandler:^(NSData *data, NSURLResponse *resp, NSError *error) {
+			  NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)resp;
+
+			  if (statusCode) {
+				  *statusCode = static_cast<std::uint32_t>(httpResponse.statusCode);
+			  }
+
+			  if (responseHeaders) {
+				  if ([httpResponse respondsToSelector:@selector(allHeaderFields)]) {
+					  NSDictionary *dict = [httpResponse allHeaderFields];
+					  for (id key in dict) {
+						  id value = [dict objectForKey:key];
+						  if ([key isKindOfClass:[NSString class]]) {
+							  if ([value isKindOfClass:[NSString class]]) {
+								  responseHeaders->emplace(std::string([key UTF8String]), std::string([value UTF8String]));
+								  log_info << "HEADER: " << [key UTF8String] << " > " << [value UTF8String] << std::endl;
+							  }
+						  }
+					  }
+				  }
+			  }
+
+			  if (response) {
+				  response->clear();
+				  NSString *responseString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+				  if (responseString) {
+					  response->append([responseString UTF8String]);
+				  }
+			  }
+
+			  dispatch_semaphore_signal(completionSemaphore);
+		  }];
+
+	[dataTask resume];
+
+	dispatch_semaphore_wait(completionSemaphore, DISPATCH_TIME_FOREVER);
+
+	return Result::Success;
 }
 
-HttpHelper_OSX::~HttpHelper_OSX()
+HttpHelper_OSX::Result HttpHelper_OSX::GetRequest(std::string_view url, const Headers &requestHeaders, std::uint32_t *statusCode, Headers *responseHeaders,
+						  std::string *response)
 {
-
+	return Request(Method::Get, url, requestHeaders, "", statusCode, responseHeaders, response);
 }
 
-HttpHelper_OSX::Result HttpHelper_OSX::Request(Method method, std::string_view url, const Headers &requestHeaders, std::string_view body, std::uint32_t* statusCode, Headers *responseHeaders,
-    std::string *response)
+HttpHelper_OSX::Result HttpHelper_OSX::PostRequest(std::string_view url, const Headers &requestHeaders, std::string_view body, std::uint32_t *statusCode,
+						   Headers *responseHeaders, std::string *response)
 {
-   dispatch_semaphore_t completionSemaphore = dispatch_semaphore_create(0);
-
-    NSString* u = [NSString stringWithUTF8String: url.data()];
-    NSMutableURLRequest *urlRequest =
-        [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:u]];
-    switch (method) {
-        case Method::Get: [urlRequest setHTTPMethod:@"GET"]; break;
-        case Method::Post: [urlRequest setHTTPMethod:@"POST"]; break;
-        default: return Result::InvalidParam;
-    }
-    
-    for (const auto &[header, value] : requestHeaders) {
-        NSString* h = [NSString stringWithUTF8String: header.data()];
-        NSString* v = [NSString stringWithUTF8String: value.data()];
-        [urlRequest setValue:v forHTTPHeaderField:h];
-    }
-    
-    if (method == Method::Post) {
-        NSData* b = [NSData dataWithBytes:body.data() length:static_cast<NSUInteger>(body.size())];
-        [urlRequest setHTTPBody:b];
-    }
-    
-    NSURLSession *session = [NSURLSession sharedSession];
-
-    NSURLSessionDataTask *dataTask =
-        [session dataTaskWithRequest:urlRequest completionHandler:^(NSData *data, NSURLResponse *resp, NSError *error)
-    {
-        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)resp;
-
-        if (statusCode) {
-            *statusCode = static_cast<std::uint32_t>(httpResponse.statusCode);
-        }
-
-        if (responseHeaders) {
-            if ([httpResponse respondsToSelector:@selector(allHeaderFields)]) {
-                NSDictionary *dict = [httpResponse allHeaderFields];
-                for (id key in dict) {
-                    id value = [dict objectForKey:key];
-                    if ([key isKindOfClass:[NSString class]]) {
-                        if ([value isKindOfClass:[NSString class]]) {
-                            responseHeaders->emplace(std::string([key UTF8String]), std::string([value UTF8String]));
-                            log_info << "HEADER: " << [key UTF8String] << " > " << [value UTF8String] << std::endl;
-                        }
-                    }
-                }
-            }
-        }
-
-        if (response) {
-            response->clear();
-            NSString *responseString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-            if (responseString) {
-                response->append([responseString UTF8String]);
-            }
-        }
-
-        dispatch_semaphore_signal(completionSemaphore);
-    }];
-
-    [dataTask resume];
-
-    dispatch_semaphore_wait(completionSemaphore, DISPATCH_TIME_FOREVER);
-
-    return Result::Success;
-}
-
-HttpHelper_OSX::Result HttpHelper_OSX::GetRequest(std::string_view url, const Headers &requestHeaders, std::uint32_t* statusCode, Headers *responseHeaders, std::string *response)
-{
-    return Request(Method::Get, url, requestHeaders, "", statusCode, responseHeaders, response);
-}
-
-HttpHelper_OSX::Result HttpHelper_OSX::PostRequest(std::string_view url, const Headers &requestHeaders, std::string_view body, std::uint32_t* statusCode, Headers *responseHeaders,
-    std::string *response)
-{
-    return Request(Method::Post, url, requestHeaders, body, statusCode, responseHeaders, response);
+	return Request(Method::Post, url, requestHeaders, body, statusCode, responseHeaders, response);
 }

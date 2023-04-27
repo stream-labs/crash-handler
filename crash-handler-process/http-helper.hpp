@@ -43,11 +43,12 @@ public:
 
 	virtual ~HttpHelper() {}
 
-	virtual Result Request(Method method, std::string_view url, const Headers &requestHeaders, std::string_view body, std::uint32_t* statusCode, Headers *responseHeaders,
-			       std::string *response) = 0;
+	virtual Result Request(Method method, std::string_view url, const Headers &requestHeaders, std::string_view body, std::uint32_t *statusCode,
+			       Headers *responseHeaders, std::string *response) = 0;
 
-	virtual Result GetRequest(std::string_view url, const Headers &requestHeaders, std::uint32_t* statusCode, Headers *responseHeaders, std::string *response) = 0;
+	virtual Result GetRequest(std::string_view url, const Headers &requestHeaders, std::uint32_t *statusCode, Headers *responseHeaders,
+				  std::string *response) = 0;
 
-	virtual Result PostRequest(std::string_view url, const Headers &requestHeaders, std::string_view body, std::uint32_t* statusCode, Headers *responseHeaders,
-				   std::string *response) = 0;
+	virtual Result PostRequest(std::string_view url, const Headers &requestHeaders, std::string_view body, std::uint32_t *statusCode,
+				   Headers *responseHeaders, std::string *response) = 0;
 };

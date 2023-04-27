@@ -27,17 +27,17 @@
 
 #include "../http-helper.hpp"
 
-class HttpHelper_WIN : public HttpHelper
-{
+class HttpHelper_WIN : public HttpHelper {
 public:
 	HttpHelper_WIN();
 	~HttpHelper_WIN() override;
 
-	Result Request(Method method, std::string_view url, const Headers &requestHeaders, std::string_view body, std::uint32_t* statusCode, Headers *responseHeaders,
-		       std::string *response) override;
+	Result Request(Method method, std::string_view url, const Headers &requestHeaders, std::string_view body, std::uint32_t *statusCode,
+		       Headers *responseHeaders, std::string *response) override;
 
-	Result GetRequest(std::string_view url, const Headers &requestHeaders, std::uint32_t* statusCode,  Headers *responseHeaders, std::string *response) override;
+	Result GetRequest(std::string_view url, const Headers &requestHeaders, std::uint32_t *statusCode, Headers *responseHeaders,
+			  std::string *response) override;
 
-	Result PostRequest(std::string_view url, const Headers &requestHeaders, std::string_view body, std::uint32_t* statusCode, Headers *responseHeaders,
+	Result PostRequest(std::string_view url, const Headers &requestHeaders, std::string_view body, std::uint32_t *statusCode, Headers *responseHeaders,
 			   std::string *response) override;
 };

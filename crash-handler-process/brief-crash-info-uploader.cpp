@@ -114,4 +114,3 @@ void BriefCrashInfoUploader::UploadJson(const std::string &json)
 		log_info << "Brief crash info upload response header: " << header << " = " << value << std::endl;
 	}
 }
-
