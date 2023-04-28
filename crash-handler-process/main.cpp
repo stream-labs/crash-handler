@@ -116,16 +116,6 @@ int main(int argc, char **argv)
 
 	delete pm;
 
-	/*HttpHelper::Headers requestHeaders = {{"Content-Type", "application/json; Charset=UTF-8"}};
-	HttpHelper::Headers responseHeaders;
-	std::string response;
-
-	std::uint32_t statusCode = 0;
-
-	auto httpHelper = HttpHelper::Create();
-	HttpHelper::Result result = httpHelper->PostRequest("https://httpbin.org/post",
-		requestHeaders, "{\"id\":\"qqqq\"}", &statusCode, &responseHeaders, &response);*/
-
 	log_info << "=== Terminating CrashHandler ===" << std::endl;
 	logging_end();
 
