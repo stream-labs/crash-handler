@@ -108,6 +108,7 @@ void BriefCrashInfoUploader::UploadJson(const std::string &json)
 	HttpHelper::Result result = httpHelper->PostRequest("https://httpbin.org/post", requestHeaders, json, &statusCode, &responseHeaders, &response);
 
 	log_info << "Brief crash info upload result (0 means SUCCESS): " << static_cast<int>(result) << std::endl;
+	log_info << "Brief crash info upload HTTP status code: " << statusCode << std::endl;
 	log_info << "Brief crash info upload response: " << response << std::endl;
 
 	for (const auto &[header, value] : responseHeaders) {
