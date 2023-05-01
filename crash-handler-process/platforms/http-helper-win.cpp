@@ -56,7 +56,7 @@ HttpHelper_WIN::HttpHelper_WIN() {}
 
 HttpHelper_WIN::~HttpHelper_WIN() {}
 
-HttpHelper::Result HttpHelper_WIN::Request(Method method, std::string_view url, const Headers &requestHeaders, std::string_view body, std::uint32_t *statucCode,
+HttpHelper::Result HttpHelper_WIN::Request(Method method, std::string_view url, const Headers &requestHeaders, std::string_view body, std::uint32_t *statusCode,
 					   Headers *responseHeaders, std::string *response)
 {
 	VARIANT varFalse;
@@ -124,6 +124,13 @@ HttpHelper::Result HttpHelper_WIN::Request(Method method, std::string_view url, 
 	hr = winHttpRequest->Send((method == Method::Post) ? varBody : varEmpty);
 	if (FAILED(hr)) {
 		return Result::RequestFailed;
+	}
+
+	if (statusCode) {
+		hr = winHttpRequest->get_Status(static_cast<long*>(static_cast<void*>(statusCode)));
+		if (FAILED(hr)) {
+			return Result::RequestFailed;
+		}
 	}
 
 	if (responseHeaders) {
