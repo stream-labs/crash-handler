@@ -127,7 +127,7 @@ HttpHelper::Result HttpHelper_WIN::Request(Method method, std::string_view url, 
 	}
 
 	if (statusCode) {
-		hr = winHttpRequest->get_Status(static_cast<long*>(static_cast<void*>(statusCode)));
+		hr = winHttpRequest->get_Status(static_cast<long *>(static_cast<void *>(statusCode)));
 		if (FAILED(hr)) {
 			return Result::RequestFailed;
 		}
