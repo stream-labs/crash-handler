@@ -70,56 +70,56 @@ HttpHelper_OSX::Result HttpHelper_OSX::Request(Method method, std::string_view u
 
 	NSURLSession *session = [NSURLSession sharedSession];
 
-    std::string errorDescription;
-    std::string* errorDescriptionPtr = &errorDescription;
+	std::string errorDescription;
+	std::string *errorDescriptionPtr = &errorDescription;
 
-	NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:urlRequest
-        completionHandler:^(NSData *data, NSURLResponse *resp, NSError *error)
-    {
-        if (error) {
-            *errorDescriptionPtr = [[error localizedDescription] UTF8String];
-            return;
-        }
+	NSURLSessionDataTask *dataTask = [session
+		dataTaskWithRequest:urlRequest
+		  completionHandler:^(NSData *data, NSURLResponse *resp, NSError *error) {
+			  if (error) {
+				  *errorDescriptionPtr = [[error localizedDescription] UTF8String];
+				  return;
+			  }
 
-		NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)resp;
+			  NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)resp;
 
-		if (statusCode) {
-			*statusCode = static_cast<std::uint32_t>(httpResponse.statusCode);
-		}
+			  if (statusCode) {
+				  *statusCode = static_cast<std::uint32_t>(httpResponse.statusCode);
+			  }
 
-		if (responseHeaders) {
-			if ([httpResponse respondsToSelector:@selector(allHeaderFields)]) {
-				NSDictionary *dict = [httpResponse allHeaderFields];
-				for (id key in dict) {
-					id value = [dict objectForKey:key];
-					if ([key isKindOfClass:[NSString class]]) {
-						if ([value isKindOfClass:[NSString class]]) {
-							responseHeaders->emplace(std::string([key UTF8String]), std::string([value UTF8String]));
-						}
-					}
-				}
-			}
-		}
+			  if (responseHeaders) {
+				  if ([httpResponse respondsToSelector:@selector(allHeaderFields)]) {
+					  NSDictionary *dict = [httpResponse allHeaderFields];
+					  for (id key in dict) {
+						  id value = [dict objectForKey:key];
+						  if ([key isKindOfClass:[NSString class]]) {
+							  if ([value isKindOfClass:[NSString class]]) {
+								  responseHeaders->emplace(std::string([key UTF8String]), std::string([value UTF8String]));
+							  }
+						  }
+					  }
+				  }
+			  }
 
-		if (response) {
-			response->clear();
-			NSString *responseString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-			if (responseString) {
-				response->append([responseString UTF8String]);
-			}
-		}
+			  if (response) {
+				  response->clear();
+				  NSString *responseString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+				  if (responseString) {
+					  response->append([responseString UTF8String]);
+				  }
+			  }
 
-		dispatch_semaphore_signal(completionSemaphore);
-	}];
+			  dispatch_semaphore_signal(completionSemaphore);
+		  }];
 
 	[dataTask resume];
 
 	dispatch_semaphore_wait(completionSemaphore, DISPATCH_TIME_FOREVER);
 
-    if (errorDescription.size()) {
-        log_error << "HTTP request error: " << errorDescription << std::endl;
-        return Result::RequestFailed;
-    }
+	if (errorDescription.size()) {
+		log_error << "HTTP request error: " << errorDescription << std::endl;
+		return Result::RequestFailed;
+	}
 
 	return Result::Success;
 }
