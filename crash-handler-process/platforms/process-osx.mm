@@ -24,6 +24,11 @@ int32_t Process_OSX::getPID(void)
 	return PID;
 }
 
+bool Process_OSX::isValid(void)
+{
+	return true;
+}
+
 bool Process_OSX::isCritical(void)
 {
 	return critical;

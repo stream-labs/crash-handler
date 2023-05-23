@@ -18,7 +18,9 @@
 
 #include "process-manager.hpp"
 
+#include <chrono>
 #include <iostream>
+
 void ThreadData::send_stop()
 {
 	{
@@ -112,6 +114,8 @@ void ProcessManager::monitor_fnc()
 	bool criticalCrash = false;
 	bool unresponsiveMarked = false;
 	uint32_t last_responsive_check = 0;
+	std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now();
+	bool validatedProcesses = false;
 
 	while (!this->monitor->wait_or_stop()) {
 		bool detectedUnresponsive = false;
@@ -119,10 +123,24 @@ void ProcessManager::monitor_fnc()
 			if (++last_responsive_check % 100 == 0)
 				last_responsive_check = 0;
 
+			bool willValidateProcesses = false;
+			if (!validatedProcesses) {
+				std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+				auto diff = std::chrono::duration_cast<std::chrono::seconds>(now - start).count();
+				if (diff >= 7) { // check in 7 seconds after start
+					willValidateProcesses = true;
+					validatedProcesses = true;
+				}
+			}
+
 			for (auto &process : this->processes) {
-				if (!process->isAlive()) {
+				if (!process->isAlive() || (willValidateProcesses && !process->isValid())) {
 					// Log information about the process that just crashed
-					log_info << "process died" << std::endl;
+					if (!process->isValid()) {
+						log_info << "process handle not valid" << std::endl;
+					} else {
+						log_info << "process died" << std::endl;
+					}
 					log_info << "process.pid: " << process->getPID() << std::endl;
 					log_info << "process.isCritical: " << process->isCritical() << std::endl;
 
