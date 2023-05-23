@@ -59,8 +59,6 @@ Process_WIN::Process_WIN(int32_t pid, bool isCritical)
 	} else {
 		log_info << "OpenProcess failed: " << GetLastError() << ", pid: " << pid << ", handle: " << this->handle_OpenProcess << std::endl;
 	}
-
-	
 }
 
 Process_WIN::~Process_WIN()

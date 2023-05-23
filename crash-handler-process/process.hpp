@@ -45,7 +45,7 @@ public:
 	virtual bool isCritical(void) = 0;
 	virtual bool isAlive(void) = 0;
 	virtual bool isUnResponsive(void) = 0;
-	virtual void terminate(void) = 0;	
+	virtual void terminate(void) = 0;
 
 public:
 	virtual void startMemoryDumpMonitoring(const std::wstring &eventName_Start, const std::wstring &eventName_Fail, const std::wstring &eventName_Success,
