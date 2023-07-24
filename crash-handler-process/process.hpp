@@ -41,6 +41,7 @@ protected:
 
 public:
 	virtual int32_t getPID(void) = 0;
+	virtual bool isValid(void) = 0;
 	virtual bool isCritical(void) = 0;
 	virtual bool isAlive(void) = 0;
 	virtual bool isUnResponsive(void) = 0;

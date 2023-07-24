@@ -53,12 +53,24 @@ Process_WIN::Process_WIN(int32_t pid, bool isCritical)
 	this->critical = isCritical;
 	this->alive = true;
 	this->handle_OpenProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, getPIDDWORD());
-	this->checker = new std::thread(&Process_WIN::worker, this);
+	if (this->handle_OpenProcess != NULL && this->handle_OpenProcess != INVALID_HANDLE_VALUE) {
+		this->checker = new std::thread(&Process_WIN::worker, this);
+		this->isValidHandle = true;
+	} else {
+		log_info << "OpenProcess failed: " << GetLastError() << ", pid: " << pid << ", handle: " << this->handle_OpenProcess << std::endl;
+	}
 }
 
 Process_WIN::~Process_WIN()
 {
-	safeCloseHandle(this->handle_OpenProcess);
+	if (isValidHandle) {
+		safeCloseHandle(this->handle_OpenProcess);
+	} else {
+		std::wstring taskkill_command(L"taskkill /F /T /PID ");
+		taskkill_command += std::to_wstring(this->PID);
+		int retval = _wsystem(taskkill_command.data());
+		log_info << "taskkill retval: " << retval << std::endl;
+	}
 
 	if (this->checker->joinable())
 		this->checker->join();
@@ -74,6 +86,11 @@ Process_WIN::~Process_WIN()
 int32_t Process_WIN::getPID(void)
 {
 	return PID;
+}
+
+bool Process_WIN::isValid(void)
+{
+	return isValidHandle;
 }
 
 bool Process_WIN::isCritical(void)

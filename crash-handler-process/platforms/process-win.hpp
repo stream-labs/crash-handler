@@ -37,6 +37,8 @@ private:
 	std::wstring memorydumpPath;
 	std::wstring memorydumpName;
 
+	bool isValidHandle = false;
+
 	HWND getTopWindow();
 
 public:
@@ -45,6 +47,7 @@ public:
 
 public:
 	virtual int32_t getPID(void) override;
+	virtual bool isValid(void) override;
 	virtual bool isCritical(void) override;
 	virtual bool isAlive(void) override;
 	virtual bool isUnResponsive(void) override;
