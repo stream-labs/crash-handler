@@ -38,22 +38,32 @@ struct ThreadData {
 
 class ProcessManager {
 public:
-	ProcessManager();
+	ProcessManager(const std::wstring& appPath);
 	~ProcessManager();
 
-	void runWatcher();
-	bool m_applicationCrashed;
-	bool m_criticalCrash;
-
-	void handleCrash(std::wstring path);
-	void sendExitMessage(bool appCrashed);
+	void run();
 
 private:
+	enum class AppExitStatus
+	{
+		Success = 0,
+		Crash,
+		OutOfGPU
+	};
+
+	std::wstring m_appPath;
+
+	AppExitStatus m_appExitStatus = AppExitStatus::Success;
+	bool m_criticalCrash = false;
+
 	ThreadData *watcher = nullptr;
 	ThreadData *monitor = nullptr;
 	std::vector<std::unique_ptr<Process>> processes;
 	std::mutex mtx;
 	std::unique_ptr<Socket> socket;
+
+	void runWatcher();
+	void finalize();
 
 	void watcher_fnc();
 	void monitor_fnc();
@@ -65,7 +75,10 @@ private:
 	void unregisterProcess(uint32_t PID);
 	void registerProcessMemoryDump(uint32_t PID, const std::wstring &eventName_Start, const std::wstring &eventName_Fail,
 				       const std::wstring &eventName_Success, const std::wstring &dumpPath, const std::wstring &dumpName);
+	void handleOutOfGPU(uint64_t errorCode, const std::wstring& errorCodeDesc);
 
 	void terminateAll(void);
 	void terminateNonCritical(void);
+
+	void sendExitMessage(bool appCrashed);
 };

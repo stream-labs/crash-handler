@@ -95,13 +95,12 @@ int main(int argc, char **argv)
 	}
 
 #endif
-	ProcessManager *pm = new ProcessManager();
-	pm->runWatcher();
 
-	if (pm->m_applicationCrashed)
-		pm->handleCrash(path);
+	{
+		auto pm = std::make_unique<ProcessManager>(path);
+		pm->run();
+	}
 
-	delete pm;
 	log_info << "=== Terminating CrashHandler ===" << std::endl;
 	logging_end();
 	return 0;

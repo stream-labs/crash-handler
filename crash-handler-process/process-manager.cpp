@@ -37,10 +37,9 @@ bool ThreadData::wait_or_stop()
 		return stop_event.wait_for(lck, std::chrono::milliseconds(50), [&flag = this->should_stop] { return flag; });
 }
 
-ProcessManager::ProcessManager()
+ProcessManager::ProcessManager(const std::wstring& appPath)
+	: m_appPath(appPath)
 {
-	m_applicationCrashed = false;
-	m_criticalCrash = false;
 }
 
 ProcessManager::~ProcessManager()
@@ -48,6 +47,12 @@ ProcessManager::~ProcessManager()
 	this->processes.clear();
 	this->socket->disconnect();
 	this->socket.reset();
+}
+
+void ProcessManager::run()
+{
+	runWatcher();
+	finalize();
 }
 
 void ProcessManager::runWatcher()
@@ -58,6 +63,60 @@ void ProcessManager::runWatcher()
 
 	if (this->watcher->worker->joinable())
 		this->watcher->worker->join();
+}
+
+void ProcessManager::finalize()
+{
+	log_info << "Finalizing..." << std::endl;
+
+	switch (m_appExitStatus) {
+		case AppExitStatus::Crash: {
+			log_info << "Handling crash - processes state: " << std::endl;
+			for (auto &process : this->processes) {
+				log_info << "----" << std::endl;
+				if (process->isAlive()) {
+					log_info << "process.pid: " << process->getPID() << std::endl;
+				} else {
+					log_info << "process.pid: " << process->getPID() << " (not alive)" << std::endl;
+					if (process->isCritical())
+						m_criticalCrash = true;
+				}
+				log_info << "process.isCritical: " << process->isCritical() << std::endl;
+			}
+			log_info << "----" << std::endl;
+
+			bool shouldRestart = false;
+			if (m_criticalCrash) {
+				terminateAll();
+			} else {
+				log_info << "Terminate non critical processes" << std::endl;
+				terminateNonCritical();
+				// Blocking operation that will return once the user
+				// decides to terminate the application
+				Util::runTerminateWindow(shouldRestart);
+				log_info << "Send exit message" << std::endl;
+				this->sendExitMessage(true);
+			}
+
+			if (shouldRestart)
+				Util::restartApp(m_appPath);
+			break;
+		}
+		case AppExitStatus::OutOfGPU: {
+			log_info << "Out of GPU resources - notifying a user" << std::endl;
+			bool shouldRestart = false;
+			Util::runOutOfGPUWindow(shouldRestart);
+			terminateAll();
+			if (shouldRestart) {
+				Util::restartApp(m_appPath);
+			}
+			break;
+		}
+		default:
+			break;
+	}
+
+	log_info << "Finalized" << std::endl;
 }
 
 void ProcessManager::watcher_fnc()
@@ -97,6 +156,12 @@ void ProcessManager::watcher_fnc()
 				registerProcessMemoryDump(pid, eventName_Start, eventName_Fail, eventName_Success, dumpPath, dumpName);
 				break;
 			}
+			case Action::HANDLEOUTOFGPU: {
+				uint64_t errorCode = msg.readUInt64();
+				std::wstring errorCodeDesc = msg.readWstring();
+				handleOutOfGPU(errorCode, errorCodeDesc);
+				break;
+			}
 			default:
 				break;
 			}
@@ -127,7 +192,7 @@ void ProcessManager::monitor_fnc()
 					log_info << "process.isCritical: " << process->isCritical() << std::endl;
 
 					m_criticalCrash |= process->isCritical();
-					m_applicationCrashed = true;
+					m_appExitStatus = AppExitStatus::Crash;
 				} else if (last_responsive_check == 0) {
 					detectedUnresponsive |= process->isUnResponsive();
 				}
@@ -144,18 +209,18 @@ void ProcessManager::monitor_fnc()
 				unresponsiveMarked = true;
 			}
 		}
-		if (m_applicationCrashed)
+		if (m_appExitStatus != AppExitStatus::Success)
 			break;
 	}
 
-	if (m_applicationCrashed && !m_criticalCrash) {
+	if (m_appExitStatus == AppExitStatus::Crash && !m_criticalCrash) {
 		log_info << "Non critical crash detected. save it to app state file" << std::endl;
 		Util::updateAppState(Util::AppState::NoncriticallyDead);
 	}
 
 	this->watcher->send_stop();
 #ifdef __APPLE__
-	if (m_applicationCrashed) {
+	if (m_appExitStatus == AppExitStatus::Crash) {
 		std::vector<char> buffer;
 		buffer.push_back('-1');
 		this->socket->write(false, buffer);
@@ -233,37 +298,16 @@ void ProcessManager::registerProcessMemoryDump(uint32_t PID, const std::wstring 
 	(*it)->startMemoryDumpMonitoring(eventName_Start, eventName_Fail, eventName_Success, dumpPath, dumpName);
 }
 
-void ProcessManager::handleCrash(std::wstring path)
+void ProcessManager::handleOutOfGPU(uint64_t errorCode, const std::wstring& errorCodeDesc)
 {
-	log_info << "Handling crash - processes state: " << std::endl;
-	for (auto &process : this->processes) {
-		log_info << "----" << std::endl;
-		if (process->isAlive()) {
-			log_info << "process.pid: " << process->getPID() << std::endl;
-		} else {
-			log_info << "process.pid: " << process->getPID() << " (not alive)" << std::endl;
-			if (process->isCritical())
-				m_criticalCrash = true;
-		}
-		log_info << "process.isCritical: " << process->isCritical() << std::endl;
-	}
-	log_info << "----" << std::endl;
+	log_info << "Processing 'out of GPU resources'" << std::endl;
 
-	bool shouldRestart = false;
-	if (m_criticalCrash) {
-		terminateAll();
-	} else {
-		log_info << "Terminate non critical processes" << std::endl;
-		terminateNonCritical();
-		// Blocking operation that will return once the user
-		// decides to terminate the application
-		Util::runTerminateWindow(shouldRestart);
-		log_info << "Send exit message" << std::endl;
-		this->sendExitMessage(true);
-	}
+	m_appExitStatus = AppExitStatus::OutOfGPU;
+	this->watcher->send_stop();
+	this->stopMonitoring();
+	this->sendExitMessage(false);
 
-	if (shouldRestart)
-		Util::restartApp(path);
+	log_info << "Processed 'out of GPU resources'" << std::endl;
 }
 
 void ProcessManager::sendExitMessage(bool appCrashed)

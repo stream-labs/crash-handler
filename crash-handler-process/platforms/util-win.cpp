@@ -144,6 +144,29 @@ void Util::runTerminateWindow(bool &shouldRestart)
 	}
 }
 
+void Util::runOutOfGPUWindow(bool &shouldRestart)
+{
+	std::wstring title = from_utf8_to_utf16_wide(boost::locale::translate("Out of GPU memory").str().c_str());
+
+	auto message_translated1 = boost::locale::translate("The GPU is out of memory. Streamlabs Desktop will be closed!");
+	std::wstring message1 = from_utf8_to_utf16_wide(message_translated1.str().c_str());
+	auto message_translated2 = boost::locale::translate("Would you like to relaunch the application?");
+	std::wstring message2 = from_utf8_to_utf16_wide(message_translated2.str().c_str());
+
+	std::wstring message = message1 + L"\n\n" + message2;
+
+	int code = MessageBox(NULL, message.c_str(), title.c_str(), MB_YESNO | MB_SYSTEMMODAL);
+	switch (code) {
+	case IDYES: {
+		shouldRestart = true;
+		break;
+	}
+	case IDNO:
+	default:
+		break;
+	}
+}
+
 static thread_local std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 
 std::string from_utf16_wide_to_utf8(const wchar_t *from, size_t length = -1)
