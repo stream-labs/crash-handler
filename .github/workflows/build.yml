@@ -19,7 +19,7 @@ env:
   BUILD_DIRECTORY: "build"
   DISTRIBUTE_DIRECTORY: "distribute"
   RELEASE_BUCKET: "slobs-crash-handler"
-  ELECTRON_VERSION: "v25.8.0"
+  ELECTRON_VERSION: "v25.8.2"
   BIN_DEPENDENCIES: "dependencies2019.0"
   AWS_SDK_VERSION: "1.9.248"
   AWS_SDK_PATH: "aws-sdk/awsi"
