@@ -22,7 +22,14 @@
 #include <vector>
 #include <string>
 
-enum class Action : uint8_t { REGISTER = 0, UNREGISTER = 1, REGISTERMEMORYDUMP = 2 };
+enum class Action : uint8_t
+{
+	REGISTER = 0,
+	UNREGISTER = 1,
+	REGISTERMEMORYDUMP = 2,
+	CRASHWITHCODE = 3,
+	HANDLEOUTOFGPU = 4
+};
 
 class Message {
 public:
