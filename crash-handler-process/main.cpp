@@ -20,6 +20,11 @@
 #include "process-manager.hpp"
 #include "util.hpp"
 #include <codecvt>
+#include <filesystem>
+
+#include "brief-crash-info-uploader.hpp"
+
+#include "http-helper.hpp"
 
 #if defined(WIN32)
 const std::string log_file_name = "\\crash-handler.log";
@@ -29,6 +34,9 @@ const std::wstring log_file_name = L"/crash-handler.log";
 
 int main(int argc, char **argv)
 {
+#if defined(_WIN32)
+	CoInitialize(NULL);
+#endif
 	Util::setupLocale();
 
 	std::string pid_path(Util::get_temp_directory());
@@ -40,6 +48,7 @@ int main(int argc, char **argv)
 	std::wstring version;
 	std::wstring isDevEnv;
 	std::wstring ipc_path;
+	std::string appData_path;
 
 	std::cout << "Launched with number of arguments = " << argc << std::endl;
 #if defined(WIN32)
@@ -65,6 +74,7 @@ int main(int argc, char **argv)
 		logging_start(w_log_path);
 		log_info << "=== Started CrashHandler ===" << std::endl;
 		Util::setCachePath(w_cache_path);
+		appData_path = cache_path;
 	}
 	if (nArgs >= 6) {
 		ipc_path = szArglist[5];
@@ -87,22 +97,31 @@ int main(int argc, char **argv)
 		logging_start(log_path);
 		log_info << "=== Started CrashHandler ===" << std::endl;
 		Util::setCachePath(cache_path);
+		appData_path = argv[4];
 	}
 	if (argc >= 6) {
 		ipc_path = converter.from_bytes(argv[5]);
 		log_info << "ipc path option recieve : " << std::string(ipc_path.begin(), ipc_path.end()) << std::endl;
 		Socket::set_ipc_path(ipc_path);
 	}
-
 #endif
+
 	ProcessManager *pm = new ProcessManager();
 	pm->runWatcher();
 
-	if (pm->m_applicationCrashed)
+	if (pm->m_applicationCrashed) {
 		pm->handleCrash(path);
+		BriefCrashInfoUploader(appData_path).Run();
+	}
 
 	delete pm;
+
 	log_info << "=== Terminating CrashHandler ===" << std::endl;
 	logging_end();
+
+#if defined(_WIN32)
+	CoUninitialize();
+#endif
+
 	return 0;
 }
