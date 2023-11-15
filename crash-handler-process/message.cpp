@@ -60,10 +60,10 @@ template<typename T> T readStringImpl(const std::vector<char> &buffer, uint64_t 
 	T value;
 	const uint32_t string_size = reinterpret_cast<const uint32_t &>(buffer[index]);
 	index += sizeof(uint32_t);
-	value.resize(string_size / sizeof(T::value_type));
+	value.resize(string_size / sizeof(typename T::value_type));
 	memcpy(&value[0], &buffer[index], string_size);
 	index += string_size;
-	value.resize(string_size / sizeof(T::value_type) - 1);
+	value.resize(string_size / sizeof(typename T::value_type) - 1);
 	return value;
 }
 
