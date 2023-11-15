@@ -78,7 +78,6 @@ void ProcessManager::watcher_fnc()
 				bool isCritical = msg.readBool();
 				uint32_t pid = msg.readUInt32();
 				size_t size = registerProcess(isCritical, pid);
-
 				if (size == 1)
 					startMonitoring();
 
@@ -97,6 +96,12 @@ void ProcessManager::watcher_fnc()
 				std::wstring dumpPath = msg.readWstring();
 				std::wstring dumpName = msg.readWstring();
 				registerProcessMemoryDump(pid, eventName_Start, eventName_Fail, eventName_Success, dumpPath, dumpName);
+				break;
+			}
+			case Action::CRASHED_MODULE_INFO: {
+				const auto moduleName = msg.readString();
+				const auto modulePath = msg.readString();
+				log_info << "crashed_module_info " << moduleName << " (" << modulePath << ")" << std::endl;
 				break;
 			}
 			default:
@@ -192,6 +197,7 @@ void ProcessManager::startMonitoring()
 
 void ProcessManager::stopMonitoring()
 {
+	log_info << "stop monitoring" << std::endl;
 	this->monitor->send_stop();
 
 	if (this->monitor->worker->joinable())

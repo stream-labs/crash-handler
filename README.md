@@ -14,7 +14,7 @@ ci\build-aws-sdk.cmd
 
 ci\localization_prepare_binaries.cmd
 
-set INSTALL_PACKAGE_PATH="../desktop/node_modules/crash_handler"
+set INSTALL_PACKAGE_PATH="../desktop/node_modules/crash-handler"
 cmake  -B"build" -G"Visual Studio 17 2022" -A x64  -DDepsPath="%CD%\build\deps\%BIN_DEPENDENCIES%\win64" -DBOOST_ROOT="%CD%\build\deps\boost"  -DCMAKE_INSTALL_PREFIX="%INSTALL_PACKAGE_PATH%"
 cmake --build "build" --target install --config RelWithDebInfo
 ```
