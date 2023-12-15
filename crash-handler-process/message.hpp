@@ -22,7 +22,13 @@
 #include <vector>
 #include <string>
 
-enum class Action : uint8_t { REGISTER = 0, UNREGISTER = 1, REGISTERMEMORYDUMP = 2 };
+enum class Action : uint8_t {
+	REGISTER = 0,
+	UNREGISTER = 1,
+	REGISTERMEMORYDUMP = 2,
+	CRASHWITHCODE = 3,
+	CRASHED_MODULE_INFO = 4,
+};
 
 class Message {
 public:
@@ -39,6 +45,7 @@ public:
 	uint32_t readUInt32();
 	uint8_t readUInt8();
 	std::wstring readWstring();
+	std::string readString();
 };
 
 #endif

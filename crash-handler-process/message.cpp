@@ -53,14 +53,28 @@ uint32_t Message::readUInt32()
 	return value;
 }
 
+namespace {
+
+template<typename T> T readStringImpl(const std::vector<char> &buffer, uint64_t &index)
+{
+	T value;
+	const uint32_t string_size = reinterpret_cast<const uint32_t &>(buffer[index]);
+	index += sizeof(uint32_t);
+	value.resize(string_size / sizeof(typename T::value_type));
+	memcpy(&value[0], &buffer[index], string_size);
+	index += string_size;
+	value.resize(string_size / sizeof(typename T::value_type) - 1);
+	return value;
+}
+
+} // namespace
+
 std::wstring Message::readWstring()
 {
-	std::wstring value;
-	uint32_t string_size = reinterpret_cast<uint32_t &>(m_buffer[index]);
-	index += sizeof(uint32_t);
-	value.resize(string_size / sizeof(wchar_t));
-	memcpy(&value[0], &m_buffer[index], string_size);
-	index += string_size;
-	value.resize(string_size / sizeof(wchar_t) - 1);
-	return value;
+	return readStringImpl<std::wstring>(m_buffer, this->index);
+}
+
+std::string Message::readString()
+{
+	return readStringImpl<std::string>(m_buffer, this->index);
 }
