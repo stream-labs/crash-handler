@@ -38,9 +38,9 @@ jobs:
         run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
         shell: bash
       - name: Install Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '22.12.0'
+          node-version: '24.x'
       - name: Install dependencies
         run: yarn install --immutable --immutable-cache --check-cache
 
@@ -193,9 +193,9 @@ jobs:
         run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
         shell: bash
       - name: Install Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '22.12.0'
+          node-version: '24.x'
       - name: Install dependencies
         run: yarn install --immutable --immutable-cache --check-cache
       - name: Prepare translations
