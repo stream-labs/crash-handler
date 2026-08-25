@@ -19,7 +19,7 @@ env:
   BUILD_DIRECTORY: "build"
   DISTRIBUTE_DIRECTORY: "distribute"
   RELEASE_BUCKET: "slobs-crash-handler"
-  ELECTRON_VERSION: "v29.4.3"
+  ELECTRON_VERSION: "v43.2.0"
   BIN_DEPENDENCIES: "dependencies2019.0"
   AWS_SDK_VERSION: "1.11.704"
   AWS_SDK_PATH: "aws-sdk/awsi"
@@ -40,7 +40,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16.x'
+          node-version: '22.12.0'
       - name: Install dependencies
         run: yarn install --immutable --immutable-cache --check-cache
 
@@ -195,7 +195,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16.x'
+          node-version: '22.12.0'
       - name: Install dependencies
         run: yarn install --immutable --immutable-cache --check-cache
       - name: Prepare translations
